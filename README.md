@@ -3,7 +3,7 @@
 	<h1>susee</h1>
 </div>
 
-Tiny TypeScript bundler that emits CommonJS, ESM, and types in one build. Includes post-process hooks like banner injection and minification.
+A minimal bundler for TypeScript projects that emits CommonJS, ESM, and type declarations in one pass. It streamlines package exports, supports custom post-process hooks (e.g., banner injection, minification), and auto-updates `package.json`.
 
 ## Features
 
