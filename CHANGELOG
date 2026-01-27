@@ -1,0 +1,29 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Node-based test suite for `susee.build`.
+
+### Changed
+- Expanded README with API, limitations, and usage details.
+
+## [0.1.0] - 2025-01-01
+
+### Added
+- TypeScript bundler pipeline with dependency tree resolution.
+- Dual output targets: CommonJS (.cjs) and ESM (.mjs) with type declarations.
+- Automatic `package.json` updates for `main`, `module`, `types`, and `exports`.
+- Post-process hook system with sync/async hooks.
+- Built-in helper hooks: `banner-text` and `minify`.
+- Subpath exports for `banner-text` and `minify`.
+
+### Notes
+- Bundling excludes `node_modules`.
+- Entry export limitations: supports `export { ... }` and `export default Identifier` only.
+- When both named and default exports exist, CommonJS output drops named exports.
