@@ -39,7 +39,10 @@
     }
   },
   "scripts": {
-    "build": "tsx build.ts"
+    "build": "tsx build.ts",
+    "test": "tsx --test",
+    "fmt": "biome format --write",
+    "lint": "biome check src --write"
   },
   "keywords": [
     "bundler"
@@ -65,5 +68,16 @@
     "README.md",
     "LICENSE",
     "dist/**/*"
-  ]
+  ],
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
+  "repository": {
+    "url": "git+https://github.com/phothinmg/susee.git",
+    "type": "git"
+  },
+  "bugs": {
+    "url": "https://github.com/phothinmg/susee/issues"
+  }
 }
