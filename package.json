@@ -42,7 +42,8 @@
     "build": "tsx build.ts",
     "test": "tsx --test",
     "fmt": "biome format --write",
-    "lint": "biome check src --write"
+    "lint": "biome check src --write",
+    "prepare": "husky"
   },
   "keywords": [
     "bundler"
@@ -61,6 +62,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",
     "@types/node": "^25.0.10",
+    "husky": "^9.1.7",
     "tsx": "^4.21.0"
   },
   "files": [
