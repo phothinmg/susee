@@ -263,7 +263,7 @@ namespace utils {
 		const resolvedFilePath = resolvePath(filePath);
 		if (!fileExists(resolvedFilePath))
 			throw emitError(`${filePath} does not exist.`);
-		const content = ts.sys.readFile(resolvedFilePath);
+		const content = ts.sys.readFile(resolvedFilePath, "utf8");
 		if (content) {
 			return content;
 		} else {
