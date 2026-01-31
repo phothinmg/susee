@@ -39,6 +39,8 @@
   },
   "homepage": "https://github.com/suseejs/tsconfig#readme",
   "dependencies": {
+    "@suseejs/tcolor": "^0.1.0",
+    "@suseejs/utils": "^0.1.2",
     "typescript": "^5.9.3"
   },
   "files": [
