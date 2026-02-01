@@ -14,31 +14,31 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 const mainEntry = "src/index.ts";
 
 async function suseeBuild() {
-  console.time("Susee Build");
-  console.info("Start : Main entry build");
-  await susee.build({
-    entry: mainEntry,
-    exportPath: ".",
-    hooks: [bannerTextHook(licenseText)],
-  });
-  console.info("End : Main entry build");
-  console.info("---------------------");
-  console.info("Start : Minify entry build");
-  await susee.build({
-    entry: "src/hooks/minify/index.ts",
-    exportPath: "./minify",
-    hooks: [bannerTextHook(licenseText)],
-  });
-  console.info("End : Minify entry build");
-  console.info("---------------------");
-  console.info("Start : Banner Text entry build");
-  await susee.build({
-    entry: "src/hooks/banner-text/index.ts",
-    exportPath: "./banner-text",
-    hooks: [bannerTextHook(licenseText)],
-  });
-  console.info("End : Banner Text entry build");
-  console.timeEnd("Susee Build");
+	console.time("Susee Build");
+	console.info("Start : Main entry build");
+	await susee.build({
+		entry: mainEntry,
+		exportPath: ".",
+		hooks: [bannerTextHook(licenseText)],
+	});
+	console.info("End : Main entry build");
+	console.info("---------------------");
+	console.info("Start : Minify entry build");
+	await susee.build({
+		entry: "src/hooks/minify/index.ts",
+		exportPath: "./minify",
+		hooks: [bannerTextHook(licenseText)],
+	});
+	console.info("End : Minify entry build");
+	console.info("---------------------");
+	console.info("Start : Banner Text entry build");
+	await susee.build({
+		entry: "src/hooks/banner-text/index.ts",
+		exportPath: "./banner-text",
+		hooks: [bannerTextHook(licenseText)],
+	});
+	console.info("End : Banner Text entry build");
+	console.timeEnd("Susee Build");
 }
 
 await suseeBuild();

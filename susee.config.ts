@@ -1,16 +1,16 @@
 import type { SuSeeConfig } from "./src/config";
 
 export default {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      exportPath: ".",
-      moduleType: "both",
-    },
-    {
-      entry: "src/config/index.ts",
-      exportPath: ".",
-      moduleType: "both",
-    },
-  ],
+	entryPoints: [
+		{
+			entry: "src/index.ts",
+			exportPath: ".",
+			moduleType: "both",
+		},
+		{
+			entry: "src/config/index.ts",
+			exportPath: ".",
+			moduleType: "both",
+		},
+	],
 } as SuSeeConfig;

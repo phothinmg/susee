@@ -15,15 +15,15 @@ import utils from "@suseejs/utils";
  * @returns { SuSee.PostProcessHook} - The output banner text string.
  */
 const bannerText = (str: string): SuSee.PostProcessHook => {
-  return {
-    async: false,
-    func: (code, file) => {
-      if (utils.extname(file as string) === ".js") {
-        code = `${str}\n${code}`;
-      }
-      return code;
-    },
-  };
+	return {
+		async: false,
+		func: (code, file) => {
+			if (utils.extname(file as string) === ".js") {
+				code = `${str}\n${code}`;
+			}
+			return code;
+		},
+	};
 };
 
 export default bannerText;
