@@ -1,20 +1,35 @@
-/**
- * Merge multiple import statements into a single import statement.
- *
- * The function takes an array of import statements and returns a new array of import statements.
- * The returned array will have the following properties:
- * - All named imports will be merged into a single import statement.
- * - All default imports will be merged into a single import statement.
- * - All type-only imports will be merged into a single type import statement.
- * - All type-only default imports will be merged into a single type default import statement.
- * - All namespace imports will be merged into a single namespace import statement.
- *
- * The function will remove any duplicate imports and will sort the imports alphabetically.
- *
- * Example:
- * Input: ["import { foo, bar } from 'module'", "import { baz } from 'module'"]
- * Output: ["import { bar, baz, foo } from 'module'"]
- */
+/*
+Key Features:
+Removes duplicate type imports: When both import ts from "typescript" and import type ts from "typescript" exist, only the regular import is kept.
+
+Handles all import types:
+
+Default imports (import x from "module")
+
+Named imports (import { x, y } from "module")
+
+Type imports (import type { x } from "module")
+
+Namespace imports (import * as x from "module")
+
+Preserves unique type imports: If a type import doesn't have a corresponding regular import, it's kept.
+
+Merges named imports: Combines all named imports from the same module and removes duplicates.
+
+Sorts imports: Outputs imports in alphabetical order for consistency.
+
+The algorithm works by:
+
+Parsing and categorizing all imports by type and module
+
+For each module, checking if regular imports exist for type imports
+
+Removing type imports that have corresponding regular imports
+
+Keeping type imports that don't have regular equivalents
+
+Generating clean, merged import statements
+*/
 function mergeImports(imports: string[]): string[] {
 	const importMap = new Map<string, Set<string>>();
 	const typeImportMap = new Map<string, Set<string>>();
@@ -29,14 +44,15 @@ function mergeImports(imports: string[]): string[] {
 		);
 		if (!importMatch) continue;
 
-		const [, importClause, modulePath] = importMatch;
+		const [, importClause, _modulePath] = importMatch;
 		const isTypeImport = importStr.includes("import type");
+		const modulePath = _modulePath as string;
 
 		if (!importClause) {
 			// Default import or side-effect import
 			const defaultMatch = importStr.match(/import\s+(?:type\s+)?(\w+)/);
 			if (defaultMatch) {
-				const importName = defaultMatch[1];
+				const importName = defaultMatch[1] as string;
 				const targetMap = isTypeImport ? typeDefaultImports : defaultImports;
 				if (!targetMap.has(modulePath)) targetMap.set(modulePath, new Set());
 				targetMap.get(modulePath)?.add(importName);
@@ -60,7 +76,7 @@ function mergeImports(imports: string[]): string[] {
 			// Namespace import: import * as name from 'module'
 			const namespaceMatch = importClause.match(/\*\s+as\s+(\w+)/);
 			if (namespaceMatch) {
-				const namespaceName = namespaceMatch[1];
+				const namespaceName = namespaceMatch[1] as string;
 				if (!namespaceImports.has(modulePath))
 					namespaceImports.set(modulePath, new Set());
 				namespaceImports.get(modulePath)?.add(namespaceName);

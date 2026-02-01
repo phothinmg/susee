@@ -1,5 +1,5 @@
-import path from "node:path";
-import type { OutPutHook } from "../types";
+import type SuSee from "@suseejs/types";
+import utils from "@suseejs/utils";
 
 /**
  * Given a string, returns a banner text string.
@@ -12,18 +12,18 @@ import type { OutPutHook } from "../types";
  * The banner text string is used as a part of the typescript OutPutHook.
  *
  * @param {string} str - The input string.
- * @returns {OutPutHook} - The output banner text string.
+ * @returns { SuSee.PostProcessHook} - The output banner text string.
  */
-const bannerText = (str: string): OutPutHook => {
-	return {
-		async: false,
-		func: (code, file) => {
-			if (path.extname(file as string) === ".js") {
-				code = `${str}\n${code}`;
-			}
-			return code;
-		},
-	};
+const bannerText = (str: string): SuSee.PostProcessHook => {
+  return {
+    async: false,
+    func: (code, file) => {
+      if (utils.extname(file as string) === ".js") {
+        code = `${str}\n${code}`;
+      }
+      return code;
+    },
+  };
 };
 
 export default bannerText;

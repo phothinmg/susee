@@ -4,8 +4,14 @@
 		"commitlint",
 		"dependensia",
 		"dexport",
+		"evenodd",
+		"kadown",
 		"Maung",
+		"phothinmaung",
 		"pkgtext",
-		"susee"
+		"replacecjs",
+		"susee",
+		"suseejs",
+		"topo"
 	]
 }

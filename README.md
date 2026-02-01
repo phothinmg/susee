@@ -1,5 +1,5 @@
 <div align="center">
-	<img src="https://github.com/phothinmg/ptmbox/blob/main/kadown.svg" width="160" height="160" alt="susee" />
+	<img src="https://github.com/suseejs/dependencies/blob/main/susee.png" width="160" height="160" alt="susee" />
 	<h1>susee</h1>
 </div>
 
