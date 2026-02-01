@@ -2,3 +2,4 @@ node_modules
 dist
 _docs
 _opt
+a.ts
