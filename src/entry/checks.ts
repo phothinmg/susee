@@ -10,7 +10,6 @@ const depsCheck = {
 	/** @private */
 	types(deps: SuSee.DepsFile[], compilerOptions: ts.CompilerOptions) {
 		if (!compilerOptions.noCheck) {
-			console.time(tcolor.green("Type checked"));
 			const filePaths = deps.map((i) => i.file);
 			let _err = false;
 			// Create program
@@ -44,14 +43,12 @@ const depsCheck = {
 			if (_err) {
 				ts.sys.exit(1);
 			} else {
-				console.timeEnd(tcolor.green("Type checked"));
 				return true;
 			}
 		}
 	},
 	/** @private */
 	ext(deps: SuSee.DepsFile[]) {
-		console.time(tcolor.green("File extensions checked"));
 		const tsExt = new Set([".ts", ".mts", ".cts", ".tsx"]);
 		for (const dep of deps) {
 			const ext = utils.extname(dep.file);
@@ -62,12 +59,10 @@ const depsCheck = {
 				ts.sys.exit(1);
 			}
 		}
-		console.timeEnd(tcolor.green("File extensions checked"));
 		return true;
 	},
 	/** @private */
 	moduleType(deps: SuSee.DepsFile[]) {
-		console.time(tcolor.green("Module types checked"));
 		let _esmCount = 0;
 		let cjsCount = 0;
 		let unknowCount = 0;
@@ -172,7 +167,6 @@ const depsCheck = {
 			);
 			ts.sys.exit(1);
 		}
-		console.timeEnd(tcolor.green("Module types checked"));
 		return true;
 	},
 	nodeCheck(nodeEnvOption: boolean, nodeModules: string[]) {
@@ -194,7 +188,7 @@ const depsCheck = {
 			[depsCheck.moduleType, deps],
 			[depsCheck.types, deps, compilerOptions],
 		]);
-		const results = await res.series();
+		const results = await res.concurrent();
 		return results.every((r) => r === true);
 	},
 };

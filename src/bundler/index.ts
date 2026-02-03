@@ -20,7 +20,6 @@ async function bundler({
 	compilerOptions,
 	renameDuplicates,
 }: BundlerOptions): Promise<string> {
-	console.time("Bundle Time");
 	const reName = renameDuplicates ?? true;
 	// construct maps
 	const namesMap: SuSee.DuplicatesNameMap = new Map();
@@ -94,7 +93,6 @@ async function bundler({
 		.join("\n")
 		.trim();
 	await utils.wait(1000);
-	console.timeEnd("Bundle Time");
 	// text join order is important here
 	const content = `${importStatements}\n${depFilesContent}\n${mainFileContent}`;
 	// TODO pre-process hooks call

@@ -26,6 +26,7 @@ const getCompilerOptions = (
 		return {
 			isMain,
 			compilerOptions,
+			out_dir,
 		};
 	};
 	const esm = () => {
@@ -48,6 +49,7 @@ const getCompilerOptions = (
 		return {
 			isMain,
 			compilerOptions,
+			out_dir,
 		};
 	};
 	return { commonjs, esm };
