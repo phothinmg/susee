@@ -3,7 +3,7 @@
 	<h1>susee</h1>
 </div>
 
-A minimal bundler for TypeScript projects that emits CommonJS, ESM, and type declarations in one pass. It streamlines package exports, supports custom post-process hooks (e.g., banner injection, minification), and auto-updates `package.json`.
+A minimal bundler for TypeScript projects that emits CommonJS, ESM, and type declarations in one pass. It streamlines package exports and auto-updates `package.json`.
 
 ## Features
 
@@ -11,119 +11,120 @@ A minimal bundler for TypeScript projects that emits CommonJS, ESM, and type dec
 - Outputs CommonJS (.cjs) and ESM (.mjs) builds with type declarations
 - Auto-writes `package.json` fields (`main`, `module`, `types`, `exports`) and change `type` force to `module`.
 - You can create post-process hooks (sync/async) for code that bundled and transformed by Typescript API.
-- The package provided two hooks, `bannerText` and `minify` by terser.
-- Limitations:
-  1. Does not support export modifiers such as `export const foo = "foo"` or `export default function foo() {}`.
-  2. Does not support anonymous exports like `export default function() {}` or `export default { foo: "bar" }`.
-- Supports only named exports (`export { foo, bar }`) and default exports with an identifier.
+- Limitations: Only supports esm entry and typescript extensions.
 - Does not remove exports from the entry file and does not bundle packages from `node_modules`.
-- If the entry has both named exports and a default export (`export { foo, bar }` and `export default foo`), the CommonJS output drops named exports. In such cases, wrap exports in a namespace.
 
 ## Installation
 
 ```bash
-npm i -D susee
+npm i susee
 ```
 
 ## Usage
 
+`susee.config.ts` at root of project
+
 ```ts
-import susee from "susee";
-import bannerText from "susee/banner-text";
-import minify from "susee/minify";
+import type { SuSeeConfig } from "susee";
+import bannerTextHook from "@suseejs/banner-text";
 
 const license = "/*! My Library */";
 
-await susee.build({
-  entry: "src/index.ts",
-  outDir: "dist",
-  target: "both",
-  defaultExportName: "myLib",
-  hooks: [bannerText(license), minify()],
-});
+export default {
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      moduleType: "both",
+    },
+  ],
+  postProcessHooks: [bannerTextHook(licenseText)],
+} as SuSeeConfig;
 ```
 
-## API
+### Bundle in terminal
 
-### `susee.build(options)`
+```bash
+npx susee
+```
 
-**Options**
+### `package.json`
 
-````ts
-/**
- * Build configuration.
- */
-interface BuildOptions {
+```json
+{
+  "scripts": {
+    "build": "susee"
+  }
+}
+```
+
+## Configuration for Susee Bundler
+
+```ts
+interface EntryPoint {
   /**
-   * Entry file to bundle.
+   * Entry of file path of package
+   *
+   * required
    */
   entry: string;
   /**
-   * Output target: `"commonjs"`, `"esm"`, or `"both"`.
+   * Export path for package
    *
-   * default - "both"
+   * required
    */
-  target?: Target;
+  exportPath: "." | `./${string}`;
   /**
-   * Default export name if applicable.
-   * - Required when the entry has default export and `options.target` = `"commonjs"` or `"both"`
+   * Output module type of package , commonjs,esm or both esm and commonjs
    *
-   * Example :
+   * default - esm
+   */
+  moduleType?: "commonjs" | "esm" | "both";
+  /**
+   * Custom tsconfig.json path for package typescript compiler options
    *
-   * ```ts
-   * const foo = {bar:"foo"};
-   * export default foo; // defaultExportName = "foo"
-   * ```
+   * Priority -
+   *  1. this custom tsconfig.json
+   *  2. tsconfig.json at root directory
+   *  3. default compiler options of susee
    *
    * default - undefined
    */
-  defaultExportName?: string | undefined;
+  tsconfigFilePath?: string | undefined;
+}
+
+/**
+ * Configuration for Susee Bundler
+ */
+interface SuSeeConfig {
   /**
-   * Whether this build represents the main export , otherwise subpath export.
+   * Array of entry points object
+   *
+   * required
+   */
+  entryPoints: EntryPoint[];
+  /**
+   * Array of hooks to handle bundled and compiled code
+   *
+   * default - []
+   */
+  postProcessHooks?: SuSee.PostProcessHook[];
+  /**
+   * Allow bundler to update your package.json.
    *
    * default - true
    */
-  isMainExport?: boolean;
+  allowUpdatePackageJson?: boolean;
   /**
-   * Output directory.
+   * Your package run on NodeJs env or not
    *
-   * For a subpath export (not the main export), `outDir` must be a single-level
-   * nested folder under the main output directory.
-   *
-   * Example:
-   *
-   * ```ts
-   * const mainOutdir = "dist";
-   * const subpathOutdir = "dist/subpath"; // subpath export in package.json will be "./subpath"
-   * const fooOutdir = "dist/foo"; // subpath export in package.json will be "./foo"
-   * ```
-   *
-   * default - "dist"
+   * default - true
    */
-  outDir?: string;
-  /**
-   * Identifiers to replace with blanks during compilation.
-   *
-   * default - []
-   */
-  replaceWithBlank?: string[];
-  /**
-   * Array of hook functions executed during compilation.
-   *
-   * default - []
-   */
-  hooks?: PostProcessHook[];
+  nodeEnv?: boolean;
+  renameDuplicates?: boolean;
 }
-````
-
-### `PostProcessHook`
-
-```ts
-type PostProcessHook =
-  | { async: true; func: (code: string, file?: string) => Promise<string> }
-  | { async: false; func: (code: string, file?: string) => string };
 ```
 
 ## License
 
-ISC
+Apache-2.0

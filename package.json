@@ -36,7 +36,7 @@
 		"email": "phothinmg@disroot.org",
 		"url": "https://phothinmg.github.io/"
 	},
-	"license": "",
+	"license": "Apache-2.0",
 	"dependencies": {
 		"@phothinmaung/resolves": "^1.0.0",
 		"@suseejs/anonymous": "^0.1.3",
