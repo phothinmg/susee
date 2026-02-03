@@ -12,12 +12,12 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 `.trim();
 
 export default {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      exportPath: ".",
-      moduleType: "both",
-    },
-  ],
-  postProcessHooks: [bannerTextHook(licenseText)],
+	entryPoints: [
+		{
+			entry: "src/index.ts",
+			exportPath: ".",
+			moduleType: "both",
+		},
+	],
+	postProcessHooks: [bannerTextHook(licenseText)],
 } as SuSeeConfig;

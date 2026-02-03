@@ -48,26 +48,26 @@ Dependencies management and get TypeScript compiler options.
  */
 
 interface DependencyOpts {
-  entryPath: string;
-  exportPath: "." | `./${string}`;
-  configPath?: string | undefined;
-  nodeEnv?: boolean;
+	entryPath: string;
+	exportPath: "." | `./${string}`;
+	configPath?: string | undefined;
+	nodeEnv?: boolean;
 }
 interface DepsObj {
-  depFiles: SuSee.DepsFile[];
-  modOpts: {
-    commonjs: () => {
-      isMain: boolean;
-      compilerOptions: ts.CompilerOptions;
-      out_dir: string;
-    };
-    esm: () => {
-      isMain: boolean;
-      compilerOptions: ts.CompilerOptions;
-      out_dir: string;
-    };
-  };
-  generalOptions: ts.CompilerOptions;
+	depFiles: SuSee.DepsFile[];
+	modOpts: {
+		commonjs: () => {
+			isMain: boolean;
+			compilerOptions: ts.CompilerOptions;
+			out_dir: string;
+		};
+		esm: () => {
+			isMain: boolean;
+			compilerOptions: ts.CompilerOptions;
+			out_dir: string;
+		};
+	};
+	generalOptions: ts.CompilerOptions;
 }
 /**
  * @module dependency
@@ -80,37 +80,37 @@ interface DepsObj {
  * @returns {Promise<DepsObj>} - A promise that resolves with an object containing the resolved dependencies and compiler options.
  */
 async function entry({
-  entryPath,
-  exportPath,
-  configPath,
-  nodeEnv,
+	entryPath,
+	exportPath,
+	configPath,
+	nodeEnv,
 }: DependencyOpts): Promise<DepsObj> {
-  // deps
-  const deps = await getDependencies(entryPath);
-  const depFiles: SuSee.DepsFile[] = deps.depFiles; /* return */
-  const nodeModules: string[] = deps.nodeModules;
-  await utils.wait(1000);
-  const opts = getCompilerOptions(exportPath, configPath);
-  const generalOptions = opts.generalOptions();
-  const modOpts = {
-    commonjs: () => opts.commonjs(),
-    esm: () => opts.esm(),
-  }; /* return */
-  await utils.wait(1000);
-  const checked = await depsCheck.make(
-    depFiles,
-    generalOptions,
-    nodeModules,
-    nodeEnv,
-  );
-  if (!checked) {
-    ts.sys.exit(1);
-  }
-  return {
-    depFiles,
-    modOpts,
-    generalOptions,
-  };
+	// deps
+	const deps = await getDependencies(entryPath);
+	const depFiles: SuSee.DepsFile[] = deps.depFiles; /* return */
+	const nodeModules: string[] = deps.nodeModules;
+	await utils.wait(1000);
+	const opts = getCompilerOptions(exportPath, configPath);
+	const generalOptions = opts.generalOptions();
+	const modOpts = {
+		commonjs: () => opts.commonjs(),
+		esm: () => opts.esm(),
+	}; /* return */
+	await utils.wait(1000);
+	const checked = await depsCheck.make(
+		depFiles,
+		generalOptions,
+		nodeModules,
+		nodeEnv,
+	);
+	if (!checked) {
+		ts.sys.exit(1);
+	}
+	return {
+		depFiles,
+		modOpts,
+		generalOptions,
+	};
 }
 
 export default entry;
