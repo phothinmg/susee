@@ -5,7 +5,6 @@ import utils from "@suseejs/utils";
 const isCjs = (files: SuSee.OutFiles) => files.commonjs && files.commonjsTypes;
 const isEsm = (files: SuSee.OutFiles) => files.esm && files.esmTypes;
 
-
 /**
  * Builds a package exports mapping for the given output files and export path.
  *
