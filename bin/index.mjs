@@ -1,4 +1,3 @@
 #!/usr/bin/env node
-import susee from "../dist/index.mjs";
-
+import { susee } from "../dist/index.mjs";
 await susee();

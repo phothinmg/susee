@@ -313,55 +313,6 @@ function checkExports(file, str) {
     ts.transform(sourceFile, [transformer]);
     return { nameExport, defExport };
 }
-const d_getCompilerOptions_1 = (exportPath, configPath) => {
-    const config = new TsConfig(configPath);
-    config.addCompilerOptions({ outDir: "dist" });
-    config.removeCompilerOption("rootDir");
-    const commonjs = () => {
-        config.removeCompilerOption("module");
-        const _options = config.getCompilerOptions();
-        let out_dir = _options.outDir;
-        let isMain = true;
-        if (exportPath !== ".") {
-            out_dir = `${out_dir}/${exportPath.slice(2)}`;
-            isMain = false;
-        }
-        const { outDir, module, ...restOptions } = _options;
-        const compilerOptions = {
-            outDir: out_dir,
-            module: ts.ModuleKind.CommonJS,
-            ...restOptions,
-        };
-        return {
-            isMain,
-            compilerOptions,
-            out_dir,
-        };
-    };
-    const esm = () => {
-        const _options = config.getCompilerOptions();
-        let out_dir = _options.outDir;
-        let isMain = true;
-        if (exportPath !== ".") {
-            out_dir = `${out_dir}/${exportPath.slice(2)}`;
-            isMain = false;
-        }
-        const { outDir, module, ...restOptions } = _options;
-        const compilerOptions = {
-            outDir: out_dir,
-            module: _options.module && _options.module !== 1
-                ? _options.module
-                : ts.ModuleKind.ES2022,
-            ...restOptions,
-        };
-        return {
-            isMain,
-            compilerOptions,
-            out_dir,
-        };
-    };
-    return { commonjs, esm };
-};
 const createHost = (sourceCode, fileName) => {
     const createdFiles = {};
     const host = {
@@ -473,7 +424,7 @@ class Compilers {
         console.time(tcolor.green("Compiled Commonjs"));
         const ck = checkExports(fileName, sourceCode);
         if (ck.defExport && ck.nameExport) {
-            console.warn("Both name export and default export are exported from your project,that will effect on default export for commonjs output");
+            console.warn(tcolor.yellow("Both name export and default export are exported from your project,that will effect on default export for commonjs output"));
         }
         const _host = createHost(sourceCode, fileName);
         const createdFiles = _host.createdFiles;
@@ -567,9 +518,6 @@ class Compilers {
         console.timeEnd(tcolor.green("Compiled ESM"));
     }
 }
-const suseeConfig = {
-    entryPoints: [],
-};
 const depsCheck = {
     types(deps, compilerOptions) {
         if (!compilerOptions.noCheck) {
@@ -729,7 +677,7 @@ async function getDependencies(entry) {
         nodeModules,
     };
 }
-const d_getCompilerOptions_2 = (exportPath, configPath) => {
+const getCompilerOptions = (exportPath, configPath) => {
     const config = new TsConfig(configPath);
     const generalOptions = () => config.getCompilerOptions();
     const commonjs = () => {
@@ -786,7 +734,7 @@ async function entry({ entryPath, exportPath, configPath, nodeEnv, }) {
     const depFiles = deps.depFiles;
     const nodeModules = deps.nodeModules;
     await utils.wait(1000);
-    const opts = d_getCompilerOptions_2(exportPath, configPath);
+    const opts = getCompilerOptions(exportPath, configPath);
     const generalOptions = opts.generalOptions();
     const modOpts = {
         commonjs: () => opts.commonjs(),
@@ -949,7 +897,7 @@ async function writePackage(files, exportPath) {
     };
     utils.writeFile(pkgFile, JSON.stringify(pkgJson, null, 2));
 }
-export async function susee() {
+async function susee() {
     const config = await getConfig();
     console.info(tcolor.cyan("Start Bundle"));
     const compile = async (e) => {
@@ -998,5 +946,5 @@ export async function susee() {
     }
     console.info(tcolor.cyan("Finished Bundle"));
 }
-export default susee;
+export { susee };
 //# sourceMappingURL=index.js.map

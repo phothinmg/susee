@@ -6,43 +6,35 @@ this file except in compliance with the License. You may obtain a copy of the
 License at http://www.apache.org/licenses/LICENSE-2.0
 ***************************************************************************** */
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function (o, m, k, k2) {
-    if (k2 === undefined)
-        k2 = k;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function () { return m[k]; } };
+      desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
-}) : (function (o, m, k, k2) {
-    if (k2 === undefined)
-        k2 = k;
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function (o, v) {
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function (o, v) {
+}) : function(o, v) {
     o["default"] = v;
 });
 var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function (o) {
+    var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
             var ar = [];
-            for (var k in o)
-                if (Object.prototype.hasOwnProperty.call(o, k))
-                    ar[ar.length] = k;
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
             return ar;
         };
         return ownKeys(o);
     };
     return function (mod) {
-        if (mod && mod.__esModule)
-            return mod;
+        if (mod && mod.__esModule) return mod;
         var result = {};
-        if (mod != null)
-            for (var k = ownKeys(mod), i = 0; i < k.length; i++)
-                if (k[i] !== "default")
-                    __createBinding(result, mod, k[i]);
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
         __setModuleDefault(result, mod);
         return result;
     };
@@ -360,55 +352,6 @@ function checkExports(file, str) {
     typescript_1.default.transform(sourceFile, [transformer]);
     return { nameExport, defExport };
 }
-const d_getCompilerOptions_1 = (exportPath, configPath) => {
-    const config = new tsconfig_1.default(configPath);
-    config.addCompilerOptions({ outDir: "dist" });
-    config.removeCompilerOption("rootDir");
-    const commonjs = () => {
-        config.removeCompilerOption("module");
-        const _options = config.getCompilerOptions();
-        let out_dir = _options.outDir;
-        let isMain = true;
-        if (exportPath !== ".") {
-            out_dir = `${out_dir}/${exportPath.slice(2)}`;
-            isMain = false;
-        }
-        const { outDir, module, ...restOptions } = _options;
-        const compilerOptions = {
-            outDir: out_dir,
-            module: typescript_1.default.ModuleKind.CommonJS,
-            ...restOptions,
-        };
-        return {
-            isMain,
-            compilerOptions,
-            out_dir,
-        };
-    };
-    const esm = () => {
-        const _options = config.getCompilerOptions();
-        let out_dir = _options.outDir;
-        let isMain = true;
-        if (exportPath !== ".") {
-            out_dir = `${out_dir}/${exportPath.slice(2)}`;
-            isMain = false;
-        }
-        const { outDir, module, ...restOptions } = _options;
-        const compilerOptions = {
-            outDir: out_dir,
-            module: _options.module && _options.module !== 1
-                ? _options.module
-                : typescript_1.default.ModuleKind.ES2022,
-            ...restOptions,
-        };
-        return {
-            isMain,
-            compilerOptions,
-            out_dir,
-        };
-    };
-    return { commonjs, esm };
-};
 const createHost = (sourceCode, fileName) => {
     const createdFiles = {};
     const host = {
@@ -520,7 +463,7 @@ class Compilers {
         console.time(tcolor_1.default.green("Compiled Commonjs"));
         const ck = checkExports(fileName, sourceCode);
         if (ck.defExport && ck.nameExport) {
-            console.warn("Both name export and default export are exported from your project,that will effect on default export for commonjs output");
+            console.warn(tcolor_1.default.yellow("Both name export and default export are exported from your project,that will effect on default export for commonjs output"));
         }
         const _host = createHost(sourceCode, fileName);
         const createdFiles = _host.createdFiles;
@@ -614,9 +557,6 @@ class Compilers {
         console.timeEnd(tcolor_1.default.green("Compiled ESM"));
     }
 }
-const suseeConfig = {
-    entryPoints: [],
-};
 const depsCheck = {
     types(deps, compilerOptions) {
         if (!compilerOptions.noCheck) {
@@ -776,7 +716,7 @@ async function getDependencies(entry) {
         nodeModules,
     };
 }
-const d_getCompilerOptions_2 = (exportPath, configPath) => {
+const getCompilerOptions = (exportPath, configPath) => {
     const config = new tsconfig_1.default(configPath);
     const generalOptions = () => config.getCompilerOptions();
     const commonjs = () => {
@@ -833,7 +773,7 @@ async function entry({ entryPath, exportPath, configPath, nodeEnv, }) {
     const depFiles = deps.depFiles;
     const nodeModules = deps.nodeModules;
     await utils_1.default.wait(1000);
-    const opts = d_getCompilerOptions_2(exportPath, configPath);
+    const opts = getCompilerOptions(exportPath, configPath);
     const generalOptions = opts.generalOptions();
     const modOpts = {
         commonjs: () => opts.commonjs(),
@@ -1045,4 +985,4 @@ async function susee() {
     }
     console.info(tcolor_1.default.cyan("Finished Bundle"));
 }
-module.exports = susee;
+//# sourceMappingURL=index.js.map

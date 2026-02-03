@@ -5,6 +5,18 @@ import utils from "@suseejs/utils";
 const isCjs = (files: SuSee.OutFiles) => files.commonjs && files.commonjsTypes;
 const isEsm = (files: SuSee.OutFiles) => files.esm && files.esmTypes;
 
+
+/**
+ * Builds a package exports mapping for the given output files and export path.
+ *
+ * Produces the appropriate export shape based on whether CommonJS and/or ESM
+ * artifacts are present, including their default entry points and type
+ * definitions. If neither format is available, returns an empty object.
+ *
+ * @param files - The build output file paths for CommonJS/ESM and their types.
+ * @param exportPath - The subpath export key (e.g. "." or "./feature").
+ * @returns A {@link SuSee.Exports} object describing the package exports map.
+ */
 function getExports(
 	files: SuSee.OutFiles,
 	exportPath: "." | `./${string}`,
@@ -43,6 +55,16 @@ function getExports(
 				: {};
 }
 
+/**
+ * Writes an updated `package.json` based on output files and export path.
+ *
+ * Determines module type (ESM/CommonJS), adjusts `main`, `module`, `types`,
+ * and `exports` fields, and preserves other existing fields from the
+ * current `package.json`.
+ *
+ * @param files - The generated output files used to populate entry points.
+ * @param exportPath - The export path for subpath exports; "." denotes main export.
+ */
 async function writePackage(
 	files: SuSee.OutFiles,
 	exportPath: "." | `./${string}`,
@@ -73,40 +95,6 @@ async function writePackage(
 	let _module: Record<string, string> = {};
 	let _types: Record<string, string> = {};
 	let _exports: Record<string, SuSee.Exports> = {};
-	// if (files.main) _main = { main: path.relative(process.cwd(), files.main) };
-	// if (files.module)
-	//   _module = { module: path.relative(process.cwd(), files.module) };
-	// if (files.types)
-	//   _types = { types: path.relative(process.cwd(), files.types) };
-	// _exports = {
-	//   exports: {
-	//     ...getExports(files, exportPath),
-	//   },
-	// };
-
-	// if (files.commonjs && files.commonjsTypes) {
-	//   _require = {
-	//     require: {
-	//       default: path.relative(process.cwd(), files.commonjs),
-	//       types: path.relative(process.cwd(), files.commonjsTypes),
-	//     },
-	//   };
-	// }
-
-	// if (files.esm && files.esmTypes) {
-	//   _import = {
-	//     import: {
-	//       default: path.relative(process.cwd(), files.esm),
-	//       types: path.relative(process.cwd(), files.esmTypes),
-	//     },
-	//   };
-	// }
-	// _exports = {
-	//   [exportPath]: {
-	//     ..._require,
-	//     ..._import,
-	//   },
-	// };
 	if (isMain) {
 		_main = files.main
 			? { main: path.relative(process.cwd(), files.main as string) }

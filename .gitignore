@@ -2,3 +2,5 @@ node_modules
 _docs
 _opt
 a.ts
+dist
+bin
