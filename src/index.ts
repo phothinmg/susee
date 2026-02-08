@@ -1,52 +1,145 @@
-import ts from "typescript";
+import type ts from "typescript";
 
-const pkgName = "SU-SEE";
+export const pkgName = "SU-SEE";
 
-interface DepsFile {
+export type Target = "commonjs" | "esm" | "both";
+export interface DepsFile {
   file: string;
   content: string;
 }
-interface NamesSet {
+export interface NamesSet {
   base: string;
   file: string;
   newName: string;
   isEd?: boolean;
 }
-type NamesSets = NamesSet[];
+export type NamesSets = NamesSet[];
 
-type DuplicatesNameMap = Map<string, Set<{ file: string }>>;
+export type DuplicatesNameMap = Map<string, Set<{ file: string }>>;
 
-type BundleHandler = ({ file, content }: DepsFile) => DepsFile;
+export type BundleHandler = ({ file, content }: DepsFile) => DepsFile;
 
-interface NamesMap {
+export type NodeVisit = (node: ts.Node) => ts.Node;
+export type BundleVisitorFunc = (
+  context: ts.TransformationContext,
+  { file, content }: DepsFile,
+  sourceFile: ts.SourceFile,
+  ...args: any[]
+) => NodeVisit;
+
+export interface NamesMap {
   base: string;
   file: string;
   short: string;
   oldName: string;
 }
-type PostProcessExtension =
+
+export type OutFiles = {
+  commonjs: string | undefined;
+  commonjsTypes: string | undefined;
+  esm: string | undefined;
+  esmTypes: string | undefined;
+  main: string | undefined;
+  module: string | undefined;
+  types: string | undefined;
+};
+
+export type Exports = Record<
+  string,
+  {
+    import?: { default: string; types: string };
+    require?: { default: string; types: string };
+  }
+>;
+export type LocalHookReturn = string | ts.Node | BundleHandler;
+export type LocalHookReturnFun<P extends any[] = any[], M = LocalHookReturn> = (
+  ...args: P
+) => M;
+export type LocalHookKey =
+  | "commonJsHook"
+  | "removeCommonJsExports"
+  | "removeEsmExports";
+
+export type LocalHook<P extends any[] = any[], M = LocalHookReturn> = {
+  name: LocalHookKey;
+  fun: LocalHookReturnFun<P, M>;
+};
+
+export interface DepsObj {
+  depFiles: DepsFile[];
+  modOpts: {
+    commonjs: () => {
+      isMain: boolean;
+      compilerOptions: ts.CompilerOptions;
+      out_dir: string;
+    };
+    esm: () => {
+      isMain: boolean;
+      compilerOptions: ts.CompilerOptions;
+      out_dir: string;
+    };
+  };
+  generalOptions: ts.CompilerOptions;
+}
+
+export type RequireImportObject = {
+  isNamespace: boolean;
+  isTypeOnly: boolean;
+  isTypeNamespace: boolean;
+  source: string;
+  importedString: string | undefined;
+  importedObject: string[] | undefined;
+};
+
+export type TypeObj = Record<string, string[]>;
+
+// plugin
+
+export type PrePostPluginAsyncCallback = (
+  code: string,
+  file?: string,
+) => Promise<string>;
+export type PrePostPluginCallback = (code: string, file?: string) => string;
+
+export type ASTPluginCallback = (
+  node: ts.Node,
+  factory: ts.NodeFactory,
+  file: string,
+) => ts.Node;
+export type ASTPluginAsyncCallback = (
+  node: ts.Node,
+  factory: ts.NodeFactory,
+  file: string,
+) => Promise<ts.Node>;
+
+export type DependencyPluginAsyncCallback = (
+  files: DepsFile[],
+) => Promise<DepsFile[]>;
+export type DependencyPluginCallback = (files: DepsFile[]) => DepsFile[];
+
+export type PostProcessPlugin =
   | {
       type: "post-process";
       async: true;
-      func: (code: string, file?: string) => Promise<string>;
+      func: PrePostPluginAsyncCallback;
     }
   | {
       type: "post-process";
       async: false;
-      func: (code: string, file?: string) => string;
+      func: PrePostPluginCallback;
     };
-type PreProcessExtension =
+export type PreProcessPlugin =
   | {
       type: "pre-process";
       async: true;
-      func: (code: string, file?: string) => Promise<string>;
+      func: PrePostPluginAsyncCallback;
     }
   | {
       type: "pre-process";
       async: false;
-      func: (code: string, file?: string) => string;
+      func: PrePostPluginCallback;
     };
-type DependencyExtension =
+export type DependencyPlugin =
   | {
       type: "dependency";
       async: true;
@@ -58,41 +151,42 @@ type DependencyExtension =
       func: (files: DepsFile[]) => DepsFile[];
     };
 
-type ASTExtension =
-  | {
-      type: "ast";
-      async: true;
-      func: (sourceFile: ts.SourceFile) => Promise<ts.SourceFile>;
-    }
-  | {
-      type: "ast";
-      async: false;
-      func: (sourceFile: ts.SourceFile) => ts.SourceFile;
-    };
-type SuseeExtension =
-  | PostProcessExtension
-  | PreProcessExtension
-  | DependencyExtension
-  | ASTExtension;
-
-type OutFiles = {
-  commonjs: string | undefined;
-  commonjsTypes: string | undefined;
-  esm: string | undefined;
-  esmTypes: string | undefined;
-  main: string | undefined;
-  module: string | undefined;
-  types: string | undefined;
+export type ASTPlugin = {
+  type: "ast";
+  func: ASTPluginCallback;
 };
-type Target = "commonjs" | "esm" | "both";
 
-type Exports = Record<
-  string,
-  {
-    import?: { default: string; types: string };
-    require?: { default: string; types: string };
-  }
->;
+export type ASTPluginParserReturnFn = (
+  fileName: string,
+  sourceCode: string,
+  compilerOptions: ts.CompilerOptions,
+) => string;
+
+export type PrePostProcessPluginParserReturnFn = (
+  code: string,
+  file?: string,
+) => string;
+
+export type DependencyPluginParserReturnFn = (files: DepsFile[]) => DepsFile[];
+
+export type PluginParserReturnFn =
+  | ASTPluginParserReturnFn
+  | PrePostProcessPluginParserReturnFn
+  | DependencyPluginParserReturnFn;
+
+export type SuseePluginFunc = (
+  ...args: any[]
+) => ASTPlugin | DependencyPlugin | PostProcessPlugin | PreProcessPlugin;
+
+export type SuseePlugin =
+  | ASTPlugin
+  | DependencyPlugin
+  | PostProcessPlugin
+  | PreProcessPlugin
+  | SuseePluginFunc;
+export type SuseePlugins = SuseePlugin[];
+
+// config
 
 type NodeJsOutput = {
   target: "nodejs";
@@ -121,7 +215,7 @@ type WebOutput = { target: "web"; outFile: string; htmlTemplate: string };
 /**
  * Entry point for SuSee configuration
  */
-type EntryPoint = {
+export interface EntryPoint {
   /**
    * Entry of file path of package
    *
@@ -151,12 +245,12 @@ type EntryPoint = {
    * default - true
    */
   renameDuplicates?: boolean;
-};
+}
 
 /**
  * Configuration for Susee Bundler
  */
-interface SuSeeConfig {
+export interface SuSeeConfig {
   /**
    * Array of entry points object
    *
@@ -168,22 +262,38 @@ interface SuSeeConfig {
    *
    * default - []
    */
-  extensions?: SuseeExtension[];
+  plugins?: SuseePlugins;
 }
 
-export type {
-  SuseeExtension,
-  Target,
-  EntryPoint,
-  SuSeeConfig,
-  DepsFile,
-  DuplicatesNameMap,
-  NamesMap,
-  NamesSet,
-  NamesSets,
-  BundleHandler,
-  Exports,
-  OutFiles,
+export type TsCompilerOptionsReturn = {
+  defaultCompilerOptions: ts.CompilerOptions;
+  commonJsCompilerOptions: () => ts.CompilerOptions;
+  esmCompilerOptions: () => ts.CompilerOptions;
+  webCompilerOptions: () => ts.CompilerOptions;
 };
 
-export { pkgName };
+export interface InitCollationsResult {
+  dependencyFilesObject: DepsFile[];
+  tsOptions: TsCompilerOptionsReturn;
+  plugins: SuseePlugin[];
+  includeNodeModules: boolean;
+  allowRenameDuplicates: boolean;
+  allowUpdatePackageJson: boolean;
+  outputTarget: "nodejs" | "web";
+  entryFileName: string;
+  outputFormat: "commonjs" | "esm" | "both" | undefined;
+  exportPath: "." | `./${string}` | undefined;
+}
+
+export interface BundleResult {
+  tsOptions: TsCompilerOptionsReturn;
+  plugins: SuseePlugin[];
+  includeNodeModules: boolean;
+  allowRenameDuplicates: boolean;
+  allowUpdatePackageJson: boolean;
+  outputTarget: "nodejs" | "web";
+  entryFileName: string;
+  outputFormat: "commonjs" | "esm" | "both" | undefined;
+  exportPath: "." | `./${string}` | undefined;
+  bundleContent: string;
+}
