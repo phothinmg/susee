@@ -1,6 +1,6 @@
 import path from "node:path";
 import ts from "typescript";
-import { wait, writeOutFile } from "./helpers";
+import { wait, writeOutFile } from "./helpers.js";
 import type SuSee from "@suseejs/types";
 
 class Compilers {

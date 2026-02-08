@@ -1,8 +1,8 @@
 import ts from "typescript";
 import fs from "node:fs";
 import path from "node:path";
-import Compilers from "./compilers";
-import * as help from "./helpers";
+import Compilers from "./compilers.js";
+import * as help from "./helpers.js";
 
 const compiler = new Compilers();
 
