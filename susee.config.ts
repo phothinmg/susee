@@ -1,5 +1,6 @@
-import type { SuSeeConfig } from "./src/config";
+import type { SuSeeConfig, plugins, SuseePlugin } from "./src/types.js";
 import bannerTextHook from "@suseejs/banner-text";
+import utils from "@suseejs/utils";
 
 const licenseText = `
 /*! *****************************************************************************
@@ -11,13 +12,32 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 ***************************************************************************** */
 `.trim();
 
-export default {
-	entryPoints: [
-		{
-			entry: "src/index.ts",
-			exportPath: ".",
-			moduleType: "both",
-		},
-	],
-	postProcessHooks: [bannerTextHook(licenseText)],
-} as SuSeeConfig;
+const banner = (text: string): SuseePlugin => {
+  return {
+    type: "post-process",
+    async: false,
+    func: (code, file) => {
+      if (file && utils.extname(file) === ".js") {
+        code = `${text}\n\n${code}\n`;
+      }
+      return code;
+    },
+  };
+};
+
+const config: SuSeeConfig = {
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      output: {
+        target: "nodejs",
+        exportPath: ".",
+        format: "both",
+        allowUpdatePackageJson: false,
+      },
+    },
+  ],
+  plugins: [banner(licenseText)],
+};
+
+export default config;

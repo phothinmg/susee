@@ -1,6 +1,18 @@
 node_modules
-_docs
-_opt
-a.ts
+# Build output dirs
 dist
 bin
+# Notes
+_docs
+_opt
+# Locals
+a.ts
+b.ts
+aa.cts
+bb.cts
+aaa.js
+bbb.js
+aaaa.cjs
+bbbb.cjs
+abc.json
+def.json
