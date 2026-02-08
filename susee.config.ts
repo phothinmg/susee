@@ -13,31 +13,31 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 `.trim();
 
 const banner = (text: string): SuseePlugin => {
-  return {
-    type: "post-process",
-    async: false,
-    func: (code, file) => {
-      if (file && utils.extname(file) === ".js") {
-        code = `${text}\n\n${code}\n`;
-      }
-      return code;
-    },
-  };
+	return {
+		type: "post-process",
+		async: false,
+		func: (code, file) => {
+			if (file && utils.extname(file) === ".js") {
+				code = `${text}\n\n${code}\n`;
+			}
+			return code;
+		},
+	};
 };
 
 const config: SuSeeConfig = {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      output: {
-        target: "nodejs",
-        exportPath: ".",
-        format: "both",
-        allowUpdatePackageJson: false,
-      },
-    },
-  ],
-  plugins: [banner(licenseText)],
+	entryPoints: [
+		{
+			entry: "src/index.ts",
+			output: {
+				target: "nodejs",
+				exportPath: ".",
+				format: "both",
+				allowUpdatePackageJson: false,
+			},
+		},
+	],
+	plugins: [banner(licenseText)],
 };
 
 export default config;

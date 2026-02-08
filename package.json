@@ -1,78 +1,78 @@
 {
-  "name": "susee",
-  "version": "0.1.1",
-  "description": "Tiny TypeScript Bundler",
-  "type": "module",
-  "main": "dist/index.cjs",
-  "types": "dist/index.d.cts",
-  "module": "dist/index.mjs",
-  "exports": {
-    ".": {
-      "import": {
-        "default": "./dist/index.mjs",
-        "types": "./dist/index.d.mts"
-      },
-      "require": {
-        "default": "./dist/index.cjs",
-        "types": "./dist/index.d.cts"
-      }
-    }
-  },
-  "bin": {
-    "susee": "./bin/index.mjs"
-  },
-  "scripts": {
-    "build": "tsx build.ts",
-    "test": "tsx --test",
-    "fmt": "biome format --write",
-    "lint": "biome check src --write",
-    "prepare": "husky"
-  },
-  "keywords": [
-    "bundler"
-  ],
-  "author": {
-    "name": "Pho Thin Mg",
-    "email": "phothinmg@disroot.org",
-    "url": "https://phothinmg.github.io/"
-  },
-  "license": "Apache-2.0",
-  "dependencies": {
-    "@phothinmaung/resolves": "^1.0.0",
-    "@suseejs/anonymous": "^0.1.3",
-    "@suseejs/dependencies": "^0.1.1",
-    "@suseejs/duplicates": "^0.1.2",
-    "@suseejs/tcolor": "^0.1.0",
-    "@suseejs/transformer": "^0.1.0",
-    "@suseejs/tsconfig": "^0.1.1",
-    "@suseejs/types": "^0.1.3",
-    "@suseejs/utils": "^0.1.2",
-    "terser": "^5.46.0",
-    "typescript": "^5.9.3"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
-    "@suseejs/banner-text": "^0.1.1",
-    "@types/node": "^25.1.0",
-    "husky": "^9.1.7",
-    "tsx": "^4.21.0"
-  },
-  "files": [
-    "package.json",
-    "README.md",
-    "LICENSE",
-    "dist/**/*",
-    "bin/**/*"
-  ],
-  "publishConfig": {
-    "provenance": true,
-    "access": "public"
-  },
-  "repository": {
-    "url": "git+https://github.com/phothinmg/susee.git",
-    "type": "git"
-  },
-  "bugs": {
-    "url": "https://github.com/phothinmg/susee/issues"
-  }
+	"name": "susee",
+	"version": "0.1.1",
+	"description": "Tiny TypeScript Bundler",
+	"type": "module",
+	"main": "dist/index.cjs",
+	"types": "dist/index.d.cts",
+	"module": "dist/index.mjs",
+	"exports": {
+		".": {
+			"import": {
+				"default": "./dist/index.mjs",
+				"types": "./dist/index.d.mts"
+			},
+			"require": {
+				"default": "./dist/index.cjs",
+				"types": "./dist/index.d.cts"
+			}
+		}
+	},
+	"bin": {
+		"susee": "./bin/index.mjs"
+	},
+	"scripts": {
+		"build": "tsx build.ts",
+		"test": "tsx --test",
+		"fmt": "biome format --write",
+		"lint": "biome check src --write",
+		"prepare": "husky"
+	},
+	"keywords": [
+		"bundler"
+	],
+	"author": {
+		"name": "Pho Thin Mg",
+		"email": "phothinmg@disroot.org",
+		"url": "https://phothinmg.github.io/"
+	},
+	"license": "Apache-2.0",
+	"dependencies": {
+		"@phothinmaung/resolves": "^1.0.0",
+		"@suseejs/anonymous": "^0.1.3",
+		"@suseejs/dependencies": "^0.1.1",
+		"@suseejs/duplicates": "^0.1.2",
+		"@suseejs/tcolor": "^0.1.0",
+		"@suseejs/transformer": "^0.1.0",
+		"@suseejs/tsconfig": "^0.1.1",
+		"@suseejs/types": "^0.1.3",
+		"@suseejs/utils": "^0.1.2",
+		"terser": "^5.46.0",
+		"typescript": "^5.9.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.13",
+		"@suseejs/banner-text": "^0.1.1",
+		"@types/node": "^25.1.0",
+		"husky": "^9.1.7",
+		"tsx": "^4.21.0"
+	},
+	"files": [
+		"package.json",
+		"README.md",
+		"LICENSE",
+		"dist/**/*",
+		"bin/**/*"
+	],
+	"publishConfig": {
+		"provenance": true,
+		"access": "public"
+	},
+	"repository": {
+		"url": "git+https://github.com/phothinmg/susee.git",
+		"type": "git"
+	},
+	"bugs": {
+		"url": "https://github.com/phothinmg/susee/issues"
+	}
 }
