@@ -5,6 +5,8 @@
 		"dependensia",
 		"dexport",
 		"evenodd",
+		"highlightjs",
+		"hljs",
 		"kadown",
 		"Maung",
 		"phothinmaung",
@@ -13,6 +15,7 @@
 		"susee",
 		"suseejs",
 		"topo",
-		"vitepress"
+		"vitepress",
+		"webp"
 	]
 }
