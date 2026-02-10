@@ -1,4 +1,3 @@
-import resolves from "@phothinmaung/resolves";
 import utils from "@suseejs/utils";
 //@ts-ignore
 import { exec } from "node:child_process";
