@@ -7,6 +7,10 @@ const prefixKey = "AnonymousName";
 
 const genName = uniqueName().setPrefix({ key: prefixKey, value: "a_" });
 
+/**
+ * A BundleVisitor that updates the call expression, property access expression, and new expression
+ * with the anonymous default import name.
+ */
 const anonymousExportVisitor: BundleVisitor = (
 	context,
 	depsTree,

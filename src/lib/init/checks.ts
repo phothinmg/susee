@@ -5,6 +5,13 @@ import type { DepsFiles } from "@suseejs/types";
 import ts from "typescript";
 
 namespace checks {
+	/**
+	 * Checks the given dependencies for type errors. If any type errors are found,
+	 * an error message is printed to the console and the process exits with a code of 1.
+	 * @param dep The dependencies to check for type errors
+	 * @param compilerOptions The compiler options to use when checking for type errors
+	 * @returns true if no type errors are found, false otherwise
+	 */
 	function typesCheck(dep: DepsFiles, compilerOptions: ts.CompilerOptions) {
 		if (!compilerOptions.noCheck) {
 			const filePaths = dep.map((i) => i.file);
@@ -45,6 +52,11 @@ namespace checks {
 		}
 	}
 
+	/**
+	 * Check the module type of the given dependencies.
+	 * @param _dep The dependencies to check for module type
+	 * @returns true if all dependencies are ESM, false otherwise
+	 */
 	function moduleType(_dep: DepsFiles) {
 		let _esmCount = 0;
 		let cjsCount = 0;

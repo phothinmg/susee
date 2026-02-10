@@ -57,7 +57,15 @@ class GetOptions {
 	}
 }
 
-function getOptions(point: Point) {
+/**
+ * Returns an instance of GetOptions, which provides various methods
+ * to generate different sets of compiler options based on the
+ * given Point.
+ *
+ * @param {Point} point - The point to generate compiler options for.
+ * @returns {GetOptions}
+ */
+function getOptions(point: Point): GetOptions {
 	return new GetOptions(point);
 }
 

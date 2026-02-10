@@ -21,6 +21,11 @@ function findProperty(node: ts.Node) {
 	return properties;
 }
 
+/**
+ * A BundleVisitor that removes import declarations and import equals declarations from a TypeScript program.
+ * The visitor collects the names of type-only import-equals and emits a named/default type import if the type-only import-equals is not a namespace-type alias.
+ * The visitor also collects the names of type-only imports of namespace-type aliases and emits a namespace type import if the type-only import-equals is not a namespace-type alias.
+ */
 const removeImportsVisitor: BundleVisitor = (
 	context,
 	depsTree,

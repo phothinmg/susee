@@ -5,6 +5,15 @@ import getConfig from "./config.js";
 import generateDependencies from "./deps.js";
 import getOptions from "./tsCompilerOptions.js";
 
+/**
+ * This function takes a susee configuration object and returns a promise that resolves with a `CollatedReturn` object.
+ * The function iterates over the `points` array in the susee configuration object.
+ * For each point, it generates the dependencies using the `generateDependencies` function.
+ * It then checks if the dependencies are valid using the `checks.init` function.
+ * If the dependencies are invalid, it exits the process with code 1.
+ * If the dependencies are valid, it constructs a `CollatedPoint` object and adds it to the result array.
+ * Finally, it returns a `CollatedReturn` object with the result array and the `allowUpdatePackageJson` flag.
+ */
 async function collections(): Promise<CollatedReturn> {
 	const __config = await getConfig();
 	const points = __config.points;

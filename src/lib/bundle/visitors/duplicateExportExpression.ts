@@ -2,6 +2,10 @@ import type { BundleVisitor, NamesSets, NodeVisit } from "@suseejs/types";
 import ts from "typescript";
 import { getFileKey } from "./visitorHelpers.js";
 
+/**
+ * A BundleVisitor that updates the call expression, property access expression, and new expression
+ * with the anonymous default import name.
+ */
 const duplicateExportExpressionVisitor: BundleVisitor = (
 	context,
 	depsTree,

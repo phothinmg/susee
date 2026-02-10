@@ -148,6 +148,14 @@ class Compiler {
 		});
 		console.timeEnd(tcolor.cyan(`Compiled esm for ${_name} export path`));
 	}
+	/**
+	 * Compile bundled code for each entry point.
+	 * This function will iterate through each entry point and compile code according to the format specified.
+	 * If the format is "commonjs", it will compile the code into commonjs format.
+	 * If the format is "esm", it will compile the code into esm format.
+	 * If the format is "both", it will compile the code into both commonjs and esm formats.
+	 * If the allowUpdatePackageJson flag is set to true, it will update the package.json according to the compiled file paths.
+	 */
 	async compile() {
 		for (const point of this.object.points) {
 			await utilities.wait(500);

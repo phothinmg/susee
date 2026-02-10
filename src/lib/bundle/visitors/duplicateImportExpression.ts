@@ -2,6 +2,17 @@ import type { BundleVisitor, NamesSets, NodeVisit } from "@suseejs/types";
 import ts from "typescript";
 import { getModuleKeyFromSpecifier } from "./visitorHelpers.js";
 
+/**
+ * A BundleVisitor that updates the import declaration, property access expression, and new expression
+ * with the anonymous default import name.
+ *
+ * @param {BundleVisitor} context - The BundleVisitor context.
+ * @param {DepsTree} depsTree - The deps tree object.
+ * @param {SourceFile} sourceFile - The source file object.
+ * @param {NamesSets} exportNameMap - The export name map object.
+ * @param {NamesSets} importNameMap - The import name map object.
+ * @return {NodeVisit} visit - The NodeVisit function.
+ */
 const duplicateImportExpressionVisitor: BundleVisitor = (
 	context,
 	depsTree,

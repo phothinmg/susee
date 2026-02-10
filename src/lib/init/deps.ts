@@ -24,6 +24,25 @@ const checkExport = (str: string, file: string) => {
 	}
 };
 
+/**
+ * Generate dependencies graph for given entry file.
+ *
+ * This function will return an array of dependencies file objects.
+ * Each object will contain the following properties:
+ * - file: path to the file
+ * - content: content of the file
+ * - length: length of the content in bytes
+ * - includeDefExport: whether the file includes export default or export = statement
+ * - size: an object containing the following properties:
+ *   - logical: size of the file in bytes
+ *   - allocated: size of the file in bytes on disk
+ *   - utf8: size of the file in bytes when encoded in utf8
+ *   - buffBytes: size of the file in bytes when encoded in buffer
+ *
+ * @param {string} entryFile - path to the entry file
+ * @param {SuseePlugins} plugins - array of plugins
+ * @returns {Promise<DepsFiles>}
+ */
 async function generateDependencies(
 	entryFile: string,
 	plugins: SuseePlugins,

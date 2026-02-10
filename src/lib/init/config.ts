@@ -62,11 +62,11 @@ function checkEntries(entries: EntryPoint[]) {
 	}
 }
 
-const getOutDir = (exp: "." | `./${string}`, dir?: string) => {
-	const _dir = dir ?? "dist";
-	return exp === "." ? _dir : `${_dir}/${exp.slice(2)}`;
-};
-
+/**
+ * Get SuSee configuration from susee.config file (susee.config.ts, susee.config.js, susee.config.mjs)
+ * @returns {Promise<ConfigReturns>} - SuSee configuration
+ * @throws {Error} - when no susee.config file found
+ */
 async function getConfig(): Promise<ConfigReturns> {
 	const configPath = getConfigPath();
 	if (configPath === undefined) {

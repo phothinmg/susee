@@ -14,6 +14,17 @@ const dupName = uniqueName().setPrefix({
 	value: "d_",
 });
 
+/**
+ * A BundleVisitor that updates the variable declaration, function declaration, and class declaration
+ * with the duplicates name.
+ *
+ * @param {BundleVisitor} context - The BundleVisitor context.
+ * @param {DepsTree} depsTree - The deps tree object.
+ * @param {SourceFile} sourceFile - The source file object.
+ * @param {DuplicatesNameMap} namesMap - The DuplicatesNameMap object.
+ * @param {NamesSets} callNameMap - The NamesSets object.
+ * @return {NodeVisit} visit - The NodeVisit function.
+ */
 const duplicateUpdateVisitor: BundleVisitor = (
 	context,
 	depsTree,

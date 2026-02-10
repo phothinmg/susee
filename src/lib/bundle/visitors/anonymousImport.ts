@@ -2,6 +2,10 @@ import path from "node:path";
 import type { BundleVisitor, NamesSets, NodeVisit } from "@suseejs/types";
 import ts from "typescript";
 
+/**
+ * A BundleVisitor that updates the import declaration, property access expression, and new expression
+ * with the anonymous default import name.
+ */
 const anonymousImportVisitor: BundleVisitor = (
 	context,
 	depsTree,

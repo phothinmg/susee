@@ -2,6 +2,11 @@ import type { BundleVisitor, NodeVisit } from "@suseejs/types";
 import utilities from "@suseejs/utils";
 import ts from "typescript";
 
+/**
+ * A BundleVisitor that removes all exports from the given source file.
+ * It does so by stripping "export" modifiers from function, class, interface, type alias, enum, and variable declarations,
+ * and by removing "export { foo }" and "export default" declarations entirely.
+ */
 const removeExportsVisitor: BundleVisitor = (context) => {
 	const { factory } = context;
 	const visit: NodeVisit = (node) => {

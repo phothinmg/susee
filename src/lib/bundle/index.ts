@@ -27,6 +27,22 @@ import removeImportsVisitor from "./visitors/removeImports.js";
 
 // ------------------------------------------------------------------------------------//
 
+/**
+ * Bundles a TypeScript project into a single file.
+ * This function takes a {@link CollatedPoint} object as input and returns a {@link BundleResultPoint} object.
+ * The function applies the following steps:
+ * 1. Call dependency plugins.
+ * 2. Handle duplicates.
+ * 3. Handling anonymous imports and exports.
+ * 4. Remove Imports.
+ * 5. Remove Exports from dependencies only.
+ * 6. Handle imported statements.
+ * 7. Create final content.
+ * 8. Call pre-process plugins.
+ * 9. Returns.
+ * @param {CollatedPoint} point - A {@link CollatedPoint} object.
+ * @returns {Promise<BundleResultPoint>} - A promise resolves with a {@link BundleResultPoint} object.
+ */
 async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 	let depsFiles = point.depFiles;
 	const reName = point.rename;

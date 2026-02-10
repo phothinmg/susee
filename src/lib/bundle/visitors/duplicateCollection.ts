@@ -7,6 +7,16 @@ import type {
 } from "@suseejs/types";
 import ts from "typescript";
 
+/**
+ * A BundleVisitor that updates the collection (variable, function, class, etc)
+ * declaration with the anonymous default import name.
+ *
+ * @param {BundleVisitor} context - The BundleVisitor context.
+ * @param {DepsTree} depsTree - The deps tree object.
+ * @param {SourceFile} sourceFile - The source file object.
+ * @param {DuplicatesNameMap} namesMap - The DuplicatesNameMap object.
+ * @return {NodeVisit} visit - The NodeVisit function.
+ */
 const duplicateCollectionVisitor: BundleVisitor = (
 	context,
 	depsTree,
