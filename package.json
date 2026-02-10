@@ -1,6 +1,6 @@
 {
   "name": "@suseejs/types",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Type definitions for suseejs",
   "type": "module",
   "main": "dist/commonjs/index.js",
