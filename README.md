@@ -24,105 +24,111 @@ npm i susee
 
 `susee.config.ts` at root of project
 
-```ts
-import type { SuSeeConfig } from "susee";
-import bannerTextHook from "@suseejs/banner-text";
+<div align="center">
+  <h1>susee</h1>
+</div>
 
-const license = "/*! My Library */";
+susee is a small TypeScript bundler that collates a package's local dependency tree, then emits compiled artifacts for ESM and/or CommonJS along with type definitions. It can also update `package.json` exports automatically for main and subpath exports.
 
-export default {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      exportPath: ".",
-      moduleType: "both",
-    },
-  ],
-  postProcessHooks: [bannerTextHook(licenseText)],
-} as SuSeeConfig;
+**Key points**
+- Produces ESM (`.mjs`) and/or CommonJS (`.cjs`) outputs and corresponding type files (`.d.mts` / `.d.cts`).
+- Merges local dependency files into a single bundled input for the TypeScript compiler.
+- Supports simple plugin hooks at multiple stages: `dependency`, `pre-process`, and `post-process`.
+- When enabled, updates `package.json` fields (`type`, `main`, `module`, `types`, `exports`) for the main export and merges subpath exports.
+
+## Installation
+
+```bash
+npm install susee
 ```
 
-### Bundle in terminal
+## Usage
+
+CLI (global or npx):
 
 ```bash
 npx susee
 ```
 
-### `package.json`
-
-```json
-{
-  "scripts": {
-    "build": "susee"
-  }
-}
-```
-
-## Configuration for Susee Bundler
+programmatic (exports):
 
 ```ts
-interface EntryPoint {
-  /**
-   * Entry of file path of package
-   *
-   * required
-   */
-  entry: string;
-  /**
-   * Export path for package
-   *
-   * required
-   */
-  exportPath: "." | `./${string}`;
-  /**
-   * Output module type of package , commonjs,esm or both esm and commonjs
-   *
-   * default - esm
-   */
-  moduleType?: "commonjs" | "esm" | "both";
-  /**
-   * Custom tsconfig.json path for package typescript compiler options
-   *
-   * Priority -
-   *  1. this custom tsconfig.json
-   *  2. tsconfig.json at root directory
-   *  3. default compiler options of susee
-   *
-   * default - undefined
-   */
-  tsconfigFilePath?: string | undefined;
-}
+import { susee } from "susee";
 
-/**
- * Configuration for Susee Bundler
- */
-interface SuSeeConfig {
-  /**
-   * Array of entry points object
-   *
-   * required
-   */
-  entryPoints: EntryPoint[];
-  /**
-   * Array of hooks to handle bundled and compiled code
-   *
-   * default - []
-   */
-  postProcessHooks?: SuSee.PostProcessHook[];
-  /**
-   * Allow bundler to update your package.json.
-   *
-   * default - true
-   */
-  allowUpdatePackageJson?: boolean;
-  /**
-   * Your package run on NodeJs env or not
-   *
-   * default - true
-   */
-  nodeEnv?: boolean;
-  renameDuplicates?: boolean;
-}
+await susee();
+```
+
+## Configuration
+
+Place a `susee.config.ts` at your project root. The config defines entry points and optional hooks.
+
+Example `susee.config.ts`:
+
+```ts
+import type { SuSeeConfig } from "susee";
+
+const config: SuSeeConfig = {
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: "both", // "esm" | "commonjs" | "both"
+      renameDuplicates: true,
+      outDir: "dist",
+    },
+  ],
+  postProcessHooks: [], // optional plugins
+  allowUpdatePackageJson: true,
+};
+
+export default config;
+```
+
+Config summary:
+- `entryPoints`: array of entry definitions
+  - `entry` — path to entry file (required)
+  - `exportPath` — `.` or a subpath like `./feature`
+  - `format` — `esm` | `commonjs` | `both` (defaults to `esm`)
+  - `tsconfigFilePath` — optional custom tsconfig for that entry
+  - `renameDuplicates` — whether to auto-rename duplicate identifiers
+  - `outDir` — where compiled files will be written (e.g. `dist`)
+- `postProcessHooks` — array of `post-process` plugins (sync or async)
+- `allowUpdatePackageJson` — when true, `package.json` is updated with produced entry points
+
+## Plugins
+
+Plugins in the ecosystem have three common types:
+- `dependency` — transform dependency list before bundling
+- `pre-process` — modify the joined bundle text before compilation
+- `post-process` — modify emitted output files
+
+Plugins may be provided as objects or factories (functions returning the plugin). They may be synchronous or async — the bundler handles both.
+
+## package.json updates
+
+When `allowUpdatePackageJson` is enabled, susee will:
+- set `type` to `module` (to ensure ESM compatibility)
+- add/update `main`, `module`, `types` and `exports` for the main export when building the package root
+- merge subpath exports for non-root `exportPath`s without overwriting unrelated exports
+
+Output file name hints (produced by the compiler):
+- ESM JS -> `.mjs`
+- ESM types -> `.d.mts`
+- CJS JS -> `.cjs`
+- CJS types -> `.d.cts`
+
+## Limitations & notes
+- The bundler only processes local TypeScript files and does not bundle `node_modules` packages.
+- The entry file should be an ESM-compatible TypeScript file.
+- Exports from the entry file are not removed — only dependency exports may be stripped during bundling.
+
+## Contributing and tests
+
+- Build and run tests with the repo scripts (see `package.json`):
+
+```bash
+npm run build
+npm test
 ```
 
 ## License
