@@ -19,7 +19,7 @@ import collections from "./lib/init/index.js";
  * 8. Call pre-process plugins.
  * 9. Returns.
  */
-async function susee():Promise<void>{
+async function susee(): Promise<void> {
 	console.info(`${tcolor.green("Start")} : ${tcolor.cyan("bundling")}`);
 	const collected = await collections();
 	await utilities.wait(1000);
