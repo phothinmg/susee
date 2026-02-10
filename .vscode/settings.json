@@ -12,6 +12,7 @@
 		"replacecjs",
 		"susee",
 		"suseejs",
-		"topo"
+		"topo",
+		"vitepress"
 	]
 }

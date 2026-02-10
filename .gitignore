@@ -16,3 +16,7 @@ aaaa.cjs
 bbbb.cjs
 abc.json
 def.json
+
+# vitepress 
+docs/.vitepress/dist
+docs/.vitepress/cache

@@ -3,7 +3,7 @@
   <h1>susee</h1>
 </div>
 
-susee is a small TypeScript bundler that collates a package's local dependency tree, then emits compiled artifacts for ESM and/or CommonJS along with type definitions. It can also update `package.json` exports automatically for main and subpath exports.
+Susee is a small TypeScript bundler that collates a package's local dependency tree, then emits compiled artifacts for ESM and/or CommonJS along with type definitions. It can also update `package.json` exports automatically for main and subpath exports.
 
 **Key points**
 - Produces ESM (`.mjs`) and/or CommonJS (`.cjs`) outputs and corresponding type files (`.d.mts` / `.d.cts`).
