@@ -2,38 +2,6 @@ import type ts from "typescript";
 
 export const pkgName = "SU-SEE";
 
-export type Target = "commonjs" | "esm" | "both";
-export interface DepsFile {
-  file: string;
-  content: string;
-}
-export interface NamesSet {
-  base: string;
-  file: string;
-  newName: string;
-  isEd?: boolean;
-}
-export type NamesSets = NamesSet[];
-
-export type DuplicatesNameMap = Map<string, Set<{ file: string }>>;
-
-export type BundleHandler = ({ file, content }: DepsFile) => DepsFile;
-
-export type NodeVisit = (node: ts.Node) => ts.Node;
-export type BundleVisitorFunc = (
-  context: ts.TransformationContext,
-  { file, content }: DepsFile,
-  sourceFile: ts.SourceFile,
-  ...args: any[]
-) => NodeVisit;
-
-export interface NamesMap {
-  base: string;
-  file: string;
-  short: string;
-  oldName: string;
-}
-
 export type OutFiles = {
   commonjs: string | undefined;
   commonjsTypes: string | undefined;
@@ -43,7 +11,6 @@ export type OutFiles = {
   module: string | undefined;
   types: string | undefined;
 };
-
 export type Exports = Record<
   string,
   {
@@ -51,130 +18,71 @@ export type Exports = Record<
     require?: { default: string; types: string };
   }
 >;
-export type LocalHookReturn = string | ts.Node | BundleHandler;
-export type LocalHookReturnFun<P extends any[] = any[], M = LocalHookReturn> = (
-  ...args: P
-) => M;
-export type LocalHookKey =
-  | "commonJsHook"
-  | "removeCommonJsExports"
-  | "removeEsmExports";
-
-export type LocalHook<P extends any[] = any[], M = LocalHookReturn> = {
-  name: LocalHookKey;
-  fun: LocalHookReturnFun<P, M>;
-};
-
-export interface DepsObj {
-  depFiles: DepsFile[];
-  modOpts: {
-    commonjs: () => {
-      isMain: boolean;
-      compilerOptions: ts.CompilerOptions;
-      out_dir: string;
-    };
-    esm: () => {
-      isMain: boolean;
-      compilerOptions: ts.CompilerOptions;
-      out_dir: string;
-    };
+/*=========================== DEPS ============================= */
+export interface DepsFile {
+  file: string;
+  content: string;
+  length: number;
+  size: {
+    logical: number;
+    allocated: number | null;
+    utf8: number;
+    buffBytes: number;
   };
-  generalOptions: ts.CompilerOptions;
+  includeDefExport: boolean;
 }
+export type DepsFiles = Array<DepsFile>;
+export type DepsFilesTree = [Record<string, any>, ...DepsFiles];
 
-export type RequireImportObject = {
-  isNamespace: boolean;
-  isTypeOnly: boolean;
-  isTypeNamespace: boolean;
-  source: string;
-  importedString: string | undefined;
-  importedObject: string[] | undefined;
-};
+/*=========================== PLUGINS ============================= */
+// callback functions
 
-export type TypeObj = Record<string, string[]>;
-
-// plugin
-
-export type PrePostPluginAsyncCallback = (
-  code: string,
-  file?: string,
-) => Promise<string>;
-export type PrePostPluginCallback = (code: string, file?: string) => string;
-
-export type ASTPluginCallback = (
+type ASTPluginCallback = (
   node: ts.Node,
   factory: ts.NodeFactory,
   file: string,
 ) => ts.Node;
-export type ASTPluginAsyncCallback = (
-  node: ts.Node,
-  factory: ts.NodeFactory,
-  file: string,
-) => Promise<ts.Node>;
-
-export type DependencyPluginAsyncCallback = (
-  files: DepsFile[],
-) => Promise<DepsFile[]>;
-export type DependencyPluginCallback = (files: DepsFile[]) => DepsFile[];
-
-export type PostProcessPlugin =
+// plugins
+type PostProcessPlugin =
   | {
       type: "post-process";
       async: true;
-      func: PrePostPluginAsyncCallback;
+      func: (code: string, file?: string) => Promise<string>;
     }
   | {
       type: "post-process";
       async: false;
-      func: PrePostPluginCallback;
+      func: (code: string, file?: string) => string;
     };
-export type PreProcessPlugin =
+type PreProcessPlugin =
   | {
       type: "pre-process";
       async: true;
-      func: PrePostPluginAsyncCallback;
+      func: (code: string, file?: string) => Promise<string>;
     }
   | {
       type: "pre-process";
       async: false;
-      func: PrePostPluginCallback;
+      func: (code: string, file?: string) => string;
     };
-export type DependencyPlugin =
+type DependencyPlugin =
   | {
       type: "dependency";
       async: true;
-      func: (files: DepsFile[]) => Promise<DepsFile[]>;
+      func: (depsFiles: DepsFiles) => Promise<DepsFiles>;
     }
   | {
       type: "dependency";
       async: false;
-      func: (files: DepsFile[]) => DepsFile[];
+      func: (depsFiles: DepsFiles) => DepsFiles;
     };
 
-export type ASTPlugin = {
+type ASTPlugin = {
   type: "ast";
   func: ASTPluginCallback;
 };
 
-export type ASTPluginParserReturnFn = (
-  fileName: string,
-  sourceCode: string,
-  compilerOptions: ts.CompilerOptions,
-) => string;
-
-export type PrePostProcessPluginParserReturnFn = (
-  code: string,
-  file?: string,
-) => string;
-
-export type DependencyPluginParserReturnFn = (files: DepsFile[]) => DepsFile[];
-
-export type PluginParserReturnFn =
-  | ASTPluginParserReturnFn
-  | PrePostProcessPluginParserReturnFn
-  | DependencyPluginParserReturnFn;
-
-export type SuseePluginFunc = (
+type SuseePluginFunc = (
   ...args: any[]
 ) => ASTPlugin | DependencyPlugin | PostProcessPlugin | PreProcessPlugin;
 
@@ -186,31 +94,21 @@ export type SuseePlugin =
   | SuseePluginFunc;
 export type SuseePlugins = SuseePlugin[];
 
-// config
-
-type NodeJsOutput = {
-  target: "nodejs";
-  /**
-   *  path for package
-   *
-   * required
-   */
+/* ==================== Config ============================== */
+export interface Point {
+  entry: string;
   exportPath: "." | `./${string}`;
-  /**
-   * Output module type of package , commonjs,esm or both esm and commonjs
-   *
-   * default - esm
-   */
-  format?: "commonjs" | "esm" | "both";
-  /**
-   * Allow bundler to update your package.json.
-   *
-   * default - true
-   */
-  allowUpdatePackageJson?: boolean;
-};
+  format: "commonjs" | "esm" | "both";
+  tsconfigFilePath: string | undefined;
+  renameDuplicates: boolean;
+  outDir: string;
+}
 
-type WebOutput = { target: "web"; outFile: string; htmlTemplate: string };
+export type ConfigReturns = {
+  points: Point[];
+  plugins: SuseePlugins;
+  allowUpdatePackageJson: boolean;
+};
 
 /**
  * Entry point for SuSee configuration
@@ -227,7 +125,18 @@ export interface EntryPoint {
    *
    * required
    */
-  output: NodeJsOutput | WebOutput;
+  /**
+   *  path for package
+   *
+   * required
+   */
+  exportPath: "." | `./${string}`;
+  /**
+   * Output module type of package , commonjs,esm or both esm and commonjs
+   *
+   * default - esm
+   */
+  format?: "commonjs" | "esm" | "both";
   /**
    * Custom tsconfig.json path for package typescript compiler options
    *
@@ -258,42 +167,87 @@ export interface SuSeeConfig {
    */
   entryPoints: EntryPoint[];
   /**
+   * Out directory
+   *
+   * default - dist
+   */
+  outDir?: string;
+  /**
    * Array of susee extension
    *
    * default - []
    */
   plugins?: SuseePlugins;
+  /**
+   * Allow bundler to update your package.json.
+   *
+   * default - true
+   */
+  allowUpdatePackageJson?: boolean;
 }
 
-export type TsCompilerOptionsReturn = {
-  defaultCompilerOptions: ts.CompilerOptions;
-  commonJsCompilerOptions: () => ts.CompilerOptions;
-  esmCompilerOptions: () => ts.CompilerOptions;
-  webCompilerOptions: () => ts.CompilerOptions;
+/* ====================== INIT =========================== */
+export interface CollatedPoint {
+  fileName: string;
+  exportPath: "." | `./${string}`;
+  format: "commonjs" | "esm" | "both";
+  rename: boolean;
+  outDir: string;
+  tsOptions: {
+    cjs: ts.CompilerOptions;
+    esm: ts.CompilerOptions;
+    default: ts.CompilerOptions;
+  };
+  depFiles: DepsFiles;
+  plugins: SuseePlugins;
+}
+
+export interface CollatedReturn {
+  points: CollatedPoint[];
+  allowUpdatePackageJson: boolean;
+}
+
+/* ==================================== BUNDLE ============================= */
+export type BundleHandler = (depsTree: DepsFile) => DepsFile;
+export type NodeVisit = (node: ts.Node, isGlobalScope?: boolean) => ts.Node;
+export type BundleVisitor = (
+  context: ts.TransformationContext,
+  depsTree: DepsFile,
+  sourceFile: ts.SourceFile,
+  ...args: any[]
+) => NodeVisit;
+
+export type BundleCreator = (
+  bundleVisitor: BundleVisitor,
+  compilerOptions: ts.CompilerOptions,
+  ...args: any[]
+) => BundleHandler;
+
+export type RequireImportObject = {
+  isNamespace: boolean;
+  isTypeOnly: boolean;
+  isTypeNamespace: boolean;
+  source: string;
+  importedString: string | undefined;
+  importedObject: string[] | undefined;
 };
 
-export interface InitCollationsResult {
-  dependencyFilesObject: DepsFile[];
-  tsOptions: TsCompilerOptionsReturn;
-  plugins: SuseePlugin[];
-  includeNodeModules: boolean;
-  allowRenameDuplicates: boolean;
-  allowUpdatePackageJson: boolean;
-  outputTarget: "nodejs" | "web";
-  entryFileName: string;
-  outputFormat: "commonjs" | "esm" | "both" | undefined;
-  exportPath: "." | `./${string}` | undefined;
-}
+export type TypeObj = Record<string, string[]>;
 
-export interface BundleResult {
-  tsOptions: TsCompilerOptionsReturn;
-  plugins: SuseePlugin[];
-  includeNodeModules: boolean;
-  allowRenameDuplicates: boolean;
+export interface NamesSet {
+  base: string;
+  file: string;
+  newName: string;
+  isEd?: boolean;
+}
+export type NamesSets = NamesSet[];
+
+export type DuplicatesNameMap = Map<string, Set<{ file: string }>>;
+
+export interface BundleResultPoint extends CollatedPoint {
+  bundledContent: string;
+}
+export interface BundledResult {
+  points: BundleResultPoint[];
   allowUpdatePackageJson: boolean;
-  outputTarget: "nodejs" | "web";
-  entryFileName: string;
-  outputFormat: "commonjs" | "esm" | "both" | undefined;
-  exportPath: "." | `./${string}` | undefined;
-  bundleContent: string;
 }
