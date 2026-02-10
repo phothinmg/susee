@@ -11,27 +11,27 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 `.trim();
 
 const text = (str: string): SuseePlugin => {
-  return {
-    type: "post-process",
-    async: false,
-    func(code, file) {
-      if (file?.match(/.js/g)) {
-        code = `${str}\n${code}`;
-      }
-      return code;
-    },
-  };
+	return {
+		type: "post-process",
+		async: false,
+		func(code, file) {
+			if (file?.match(/.js/g)) {
+				code = `${str}\n${code}`;
+			}
+			return code;
+		},
+	};
 };
 
 const config: SuSeeConfig = {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: "both",
-    },
-  ],
-  plugins: [text(licenseText)],
+	entryPoints: [
+		{
+			entry: "src/index.ts",
+			exportPath: ".",
+			format: "both",
+		},
+	],
+	plugins: [text(licenseText)],
 };
 
 export default config;
