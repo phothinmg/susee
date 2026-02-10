@@ -1,3 +1,3 @@
-import getConfig from "../../../../src/entry/getConfig";
+import getConfig from "../../../../src/lib/init/config.js";
 
 await getConfig();

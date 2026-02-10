@@ -1,16 +1,16 @@
-import type { SuSeeConfig } from "../../../src/config";
+import type { SuSeeConfig } from "@suseejs/types";
 
 export default {
-	entryPoints: [
-		{
-			entry: "src/index.ts",
-			exportPath: ".",
-			moduleType: "both",
-		},
-		{
-			entry: "src/config/index.ts",
-			exportPath: ".",
-			moduleType: "both",
-		},
-	],
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: "both",
+    },
+    {
+      entry: "src/config/index.ts",
+      exportPath: ".",
+      format: "both",
+    },
+  ],
 } as SuSeeConfig;

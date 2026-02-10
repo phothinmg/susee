@@ -29,9 +29,7 @@ class GetOptions {
 		let { types, lib, ...restOptions } = this._options;
 		// normalize types into an array
 		if (types) {
-			if (types.includes("node")) {
-				types = types;
-			} else {
+			if (!types.includes("node")) {
 				types = ["node", ...types];
 			}
 		} else {

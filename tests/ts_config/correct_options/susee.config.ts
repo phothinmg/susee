@@ -1,11 +1,18 @@
 import type { SuSeeConfig } from "@suseejs/types";
 
-export default {
+const config: SuSeeConfig = {
   entryPoints: [
     {
       entry: "src/index.ts",
       exportPath: ".",
       format: "both",
     },
+    {
+      entry: "src/mod.ts",
+      exportPath: "./mod",
+      format: "both",
+    },
   ],
-} as SuSeeConfig;
+};
+
+export default config;

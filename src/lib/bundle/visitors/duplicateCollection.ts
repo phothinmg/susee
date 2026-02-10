@@ -13,7 +13,7 @@ const duplicateCollectionVisitor: BundleVisitor = (
 	_sourceFile,
 	namesMap: DuplicatesNameMap,
 ) => {
-	const { factory } = context;
+	//const { factory } = context;
 	const visit: NodeVisit = (node, isGlobalScope = true) => {
 		// Global declarations များကိုသာ collect လုပ်မယ်
 		if (isGlobalScope) {
