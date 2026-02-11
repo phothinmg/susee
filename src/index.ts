@@ -30,6 +30,7 @@ export interface DepsFile {
     buffBytes: number;
   };
   includeDefExport: boolean;
+  type?: "cjs" | "esm";
 }
 export type DepsFiles = Array<DepsFile>;
 export type DepsFilesTree = [Record<string, any>, ...DepsFiles];
@@ -37,52 +38,63 @@ export type DepsFilesTree = [Record<string, any>, ...DepsFiles];
 /*=========================== PLUGINS ============================= */
 // callback functions
 
-type ASTPluginCallback = (
-  node: ts.Node,
-  factory: ts.NodeFactory,
-  file: string,
-) => ts.Node;
+export type PluginTypes = "plugin" | "hooks";
+
 // plugins
-type PostProcessPlugin =
+export type PostProcessPlugin =
   | {
       type: "post-process";
       async: true;
       func: (code: string, file?: string) => Promise<string>;
+      group?: PluginTypes;
+      name?: string;
     }
   | {
       type: "post-process";
       async: false;
       func: (code: string, file?: string) => string;
+      group?: PluginTypes;
+      name?: string;
     };
-type PreProcessPlugin =
+export type PreProcessPlugin =
   | {
       type: "pre-process";
       async: true;
       func: (code: string, file?: string) => Promise<string>;
+      group?: PluginTypes;
+      name?: string;
     }
   | {
       type: "pre-process";
       async: false;
       func: (code: string, file?: string) => string;
+      group?: PluginTypes;
+      name?: string;
     };
-type DependencyPlugin =
+export type DependencyPlugin =
   | {
       type: "dependency";
       async: true;
       func: (depsFiles: DepsFiles) => Promise<DepsFiles>;
+      group?: PluginTypes;
+      name?: string;
     }
   | {
       type: "dependency";
       async: false;
       func: (depsFiles: DepsFiles) => DepsFiles;
+      group?: PluginTypes;
+      name?: string;
     };
 
-type ASTPlugin = {
+export type ASTPlugin = {
   type: "ast";
-  func: ASTPluginCallback;
+  func: (node: ts.Node, factory: ts.NodeFactory, file: string) => ts.Node;
+  group?: PluginTypes;
+  name?: string;
 };
 
-type SuseePluginFunc = (
+export type SuseePluginFunc = (
   ...args: any[]
 ) => ASTPlugin | DependencyPlugin | PostProcessPlugin | PreProcessPlugin;
 
