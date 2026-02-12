@@ -1,3 +1,11 @@
+/**
+ * Merge a list of import statements into a minimal set of import statements.
+ * The algorithm works by grouping imports by module path and then merging them into a single import statement.
+ * Type imports are processed first, and then regular imports are processed.
+ * The resulting import statements are sorted alphabetically by module path.
+ * @param imports - A list of import statements to merge.
+ * @returns A list of merged import statements.
+ */
 function mergeImportsStatement(imports: string[]): string[] {
 	const importMap = new Map<string, Set<string>>();
 	const typeImportMap = new Map<string, Set<string>>();

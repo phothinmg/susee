@@ -1,3 +1,10 @@
+/**
+ * Returns an object with three functions: setPrefix, getName, getPrefix.
+ * setPrefix sets a prefix for a given key.
+ * getName returns a unique name based on the given prefix and input.
+ * getPrefix returns the prefix for a given key.
+ *
+ */
 function uniqueName() {
 	const storedPrefix: Map<string, [string, number]> = new Map();
 

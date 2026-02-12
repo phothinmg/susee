@@ -1,3 +1,8 @@
+/**
+ * Splits a camelCase string into a space-separated string.
+ * @param {string} str - The string to split.
+ * @returns {string} The split string.
+ */
 function splitCamelCase(str: string) {
 	const splitString = str
 		.replace(/([a-z])([A-Z])/g, "$1 $2")

@@ -5,7 +5,7 @@ import type { DepsFile, DepsFiles, SuseePlugins } from "@suseejs/types";
 import utilities from "@suseejs/utils";
 import ts from "typescript";
 
-//---------------
+
 async function fileSizes(path: string) {
 	const s = await fs.promises.stat(path);
 	const logical = s.size; // bytes in file

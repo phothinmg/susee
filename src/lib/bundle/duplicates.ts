@@ -17,6 +17,11 @@ const callNameMap: NamesSets = [];
 const importNameMap: NamesSets = [];
 const exportNameMap: NamesSets = [];
 
+/**
+ * Returns an object with a getName function that generates a unique name based on a given prefix.
+ * The generated name is in the format of <prefix><input>_<count>, where <count> is the number of times the getName function has been called with the same <prefix> and <input>.
+ * @returns an object with a getName function.
+ */
 function __uniqueName() {
 	const storedPrefix: Map<string, string> = new Map();
 
@@ -56,6 +61,12 @@ const dupName = __uniqueName().setPrefix({
 	value: "__duplicatesNames__",
 });
 
+/**
+ * Normalize a file path by removing the extension from the file name.
+ * If the file name is "index", the directory path will be returned instead.
+ * @param filePath - The file path to be normalized.
+ * @returns The normalized file path.
+ */
 const normalizePathKey = (filePath: string) => {
 	const parsed = path.parse(filePath);
 	let noExt = path.join(parsed.dir, parsed.name);
@@ -67,6 +78,16 @@ const normalizePathKey = (filePath: string) => {
 
 const getFileKey = (filePath: string) => normalizePathKey(filePath);
 
+/**
+ * Given a module specifier expression, returns a string representing the module specifier.
+ * If the module specifier is a string literal, the string text is returned.
+ * If the module specifier is an identifier expression, the identifier name is returned.
+ * If the module specifier is a relative or absolute path, the path is resolved against the containing file and returned as a normalized path.
+ * @param moduleSpecifier - The module specifier expression.
+ * @param sourceFile - The source file containing the module specifier expression.
+ * @param containingFile - The containing file path.
+ * @returns A string representing the module specifier.
+ */
 const getModuleKeyFromSpecifier = (
 	moduleSpecifier: ts.Expression,
 	sourceFile: ts.SourceFile,
@@ -85,6 +106,14 @@ const getModuleKeyFromSpecifier = (
 	return spec;
 };
 
+/**
+ * A bundle handler that takes a list of source files and transforms them into renamed source files.
+ * The transformation is done in a series of steps, each step transforms the source files based on the given maps.
+ * The order of the steps is important, as it will determine the final output.
+ * @param deps - A list of source files to be transformed.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A list of transformed source files.
+ */
 const callExpression = (compilerOptions: ts.CompilerOptions): BundleHandler => {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
 		const sourceFile = ts.createSourceFile(
@@ -273,6 +302,13 @@ const exportExpression = (
 	}; // returns
 };
 
+/**
+ * This handler will transform the import expressions in the source files.
+ * It will iterate through the import declarations and update the names of the imported modules.
+ * It will also update the names of the imported identifiers.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A transformed source file.
+ */
 const importExpression = (
 	compilerOptions: ts.CompilerOptions,
 ): BundleHandler => {
@@ -394,6 +430,11 @@ const importExpression = (
 	}; // returns
 };
 
+/**
+ * Collect global declarations and local scope declarations
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A transformed source file.
+ */
 const collector = (compilerOptions: ts.CompilerOptions): BundleHandler => {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
 		const sourceFile = ts.createSourceFile(
@@ -484,6 +525,11 @@ const collector = (compilerOptions: ts.CompilerOptions): BundleHandler => {
 	}; // returns
 };
 
+/**
+ * Update the given source files by renaming duplicate global declarations and local scope declarations.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A transformed source file.
+ */
 const updater = (compilerOptions: ts.CompilerOptions): BundleHandler => {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
 		const sourceFile = ts.createSourceFile(

@@ -9,6 +9,16 @@ import type {
 import utilities from "@suseejs/utils";
 import ts from "typescript";
 
+/**
+ * A bundle handler that takes a list of source files and transforms them into renamed source files.
+ * The transformation is done in a series of steps:
+ * - Case 1: Strip "export" modifiers from function, class, interface, type alias, enum and variable declarations.
+ * - Case 2: Remove "export { foo }" entirely.
+ * - Case 3: Handle "export default ..." by removing the line.
+ * @param deps - A list of source files to be transformed.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A list of transformed source files.
+ */
 function esmExportRemoveHandler(
 	compilerOptions: ts.CompilerOptions,
 ): BundleHandler {
@@ -134,6 +144,11 @@ let properties: string[] = [];
 const typeObj: TypeObj = {};
 const typesNames: string[] = [];
 
+/**
+ * Finds all the properties accessed in the given node.
+ * @param {ts.Node} node - The node to search through.
+ * @returns {string[]} - An array of all the properties accessed.
+ */
 function findProperty(node: ts.Node) {
 	const properties: string[] = [];
 	if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression)) {
@@ -144,6 +159,12 @@ function findProperty(node: ts.Node) {
 	return properties;
 }
 
+/**
+ * A bundle handler that removes all imports from the given source files.
+ * @param {string[]} removedStatements - An array of strings to be removed from the source files.
+ * @param {ts.CompilerOptions} compilerOptions - The options for the TypeScript compiler.
+ * @returns {DepFile} - The transformed source file.
+ */
 function importAllRemoveHandler(
 	removedStatements: string[],
 	compilerOptions: ts.CompilerOptions,
@@ -344,6 +365,14 @@ function importAllRemoveHandler(
 	};
 }
 
+/**
+ * A bundle handler that takes a list of source files and transforms them into renamed source files.
+ * The transformation is done in a series of steps, each step transforms the source files based on the given maps.
+ * The order of the steps is important, as it will determine the final output.
+ * @param removedStatements - A list of statements to be removed from the source files.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A list of transformed source files.
+ */
 const removeHandlers = async (
 	removedStatements: string[],
 	compilerOptions: ts.CompilerOptions,

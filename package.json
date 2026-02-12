@@ -39,7 +39,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@phothinmaung/resolves": "^1.0.0",
-    "@suseejs/anonymous": "^0.1.4",
     "@suseejs/dependencies": "^0.1.1",
     "@suseejs/tcolor": "^0.1.0",
     "@suseejs/transformer": "^0.1.0",

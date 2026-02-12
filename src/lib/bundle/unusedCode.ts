@@ -41,7 +41,7 @@ function clearUnusedCode(
 
 	const markDefined = (name: string, exported = false) => {
 		const prev = defined.get(name);
-		defined.set(name, { exported: !!(prev && prev.exported) || exported });
+		defined.set(name, { exported: !!prev?.exported || exported });
 	};
 
 	// First pass: collect defined names (imports, vars, funcs, classes) and used identifiers
@@ -76,6 +76,7 @@ function clearUnusedCode(
 				collectBindingNames(d.name, []);
 				const names: string[] = [];
 				collectBindingNames(d.name, names);
+				// biome-ignore  lint/suspicious/useIterableCallbackReturn : ts
 				names.forEach((n) => markDefined(n, exported));
 			});
 		} else if (
@@ -131,8 +132,6 @@ function clearUnusedCode(
 	const transformer: ts.TransformerFactory<ts.SourceFile> = (
 		context: ts.TransformationContext,
 	) => {
-		const { factory } = context;
-
 		const visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
 			// ImportDeclaration: remove unused imported specifiers / names
 			if (ts.isImportDeclaration(node) && node.importClause) {
@@ -200,6 +199,7 @@ function clearUnusedCode(
 						node.modifiers,
 						newImportClause,
 						node.moduleSpecifier,
+						// biome-ignore  lint/suspicious/noExplicitAny : ts
 						(node as any).assertClause,
 					);
 				}
@@ -221,6 +221,7 @@ function clearUnusedCode(
 			// VariableStatement: remove whole statement only if none of declared names are used
 			if (ts.isVariableStatement(node)) {
 				const names: string[] = [];
+				// biome-ignore  lint/suspicious/useIterableCallbackReturn : ts
 				node.declarationList.declarations.forEach((d) =>
 					collectBindingNames(d.name, names),
 				);

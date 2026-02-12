@@ -29,6 +29,11 @@ class Compiler {
 	private _isUpdate() {
 		return this.object.allowUpdatePackageJson;
 	}
+	/**
+	 * Compiles a single file into a CommonJS module.
+	 * @param point - a point containing the file name, source code, format, and plugins.
+	 * @returns A promise that resolves when the compilation is complete.
+	 */
 	private async _commonjs(point: BundleResultPoint) {
 		const isMain = point.exportPath === ".";
 		const _name = isMain ? "Main" : splitCamelCase(point.exportPath.slice(2));
@@ -90,6 +95,11 @@ class Compiler {
 			`${tcolor.cyan(`Compiled CJS`)} -> ${tcolor.brightCyan(_name)} ${tcolor.cyan(`export path`)}`,
 		);
 	}
+	/**
+	 * Compiles a single file into an ESM module.
+	 * @param point - a point containing the file name, source code, format, and plugins.
+	 * @returns A promise that resolves when the compilation is complete.
+	 */
 	private async _esm(point: BundleResultPoint) {
 		const isMain = point.exportPath === ".";
 		const _name = isMain ? "Main" : splitCamelCase(point.exportPath.slice(2));

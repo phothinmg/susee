@@ -6,9 +6,8 @@ import type {
 	CollatedPoint,
 	CollatedReturn,
 } from "@suseejs/types";
-import utilities from "@suseejs/utils";
 import { splitCamelCase } from "../helpers.js";
-import anonymous from "./anonymous.js";
+import anonymousHandler from "./anonymous.js";
 import duplicateHandlers from "./duplicates.js";
 import mergeImportsStatement from "./mergeImports.js";
 import removeHandlers from "./removes.js";
@@ -50,7 +49,7 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 		depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
 	}
 	// 3. Handling anonymous imports and exports
-	depsFiles = await anonymous(depsFiles, compilerOptions);
+	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
 	//await utilities.wait(1000);
 	// 4. Remove Imports
 	const removed = await removeHandlers(removedStatements, compilerOptions);

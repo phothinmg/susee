@@ -165,6 +165,12 @@ namespace checks {
 		return true;
 	}
 
+	/**
+	 * Check if all the dependencies have valid TypeScript extensions.
+	 * Valid extensions are .ts, .mts, .cts, and .tsx.
+	 * @param _dep - A list of dependencies to be checked.
+	 * @returns True if all dependencies have valid extensions, false otherwise.
+	 */
 	function ext(_dep: DepsFiles) {
 		const tsExt = new Set([".ts", ".mts", ".cts", ".tsx"]);
 		for (const dep of _dep) {
@@ -179,6 +185,13 @@ namespace checks {
 		return true;
 	}
 
+	/**
+	 * Initialize the bundler with the given dependencies and compiler options.
+	 * It checks if all dependencies have valid TypeScript extensions, checks if the dependencies tree is valid, and checks for type errors.
+	 * @param _dep - A list of dependencies to be checked.
+	 * @param options - The options for the TypeScript compiler.
+	 * @returns A promise that resolves to true if all checks pass, false otherwise.
+	 */
 	export async function init(_dep: DepsFiles, options: ts.CompilerOptions) {
 		const res = resolves([
 			[ext, _dep],

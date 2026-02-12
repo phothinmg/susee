@@ -15,6 +15,14 @@ const genName = uniqueName().setPrefix({
 	value: "__anonymous__",
 });
 
+/**
+ * A bundle handler that takes a list of source files and transforms them into renamed source files.
+ * The transformation is done in a series of steps, each step transforms the source files based on the given maps.
+ * The order of the steps is important, as it will determine the final output.
+ * @param deps - A list of source files to be transformed.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A list of transformed source files.
+ */
 function anonymousCallExpressionHandler(
 	compilerOptions: ts.CompilerOptions,
 ): BundleHandler {
@@ -103,6 +111,12 @@ function anonymousCallExpressionHandler(
 	};
 }
 
+/**
+ * A transformer that handles anonymous default exports by assigning them a name
+ *
+ * @param {ts.TransformationContext} context - transformation context
+ * @returns {ts.Transformer<ts.SourceFile>} - transformer
+ */
 function anonymousExportHandler(
 	compilerOptions: ts.CompilerOptions,
 ): BundleHandler {
@@ -405,6 +419,13 @@ function anonymousExportHandler(
 	};
 }
 
+/**
+ * A bundle handler that takes a list of source files and transforms them into renamed source files.
+ * The transformation is done in a series of steps, each step transforms the source files based on the given maps.
+ * The order of the steps is important, as it will determine the final output.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A list of transformed source files.
+ */
 function anonymousImportHandler(
 	compilerOptions: ts.CompilerOptions,
 ): BundleHandler {
@@ -468,7 +489,15 @@ function anonymousImportHandler(
 	};
 }
 
-const anonymous = async (
+/**
+ * A bundle handler that takes a list of source files and transforms them into renamed source files.
+ * The transformation is done in a series of steps, each step transforms the source files based on the given maps.
+ * The order of the steps is important, as it will determine the final output.
+ * @param deps - A list of source files to be transformed.
+ * @param compilerOptions - The options for the TypeScript compiler.
+ * @returns A list of transformed source files.
+ */
+const anonymousHandler = async (
 	deps: DepsFile[],
 	compilerOptions: ts.CompilerOptions,
 ): Promise<DepsFile[]> => {
@@ -484,4 +513,4 @@ const anonymous = async (
 	return deps;
 };
 
-export default anonymous;
+export default anonymousHandler;

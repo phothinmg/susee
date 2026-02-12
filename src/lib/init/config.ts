@@ -9,7 +9,13 @@ import type {
 import utilities from "@suseejs/utils";
 import ts from "typescript";
 
-// -------------
+
+/**
+ * Finds the path of the susee.config file if it exists.
+ * It checks for the existence of "susee.config.ts", "susee.config.js", and "susee.config.mjs" in the current working directory.
+ * The first file found is returned.
+ * @returns {string | undefined} - path to the susee.config file or undefined if it does not exist.
+ */
 const getConfigPath = () => {
 	const fileNames = ["susee.config.ts", "susee.config.js", "susee.config.mjs"];
 	let configFile: string | undefined;
@@ -23,7 +29,14 @@ const getConfigPath = () => {
 	return configFile;
 };
 
-//---------
+
+/**
+ * Checks if the given entries have at least one entry and if there are any duplicate export paths.
+ * If there are no entries, it will exit with code 1 and print an error message.
+ * If there are any duplicate export paths, it will exit with code 1 and print an error message.
+ * It will also check if each entry file exists, if not, it will exit with code 1 and print an error message.
+ * @param {EntryPoint[]} entries - array of entry points
+ */
 function checkEntries(entries: EntryPoint[]) {
 	if (entries.length < 1) {
 		console.error(
