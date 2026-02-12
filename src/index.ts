@@ -104,7 +104,7 @@ export type SuseePlugin =
   | PostProcessPlugin
   | PreProcessPlugin
   | SuseePluginFunc;
-export type SuseePlugins = SuseePlugin[];
+type SuseePlugins = SuseePlugin[] | string[];
 
 /* ==================== Config ============================== */
 export interface Point {
