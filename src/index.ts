@@ -36,9 +36,6 @@ export type DepsFiles = Array<DepsFile>;
 export type DepsFilesTree = [Record<string, any>, ...DepsFiles];
 
 /*=========================== PLUGINS ============================= */
-// callback functions
-
-export type PluginTypes = "plugin" | "hooks";
 
 // plugins
 export type PostProcessPlugin =
@@ -46,52 +43,38 @@ export type PostProcessPlugin =
       type: "post-process";
       async: true;
       func: (code: string, file?: string) => Promise<string>;
-      group?: PluginTypes;
-      name?: string;
     }
   | {
       type: "post-process";
       async: false;
       func: (code: string, file?: string) => string;
-      group?: PluginTypes;
-      name?: string;
     };
 export type PreProcessPlugin =
   | {
       type: "pre-process";
       async: true;
       func: (code: string, file?: string) => Promise<string>;
-      group?: PluginTypes;
-      name?: string;
     }
   | {
       type: "pre-process";
       async: false;
       func: (code: string, file?: string) => string;
-      group?: PluginTypes;
-      name?: string;
     };
 export type DependencyPlugin =
   | {
       type: "dependency";
       async: true;
       func: (depsFiles: DepsFiles) => Promise<DepsFiles>;
-      group?: PluginTypes;
-      name?: string;
     }
   | {
       type: "dependency";
       async: false;
       func: (depsFiles: DepsFiles) => DepsFiles;
-      group?: PluginTypes;
-      name?: string;
     };
 
 export type ASTPlugin = {
   type: "ast";
   func: (node: ts.Node, factory: ts.NodeFactory, file: string) => ts.Node;
-  group?: PluginTypes;
-  name?: string;
 };
 
 export type SuseePluginFunc = (
@@ -104,7 +87,7 @@ export type SuseePlugin =
   | PostProcessPlugin
   | PreProcessPlugin
   | SuseePluginFunc;
-type SuseePlugins = SuseePlugin[] | string[];
+export type SuseePlugins = SuseePlugin[];
 
 /* ==================== Config ============================== */
 export interface Point {
