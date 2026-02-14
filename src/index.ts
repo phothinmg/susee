@@ -77,7 +77,7 @@ export type ASTPlugin = {
   func: (node: ts.Node, factory: ts.NodeFactory, file: string) => ts.Node;
 };
 
-export type SuseePluginFunc = (
+export type SuseePluginFunction = (
   ...args: any[]
 ) => ASTPlugin | DependencyPlugin | PostProcessPlugin | PreProcessPlugin;
 
@@ -85,9 +85,7 @@ export type SuseePlugin =
   | ASTPlugin
   | DependencyPlugin
   | PostProcessPlugin
-  | PreProcessPlugin
-  | SuseePluginFunc;
-export type SuseePlugins = SuseePlugin[];
+  | PreProcessPlugin;
 
 /* ==================== Config ============================== */
 export interface Point {
@@ -101,7 +99,7 @@ export interface Point {
 
 export type ConfigReturns = {
   points: Point[];
-  plugins: SuseePlugins;
+  plugins: (SuseePlugin | SuseePluginFunction)[];
   allowUpdatePackageJson: boolean;
 };
 
@@ -172,7 +170,7 @@ export interface SuSeeConfig {
    *
    * default - []
    */
-  plugins?: SuseePlugins;
+  plugins?: (SuseePlugin | SuseePluginFunction)[];
   /**
    * Allow bundler to update your package.json.
    *
@@ -194,7 +192,7 @@ export interface CollatedPoint {
     default: ts.CompilerOptions;
   };
   depFiles: DepsFiles;
-  plugins: SuseePlugins;
+  plugins: (SuseePlugin | SuseePluginFunction)[];
 }
 
 export interface CollatedReturn {
