@@ -43,38 +43,45 @@ export type PostProcessPlugin =
       type: "post-process";
       async: true;
       func: (code: string, file?: string) => Promise<string>;
+      name?: string;
     }
   | {
       type: "post-process";
       async: false;
       func: (code: string, file?: string) => string;
+      name?: string;
     };
 export type PreProcessPlugin =
   | {
       type: "pre-process";
       async: true;
       func: (code: string, file?: string) => Promise<string>;
+      name?: string;
     }
   | {
       type: "pre-process";
       async: false;
       func: (code: string, file?: string) => string;
+      name?: string;
     };
 export type DependencyPlugin =
   | {
       type: "dependency";
       async: true;
       func: (depsFiles: DepsFiles) => Promise<DepsFiles>;
+      name?: string;
     }
   | {
       type: "dependency";
       async: false;
       func: (depsFiles: DepsFiles) => DepsFiles;
+      name?: string;
     };
 
 export type ASTPlugin = {
   type: "ast";
   func: (node: ts.Node, factory: ts.NodeFactory, file: string) => ts.Node;
+  name?: string;
 };
 
 export type SuseePluginFunction = (
