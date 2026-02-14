@@ -41,7 +41,6 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 			}
 		}
 	} //--
-	//await utilities.wait(1000);
 	// 2. Handle duplicates
 	if (reName) {
 		depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
@@ -50,11 +49,9 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 	}
 	// 3. Handling anonymous imports and exports
 	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
-	//await utilities.wait(1000);
 	// 4. Remove Imports
 	const removed = await removeHandlers(removedStatements, compilerOptions);
 	depsFiles = depsFiles.map(removed[0]);
-	//await utilities.wait(500);
 	// 5. Remove Exports from dependencies only
 	// not remove exports from entry file
 	const deps_files = depsFiles.slice(0, -1).map(removed[1]);
@@ -81,7 +78,6 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 		})
 		.join("\n")
 		.trim();
-	//await utilities.wait(1000);
 	// text join order is important here
 	let content = `${importStatements}\n${depFilesContent}\n${mainFileContent}`;
 	// remove ;

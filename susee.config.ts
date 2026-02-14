@@ -1,4 +1,6 @@
-import type { SuSeeConfig, SuseePlugin } from "@suseejs/types";
+import type { SuSeeConfig } from "@suseejs/types";
+import suseeBannerText from "@suseejs/plugin-banner-text";
+import suseeTerser from "@suseejs/plugin-terser";
 
 const licenseText = `
 /*! *****************************************************************************
@@ -10,19 +12,6 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 ***************************************************************************** */
 `.trim();
 
-const text = (str: string): SuseePlugin => {
-	return {
-		type: "post-process",
-		async: false,
-		func(code, file) {
-			if (file?.match(/.js/g)) {
-				code = `${str}\n${code}`;
-			}
-			return code;
-		},
-	};
-};
-
 const config: SuSeeConfig = {
 	entryPoints: [
 		{
@@ -31,7 +20,7 @@ const config: SuSeeConfig = {
 			format: "both",
 		},
 	],
-	plugins: [text(licenseText)],
+	plugins: [suseeBannerText(licenseText), suseeTerser()],
 };
 
 export default config;

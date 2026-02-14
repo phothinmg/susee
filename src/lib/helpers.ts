@@ -3,7 +3,7 @@
  * @param {string} str - The string to split.
  * @returns {string} The split string.
  */
-function splitCamelCase(str: string) {
+function splitCamelCase(str: string): string {
 	const splitString = str
 		.replace(/([a-z])([A-Z])/g, "$1 $2")
 		.replace(/(_|-|\/)([a-z] || [A-Z])/g, " ")

@@ -9,7 +9,6 @@ import type {
 import utilities from "@suseejs/utils";
 import ts from "typescript";
 
-
 /**
  * Finds the path of the susee.config file if it exists.
  * It checks for the existence of "susee.config.ts", "susee.config.js", and "susee.config.mjs" in the current working directory.
@@ -28,7 +27,6 @@ const getConfigPath = () => {
 	}
 	return configFile;
 };
-
 
 /**
  * Checks if the given entries have at least one entry and if there are any duplicate export paths.

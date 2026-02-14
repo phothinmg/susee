@@ -1,10 +1,9 @@
 import { Buffer } from "node:buffer";
 import fs from "node:fs";
 import dependencies from "@suseejs/dependencies";
-import type { DepsFile, DepsFiles, SuseePlugins } from "@suseejs/types";
+import type { DepsFile, DepsFiles } from "@suseejs/types";
 import utilities from "@suseejs/utils";
 import ts from "typescript";
-
 
 async function fileSizes(path: string) {
 	const s = await fs.promises.stat(path);
@@ -40,16 +39,12 @@ const checkExport = (str: string, file: string) => {
  *   - buffBytes: size of the file in bytes when encoded in buffer
  *
  * @param {string} entryFile - path to the entry file
- * @param {SuseePlugins} plugins - array of plugins
  * @returns {Promise<DepsFiles>}
  */
-async function generateDependencies(
-	entryFile: string,
-	plugins: SuseePlugins,
-): Promise<DepsFiles> {
+async function generateDependencies(entryFile: string): Promise<DepsFiles> {
 	const deps = await dependencies(entryFile);
 	const sorted = deps.sort(); // get dependencies graph
-	let depsFiles: DepsFiles = [];
+	const depsFiles: DepsFiles = [];
 
 	await utilities.wait(1000);
 
@@ -59,6 +54,14 @@ async function generateDependencies(
 		const s = await fileSizes(file);
 		const length = content.length;
 		const includeDefExport = checkExport(content, file);
+		const _sourceFile = ts.createSourceFile(
+			file,
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+		);
+		const _moduleTypes = utilities.checkModuleType(_sourceFile, file);
+		const _types = _moduleTypes.isCommonJs ? "cjs" : "esm";
 		const _files = {
 			file,
 			content,
@@ -70,23 +73,11 @@ async function generateDependencies(
 				utf8: new TextEncoder().encode(content).length,
 				buffBytes: Buffer.byteLength(content, "utf8"),
 			},
+			type: _types,
 		} as DepsFile;
 		depsFiles.push(_files);
 	}
-	// call dependency plugins
-	if (plugins.length) {
-		for (const plugin of plugins) {
-			const _plug = typeof plugin === "function" ? plugin() : plugin;
-			if (_plug.type === "dependency") {
-				if (_plug.async) {
-					depsFiles = await _plug.func(depsFiles);
-				} else {
-					depsFiles = _plug.func(depsFiles);
-				}
-				await utilities.wait(1000);
-			}
-		}
-	}
+
 	return depsFiles;
 }
 

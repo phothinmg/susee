@@ -54,19 +54,25 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
+			const ext = path.extname(outName);
 			// ------------------------------------
-			if (plugins.length) {
-				for (let plugin of plugins) {
-					plugin = typeof plugin === "function" ? plugin() : plugin;
-					if (plugin.type === "post-process") {
-						if (plugin.async) {
-							content = await plugin.func(content, outName);
-						} else {
-							content = plugin.func(content, outName);
+			if (ext === ".js") {
+				if (plugins.length) {
+					for (let plugin of plugins) {
+						plugin = typeof plugin === "function" ? plugin() : plugin;
+						if (plugin.type === "post-process") {
+							if (plugin.async) {
+								content = await plugin.func(content, outName);
+							} else {
+								content = plugin.func(content, outName);
+							}
 						}
 					}
 				}
 			}
+
+			//----------------------------------------------------------------
+
 			if (this._isUpdate()) {
 				if (outName.match(/.js/g)) {
 					this.files.commonjs = outName.replace(/.js/g, ".cjs");
@@ -120,19 +126,24 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
-			if (plugins.length) {
-				for (let plugin of plugins) {
-					plugin = typeof plugin === "function" ? plugin() : plugin;
-					if (plugin.type === "post-process") {
-						if (plugin.async) {
-							content = await plugin.func(content, outName);
-						} else {
-							content = plugin.func(content, outName);
+			const ext = path.extname(outName);
+			// ------------------------------------
+			if (ext === ".js") {
+				if (plugins.length) {
+					for (let plugin of plugins) {
+						plugin = typeof plugin === "function" ? plugin() : plugin;
+						if (plugin.type === "post-process") {
+							if (plugin.async) {
+								content = await plugin.func(content, outName);
+							} else {
+								content = plugin.func(content, outName);
+							}
 						}
 					}
 				}
 			}
-			// ------------------------------------------
+			//----------------------------------------------------------------
+
 			if (this._isUpdate()) {
 				if (outName.match(/.js/g)) {
 					this.files.esm = outName.replace(/.js/g, ".mjs");

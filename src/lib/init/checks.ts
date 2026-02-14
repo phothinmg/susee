@@ -51,6 +51,14 @@ namespace checks {
 			}
 		}
 	}
+	export async function types(
+		dep: DepsFiles,
+		compilerOptions: ts.CompilerOptions,
+	) {
+		const res = resolves([[typesCheck, dep, compilerOptions]]);
+		const result = await res.series();
+		return result[0];
+	}
 
 	/**
 	 * Check the module type of the given dependencies.
@@ -185,18 +193,10 @@ namespace checks {
 		return true;
 	}
 
-	/**
-	 * Initialize the bundler with the given dependencies and compiler options.
-	 * It checks if all dependencies have valid TypeScript extensions, checks if the dependencies tree is valid, and checks for type errors.
-	 * @param _dep - A list of dependencies to be checked.
-	 * @param options - The options for the TypeScript compiler.
-	 * @returns A promise that resolves to true if all checks pass, false otherwise.
-	 */
-	export async function init(_dep: DepsFiles, options: ts.CompilerOptions) {
+	export async function moduleAndExtension(_dep: DepsFiles) {
 		const res = resolves([
-			[ext, _dep],
 			[moduleType, _dep],
-			[typesCheck, _dep, options],
+			[ext, _dep],
 		]);
 		const results = await res.concurrent();
 		return results.every((r) => r === true);

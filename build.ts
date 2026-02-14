@@ -1,5 +1,4 @@
 import utils from "@suseejs/utils";
-//@ts-ignore
 import { exec } from "node:child_process";
 import { susee } from "./src/index.js";
 import utilities from "@suseejs/utils";

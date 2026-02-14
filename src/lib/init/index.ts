@@ -1,3 +1,4 @@
+import tcolor from "@suseejs/tcolor";
 import type { CollatedPoint, CollatedReturn } from "@suseejs/types";
 import ts from "typescript";
 import checks from "./checks.js";
@@ -6,27 +7,45 @@ import generateDependencies from "./deps.js";
 import getOptions from "./tsCompilerOptions.js";
 
 /**
- * This function takes a susee configuration object and returns a promise that resolves with a `CollatedReturn` object.
- * The function iterates over the `points` array in the susee configuration object.
- * For each point, it generates the dependencies using the `generateDependencies` function.
- * It then checks if the dependencies are valid using the `checks.init` function.
- * If the dependencies are invalid, it exits the process with code 1.
- * If the dependencies are valid, it constructs a `CollatedPoint` object and adds it to the result array.
- * Finally, it returns a `CollatedReturn` object with the result array and the `allowUpdatePackageJson` flag.
+ * This function is the main entry point for susee.
  */
 async function collections(): Promise<CollatedReturn> {
+	console.time(`${tcolor.cyan("Collected Data")} :`);
 	const __config = await getConfig();
 	const points = __config.points;
+	const plugins = __config.plugins;
 	const result: CollatedPoint[] = [];
 	for (const point of points) {
 		const __opts = getOptions(point);
-		const __deps = await generateDependencies(point.entry, __config.plugins);
-
-		const checked = await checks.init(__deps, __opts.esm);
-
-		if (!checked) {
+		let __deps = await generateDependencies(point.entry);
+		const typeChecked = await checks.types(__deps, __opts.esm);
+		if (!typeChecked) {
 			ts.sys.exit(1);
 		}
+		let isParseCommonjs = false;
+		if (plugins.length) {
+			for (const plugin of plugins) {
+				const _plugin = typeof plugin === "function" ? plugin() : plugin;
+				if (_plugin.type === "dependency") {
+					if (_plugin.name && _plugin.name === "@suseejs/plugin-commonjs") {
+						isParseCommonjs = true;
+					}
+					if (_plugin.async) {
+						__deps = await _plugin.func(__deps);
+					} else {
+						__deps = _plugin.func(__deps);
+					}
+				}
+			}
+		}
+
+		if (!isParseCommonjs) {
+			const checked = await checks.moduleAndExtension(__deps);
+			if (!checked) {
+				ts.sys.exit(1);
+			}
+		}
+
 		const c = {
 			fileName: point.entry,
 			exportPath: point.exportPath,
@@ -39,10 +58,11 @@ async function collections(): Promise<CollatedReturn> {
 				default: __opts.default,
 			},
 			depFiles: __deps,
-			plugins: __config.plugins,
+			plugins: plugins,
 		} as CollatedPoint;
 		result.push(c);
 	}
+	console.timeEnd(`${tcolor.cyan("Collected Data")} :`);
 	return {
 		points: result,
 		allowUpdatePackageJson: __config.allowUpdatePackageJson,
