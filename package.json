@@ -1,6 +1,6 @@
 {
   "name": "@suseejs/plugin-terser",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Susee plugin terser",
   "type": "module",
   "main": "dist/index.cjs",
