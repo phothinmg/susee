@@ -1,5 +1,5 @@
 import tcolor from "@suseejs/tcolor";
-import type { SuSeeConfig, SuseePlugin } from "@suseejs/types";
+import type { SuSeeConfig } from "@suseejs/types";
 import utilities from "@suseejs/utils";
 import bundle from "./lib/bundle/index.js";
 import Compiler from "./lib/compile/index.js";
@@ -25,5 +25,5 @@ async function susee(): Promise<void> {
 	console.timeEnd(`${tcolor.cyan(`Done`)}`);
 }
 
-export type { SuSeeConfig, SuseePlugin };
+export type { SuSeeConfig };
 export { susee };
