@@ -68,13 +68,19 @@ export type DependencyPlugin =
   | {
       type: "dependency";
       async: true;
-      func: (depsFiles: DepsFiles) => Promise<DepsFiles>;
+      func: (
+        depsFiles: DepsFiles,
+        compilerOptions: ts.CompilerOptions,
+      ) => Promise<DepsFiles>;
       name?: string;
     }
   | {
       type: "dependency";
       async: false;
-      func: (depsFiles: DepsFiles) => DepsFiles;
+      func: (
+        depsFiles: DepsFiles,
+        compilerOptions: ts.CompilerOptions,
+      ) => DepsFiles;
       name?: string;
     };
 
