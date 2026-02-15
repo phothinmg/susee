@@ -65,7 +65,7 @@ function duplicates(
 		if (arr.length > 1) {
 			// skip first, rename subsequent
 			for (let i = 1; i < arr.length; i++) {
-				const newName = gen.getName("DuplicateImport", name + "_");
+				const newName = gen.getName("DuplicateImport", `${name}_`);
 				// record renaming for the local name
 				renameMap.set(`${name}::${i}`, newName);
 				// also map plain name to first new name only if not yet set (for simpler lookup)
@@ -80,7 +80,7 @@ function duplicates(
 		if (arr.length > 1) {
 			for (let i = 1; i < arr.length; i++) {
 				const binding = arr[i];
-				if (binding && binding.node) {
+				if (binding?.node) {
 					nodeRenameByPos.set(
 						binding.node.pos,
 						renameMap.get(`${name}::${i}`) as string,
@@ -127,7 +127,7 @@ function duplicates(
 
 				// default import
 				if (ipc.name && ts.isIdentifier(ipc.name)) {
-					const pos = ipc.pos;
+					const _pos = ipc.pos;
 					const newName = nodeRenameByPos.get(ipc.pos);
 					if (newName) {
 						newImportClause = factory.updateImportClause(
