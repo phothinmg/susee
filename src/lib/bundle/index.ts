@@ -44,11 +44,11 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 		}
 	} //--
 	// 2. Handle duplicates
-	if (reName) {
-		depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
-	} else {
-		depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
-	}
+	// if (reName) {
+	// 	depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
+	// } else {
+	// 	depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
+	// }
 	// 3. Handling anonymous imports and exports
 	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
 	// 4. Remove Imports
