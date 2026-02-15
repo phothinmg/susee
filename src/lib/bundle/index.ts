@@ -9,7 +9,7 @@ import type {
 import utilities from "@suseejs/utils";
 import { splitCamelCase } from "../helpers.js";
 import anonymousHandler from "./anonymous.js";
-import duplicateHandlers from "./duplicates.js";
+//import duplicateHandlers from "./duplicates.js";
 import duplicateNew from "./duplicatesNew.js";
 import mergeImportsStatement from "./mergeImports.js";
 import removeHandlers from "./removes.js";
@@ -50,7 +50,11 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 		const dupes = duplicateNew.collectDuplicates(depsFiles);
 		const plan = duplicateNew.createRenamePlan(dupes);
 		if (plan.size > 0) {
-			depsFiles = await duplicateNew.applyRenamePlan(depsFiles, compilerOptions, plan);
+			depsFiles = await duplicateNew.applyRenamePlan(
+				depsFiles,
+				compilerOptions,
+				plan,
+			);
 		}
 	} else {
 		// validate no duplicates remain
@@ -60,6 +64,7 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 			if (files.size > 1) {
 				err = true;
 				console.warn(`Name -> ${name} declared in multiple files :`);
+				// biome-ignore lint/suspicious/useIterableCallbackReturn : just log warn
 				files.forEach((f) => console.warn(`  - ${f.file}`));
 			}
 		});
