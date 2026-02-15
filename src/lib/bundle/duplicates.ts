@@ -692,4 +692,43 @@ const duplicateHandlers = {
 	},
 };
 
+/**
+ * Run collector across provided files and return the map of duplicate names.
+ * This will reset internal maps before collection.
+ */
+export async function findDuplicateDeclarations(
+	deps: DepsFile[],
+	compilerOptions: ts.CompilerOptions,
+): Promise<DuplicatesNameMap> {
+	// reset internal state
+	namesMap.clear();
+	callNameMap.length = 0;
+	importNameMap.length = 0;
+	exportNameMap.length = 0;
+
+	const workers = resolves([[collector, compilerOptions]]);
+	const fns = await workers.concurrent();
+	const collectorFn = fns[0];
+	deps = deps.map(collectorFn);
+	return namesMap;
+}
+
+/**
+ * Substitute duplicate global declarations with unique names and return transformed files.
+ * This resets internal state and runs the rename pipeline.
+ */
+export async function substituteWithUniqueNames(
+	deps: DepsFile[],
+	compilerOptions: ts.CompilerOptions,
+): Promise<DepsFile[]> {
+	// reset internal state
+	namesMap.clear();
+	callNameMap.length = 0;
+	importNameMap.length = 0;
+	exportNameMap.length = 0;
+
+	const result = await duplicateHandlers.renamed(deps, compilerOptions);
+	return result;
+}
+
 export default duplicateHandlers;

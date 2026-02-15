@@ -10,6 +10,7 @@ import utilities from "@suseejs/utils";
 import { splitCamelCase } from "../helpers.js";
 import anonymousHandler from "./anonymous.js";
 import duplicateHandlers from "./duplicates.js";
+import duplicateNew from "./duplicatesNew.js";
 import mergeImportsStatement from "./mergeImports.js";
 import removeHandlers from "./removes.js";
 import clearUnusedCode from "./unusedCode.js";
@@ -44,11 +45,26 @@ async function bundler(point: CollatedPoint): Promise<BundleResultPoint> {
 		}
 	} //--
 	// 2. Handle duplicates
-	// if (reName) {
-	// 	depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
-	// } else {
-	// 	depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
-	// }
+	if (reName) {
+		// new stateless flow: collect, create plan, apply
+		const dupes = duplicateNew.collectDuplicates(depsFiles);
+		const plan = duplicateNew.createRenamePlan(dupes);
+		if (plan.size > 0) {
+			depsFiles = await duplicateNew.applyRenamePlan(depsFiles, compilerOptions, plan);
+		}
+	} else {
+		// validate no duplicates remain
+		const dupes = duplicateNew.collectDuplicates(depsFiles);
+		let err = false;
+		dupes.forEach((files, name) => {
+			if (files.size > 1) {
+				err = true;
+				console.warn(`Name -> ${name} declared in multiple files :`);
+				files.forEach((f) => console.warn(`  - ${f.file}`));
+			}
+		});
+		if (err) process.exit(1);
+	}
 	// 3. Handling anonymous imports and exports
 	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
 	// 4. Remove Imports
