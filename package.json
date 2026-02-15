@@ -19,7 +19,7 @@
 		}
 	},
 	"bin": {
-		"susee": "./bin/index.mjs"
+		"susee": "bin/index.mjs"
 	},
 	"scripts": {
 		"build": "tsx build.ts",
