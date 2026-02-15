@@ -43,7 +43,7 @@
 		"@suseejs/tcolor": "^0.1.0",
 		"@suseejs/transformer": "^0.1.0",
 		"@suseejs/tsconfig": "^0.1.1",
-		"@suseejs/types": "^0.1.10",
+		"@suseejs/types": "^0.1.11",
 		"@suseejs/utils": "^0.1.3",
 		"typescript": "^5.9.3"
 	},
