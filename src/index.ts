@@ -14,15 +14,15 @@ import collections from "./lib/init/index.js";
  * The function will return a promise that resolves when the compilation is done.
  */
 async function susee(): Promise<void> {
-  console.info(`${tcolor.cyan(`Susee Started`)} : `);
-  console.time(`${tcolor.cyan(`Susee Done`)}`);
-  const collected = await collections();
-  await utilities.wait(1000);
-  const bundled = await bundle(collected);
-  await utilities.wait(1000);
-  const compiler = new Compiler(bundled);
-  await compiler.compile();
-  console.timeEnd(`${tcolor.cyan(`Susee Done`)}`);
+	console.info(`${tcolor.cyan(`Susee Started`)} : `);
+	console.time(`${tcolor.cyan(`Susee Done`)}`);
+	const collected = await collections();
+	await utilities.wait(1000);
+	const bundled = await bundle(collected);
+	await utilities.wait(1000);
+	const compiler = new Compiler(bundled);
+	await compiler.compile();
+	console.timeEnd(`${tcolor.cyan(`Susee Done`)}`);
 }
 
 export type { SuSeeConfig };
