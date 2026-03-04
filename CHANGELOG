@@ -7,15 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+
+- Current runtime support remains Node.js only.
+- Add first-class support for Deno environments.
+- Add browser-oriented library build support.
+- Improve workflows for building React-related libraries.
+
+## [1.0.0] - 2026-03-05
+
 ### Added
+
 - Node-based test suite for `susee.build`.
+- Plugin pipeline support across dependency, pre-process, and post-process stages.
+- Config options for per-entry `format`, `tsconfigFilePath`, and duplicate symbol handling.
 
 ### Changed
-- Expanded README with API, limitations, and usage details.
+
+- Expanded README with API, configuration, limitations, and usage details.
+- Stabilized dual-format output behavior for ESM (`.mjs`, `.d.mts`) and CommonJS (`.cjs`, `.d.cts`).
+- Improved `package.json` update flow for `main`, `module`, `types`, and `exports` generation.
+
+### Notes
+
+- `susee` remains focused on local TypeScript dependency bundling and does not bundle `node_modules`.
 
 ## [0.1.0] - 2025-01-01
 
+<!-- markdownlint-disable MD024 -->
+
 ### Added
+
 - TypeScript bundler pipeline with dependency tree resolution.
 - Dual output targets: CommonJS (.cjs) and ESM (.mjs) with type declarations.
 - Automatic `package.json` updates for `main`, `module`, `types`, and `exports`.
@@ -24,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Subpath exports for `banner-text` and `minify`.
 
 ### Notes
+
 - Bundling excludes `node_modules`.
 - Entry export limitations: supports `export { ... }` and `export default Identifier` only.
 - When both named and default exports exist, CommonJS output drops named exports.

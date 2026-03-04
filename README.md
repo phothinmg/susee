@@ -1,59 +1,56 @@
+<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD041 -->
 <div align="center">
-<img src="https://pub-d94f06e647584b8496cac0d43a6fecfb.r2.dev/susee/susee.webp" width="160" height="160" alt="susee" />
+<img src="https://susee.phothin.dev/logo/susee.webp" width="160" height="160" alt="susee" />
   <h1>susee</h1>
 </div>
+<!-- markdownlint-enable MD033 -->
 
-Susee is a small TypeScript bundler that collates a package's local dependency tree, then emits compiled artifacts for ESM and/or CommonJS along with type definitions. It can also update `package.json` exports automatically for main and subpath exports.
+[![npm version](https://img.shields.io/npm/v/susee)](https://www.npmjs.com/package/susee) [![license](https://img.shields.io/npm/l/susee)](LICENSE) [![GitHub Actions Workflow Status](https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml)
 
-**Key points**
+## Overview
 
-- Produces ESM (`.mjs`) and/or CommonJS (`.cjs`) outputs and corresponding type files (`.d.mts` / `.d.cts`).
-- Merges local dependency files into a single bundled input for the TypeScript compiler.
-- Supports simple plugin hooks at multiple stages: `dependency`, `pre-process`, and `post-process`.
-- When enabled, updates `package.json` fields (`type`, `main`, `module`, `types`, `exports`) for the main export and merges subpath exports.
+`susee` is a TypeScript bundler that processes a package's local dependency tree and emits compiled artifacts in multiple module formats. Unlike general-purpose bundlers that target browser environments or bundle `node_modules`, `susee` focuses on library authorship: it collates local TypeScript files, merges them into cohesive bundles, compiles them through the TypeScript compiler, and generates properly formatted outputs for consumption as npm packages.
+
+## Key Features
+
+1. **Dependency Tree Resolution** : automatically resolves and collects local TypeScript dependencies starting from specified entry points.
+
+2. **Dual-Format Module Output** : generates outputs for both ESM and CommonJS module systems from a single TypeScript source.
+
+3. **File Extension Conventions** : dual-emit conventions for unambiguous module format identification.
+
+   | Module Format | JavaScript Extension | Type Definition Extension |
+   | ------------- | -------------------- | ------------------------- |
+   | ESM           | `.mjs`               | `.d.mts`                  |
+   | CommonJS      | `.cjs`               | `.d.cts`                  |
+
+4. **Automatic package.json Management** : conditionally updates package.json fields based on compilation outputs, this feature is controlled by the `allowUpdatePackageJson` boolean in `SuSeeConfig`.
 
 ## Installation
 
-```bash
-npm install susee
-```
-
-## Usage
-
-CLI (global or npx):
+Install as a development dependency :
 
 ```bash
-npx susee
+npm install susee --save-dev
 ```
 
-programmatic (exports):
+Global install:
 
-```ts
-import { susee } from "susee";
-
-await susee();
+```bash
+npm install -g susee
 ```
 
-## Configuration
+## Quick Start
 
-Place a `susee.config.ts` at your project root. The config defines entry points and optional hooks.
+The `susee` CLI binary is exposed through the `bin` field and becomes available immediately after installation.
 
-Example `susee.config.ts`:
+### Creating a Minimal Configuration
+
+Create a file named `susee.config.ts` in your project root:
 
 ```ts
 import type { SuSeeConfig } from "susee";
-import suseeBannerText from "@suseejs/plugin-banner-text";
-import suseeTerser from "@suseejs/plugin-terser";
-
-const licenseText = `
-/*! *****************************************************************************
-Copyright (c) John Doe <johndoe@jhondoe.org>
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-***************************************************************************** */
-`.trim();
 
 const config: SuSeeConfig = {
   entryPoints: [
@@ -63,23 +60,104 @@ const config: SuSeeConfig = {
       format: "both",
     },
   ],
-  plugins: [suseeBannerText(licenseText), suseeTerser()],
 };
 
 export default config;
 ```
 
-Config summary:
+### Running Your First Build
 
-- `entryPoints`: array of entry definitions
-  - `entry` — path to entry file (required)
-  - `exportPath` — `.` or a subpath like `./feature`
-  - `format` — `esm` | `commonjs` | `both` (defaults to `esm`)
-  - `tsconfigFilePath` — optional custom tsconfig for that entry
-  - `renameDuplicates` — whether to auto-rename duplicate identifiers
-  - `outDir` — where compiled files will be written (e.g. `dist`)
-- `postProcessHooks` — array of `post-process` plugins (sync or async)
-- `allowUpdatePackageJson` — when true, `package.json` is updated with produced entry points
+Execute the bundler using one of these methods:
+
+#### CLI Execution
+
+with `npx` :
+
+```bash
+npx susee
+```
+
+via `package.json` :
+
+```json
+{
+  "scripts": {
+    "build": "susee"
+  }
+}
+```
+
+```bash
+npm run build
+```
+
+for global :
+
+```bash
+susee
+```
+
+#### Programmatic Execution
+
+```ts
+import { susee } from "susee";
+
+await susee();
+```
+
+The `susee()` function is an asynchronous operation that:
+
+1. Loads configuration from `susee.config.ts`
+2. Resolves the dependency tree
+3. Bundles local dependencies
+4. Compiles to target formats
+5. Optionally updates `package.json`
+
+## Configuration summary
+
+### Top-Level Configuration Fields
+
+#### entryPoints
+
+An array of [EntryPoint](#entrypoint-structure) objects defining the files to bundle. Each entry point represents a separate bundling operation with its own entry file, export path, and output configuration. The array must contain at least one entry point.
+
+#### plugins (optional)
+
+An optional array of plugin instances that provide transformation hooks. Plugins can be objects or factory functions and execute at different stages of the bundling pipeline (dependency, pre-process, post-process). Defaults to `[]` if not specified.
+
+#### allowUpdatePackageJson (optional)
+
+Controls whether `susee` automatically updates the `package.json` file with generated `exports`, `main` fields, and `module` fields. When `true`, susee modifies the `package.json` to reflect the bundled outputs. When `false`, `package.json` remains unchanged.
+Defaults to `true` if not specified.
+
+#### outDir (optional)
+
+Specifies the base output directory where compiled files are written. This can be overridden per entry point if needed (though the current implementation uses a global outDir). Defaults to `"dist"` if not specified.
+
+### EntryPoint Structure
+
+Each entry point in the [entryPoints](#entrypoints) array defines a separate bundling target. The EntryPoint interface specifies the following fields:
+
+**entry**: The file path to the TypeScript entry file. This path is validated during configuration loading to ensure the file exists
+
+**exportPath**: The package export path where this bundle will be exposed. Use "." for the main package export, or subpath like "./config" for additional exports. Duplicate export paths across entry points are not allowed and will cause validation failure.
+
+**format (optional)**: Determines which module format(s), `commonjs`,`esm` or both `esm`and `commonjs` to generate.
+Defaults to `esm` if not specified.
+
+**tsconfigFilePath (optional)**: Optional path to a custom TypeScript configuration file for this specific entry point. If not specified, susee will resolve for TypesScript compiler options as follow :
+
+Priority -
+
+1. this custom `tsconfig.json`
+
+2. `tsconfig.json` at root directory
+
+3. default compiler options of `susee`
+
+Notes: You can control TypesScript compiler options from `tsconfig.json` except , `rootDir` , `outDir`,`module`.
+
+**renameDuplicates (optional)**: Controls whether susee automatically renames duplicate identifiers during the bundling process to avoid naming conflicts when merging files.(default to `true`).If you want to rename your self set to `false`, process will exit with code-1 and print where duplicate found.
 
 ## Plugins
 
@@ -112,7 +190,21 @@ Output file name hints (produced by the compiler):
 - The entry file should be an ESM-compatible TypeScript file.
 - Exports from the entry file are not removed — only dependency exports may be stripped during bundling.
 
+## Roadmap
+
+Current environment support:
+
+- Node.js only.
+
+Planned work:
+
+- [ ] Add first-class support for Deno environments.
+- [ ] Add browser-oriented library build support.
+- [ ] Improve workflows for building React-related libraries.
+
 ## Contributing and tests
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution workflow, pull request checklist, and development guidelines.
 
 - Build and run tests with the repo scripts (see `package.json`):
 
@@ -123,4 +215,9 @@ npm test
 
 ## License
 
-Apache-2.0
+[Apache-2.0][license] © [Pho Thin Maung][ptm]
+
+<!-- markdownlint-disable MD053 -->
+
+[license]: LICENSE
+[ptm]: https://github.com/phothinmg
