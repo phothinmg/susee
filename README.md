@@ -6,7 +6,7 @@
 </div>
 <!-- markdownlint-enable MD033 -->
 
-[![npm version](https://img.shields.io/npm/v/susee)](https://www.npmjs.com/package/susee) [![license](https://img.shields.io/npm/l/susee)](LICENSE) [![GitHub Actions Workflow Status](https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml)
+[![npm version](https://img.shields.io/npm/v/susee)](https://www.npmjs.com/package/susee) [![license](https://img.shields.io/npm/l/susee)](LICENSE)
 
 ## Overview
 
