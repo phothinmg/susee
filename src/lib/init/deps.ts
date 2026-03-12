@@ -1,26 +1,26 @@
 import { Buffer } from "node:buffer";
 import fs from "node:fs";
-import mhaehko from "mhaehko";
 import type { DepsFile, DepsFiles } from "@suseejs/types";
 import utilities from "@suseejs/utils";
+import mhaehko from "mhaehko";
 import ts from "typescript";
 
 async function fileSizes(path: string) {
-  const s = await fs.promises.stat(path);
-  const logical = s.size; // bytes in file
-  const allocated = s.blocks !== null ? s.blocks * 512 : null; // bytes actually allocated (POSIX)
-  return { logical, allocated };
+	const s = await fs.promises.stat(path);
+	const logical = s.size; // bytes in file
+	const allocated = s.blocks !== null ? s.blocks * 512 : null; // bytes actually allocated (POSIX)
+	return { logical, allocated };
 }
 
 const checkExport = (str: string, file: string) => {
-  const esmRex = /export default .*/gm;
-  const cjsRex = /export = .*/gm;
-  const ctsRex = /.cts/g;
-  if (str.match(esmRex) || (str.match(cjsRex) && file.match(ctsRex))) {
-    return true;
-  } else {
-    return false;
-  }
+	const esmRex = /export default .*/gm;
+	const cjsRex = /export = .*/gm;
+	const ctsRex = /.cts/g;
+	if (str.match(esmRex) || (str.match(cjsRex) && file.match(ctsRex))) {
+		return true;
+	} else {
+		return false;
+	}
 };
 
 /**
@@ -42,43 +42,43 @@ const checkExport = (str: string, file: string) => {
  * @returns {Promise<DepsFiles>}
  */
 async function generatemhaehko(entryFile: string): Promise<DepsFiles> {
-  const deps = await mhaehko(entryFile);
-  const sorted = deps.sort(); // get mhaehko graph
-  const depsFiles: DepsFiles = [];
+	const deps = await mhaehko(entryFile);
+	const sorted = deps.sort(); // get mhaehko graph
+	const depsFiles: DepsFiles = [];
 
-  await utilities.wait(1000);
+	await utilities.wait(1000);
 
-  for (const dep of sorted) {
-    const file = ts.sys.resolvePath(dep);
-    const content = await fs.promises.readFile(file, "utf8");
-    const s = await fileSizes(file);
-    const length = content.length;
-    const includeDefExport = checkExport(content, file);
-    const _sourceFile = ts.createSourceFile(
-      file,
-      content,
-      ts.ScriptTarget.Latest,
-      true,
-    );
-    const _moduleTypes = utilities.checkModuleType(_sourceFile, file);
-    const _types = _moduleTypes.isCommonJs ? "cjs" : "esm";
-    const _files = {
-      file,
-      content,
-      length,
-      includeDefExport,
-      size: {
-        logical: s.logical,
-        allocated: s.allocated,
-        utf8: new TextEncoder().encode(content).length,
-        buffBytes: Buffer.byteLength(content, "utf8"),
-      },
-      type: _types,
-    } as DepsFile;
-    depsFiles.push(_files);
-  }
+	for (const dep of sorted) {
+		const file = ts.sys.resolvePath(dep);
+		const content = await fs.promises.readFile(file, "utf8");
+		const s = await fileSizes(file);
+		const length = content.length;
+		const includeDefExport = checkExport(content, file);
+		const _sourceFile = ts.createSourceFile(
+			file,
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+		);
+		const _moduleTypes = utilities.checkModuleType(_sourceFile, file);
+		const _types = _moduleTypes.isCommonJs ? "cjs" : "esm";
+		const _files = {
+			file,
+			content,
+			length,
+			includeDefExport,
+			size: {
+				logical: s.logical,
+				allocated: s.allocated,
+				utf8: new TextEncoder().encode(content).length,
+				buffBytes: Buffer.byteLength(content, "utf8"),
+			},
+			type: _types,
+		} as DepsFile;
+		depsFiles.push(_files);
+	}
 
-  return depsFiles;
+	return depsFiles;
 }
 
 export default generatemhaehko;
