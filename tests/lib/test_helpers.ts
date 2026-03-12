@@ -1,8 +1,8 @@
 import assert from "node:assert";
+import { exec } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { exec } from "node:child_process";
 
 async function setupTempDir(name: string) {
 	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `susee-${name}-`));
@@ -23,15 +23,17 @@ async function fileExists(filePath: string) {
 		return false;
 	}
 }
-
+// biome-ignore lint/suspicious/noExplicitAny: reason we need any here
 const isObject = (input: any) =>
 	typeof input === "object" && !Array.isArray(input) && input !== null;
-
+// biome-ignore lint/suspicious/noExplicitAny: reason we need any here
 function expect(entry: any) {
+	// biome-ignore lint/suspicious/noExplicitAny: reason we need any here
 	const hasOwn = (input: any) => {
 		if (!isObject(entry)) assert.fail(`${entry} is not an object`);
 		assert.ok(Object.hasOwn(entry, input));
 	};
+	// biome-ignore lint/suspicious/noExplicitAny: reason we need any here
 	const isInstanceOf = (input: any) => {
 		if (typeof input === "string") {
 			assert.ok(typeof entry === input);
@@ -55,6 +57,7 @@ function expect(entry: any) {
 
 function exitWithCodeOneAndMessage(
 	filePath: string,
+	// biome-ignore lint/suspicious/noExplicitAny: reason we need any here
 	done: (result?: any) => void,
 	message?: string,
 ) {
@@ -84,6 +87,7 @@ function exitWithCodeOneAndMessage(
 
 function exitWithCodeZeroAndMessage(
 	filePath: string,
+	// biome-ignore lint/suspicious/noExplicitAny: reason we need any here
 	done: (result?: any) => void,
 	message?: string,
 ) {
@@ -110,6 +114,12 @@ function exitWithCodeZeroAndMessage(
 		}
 	});
 }
+// biome-ignore lint/suspicious/noExplicitAny: reason we need any here
+function sortObject(obj: any) {
+	return Object.fromEntries(
+		Object.entries(obj).sort(([keyA], [keyB]) => keyA.localeCompare(keyB)),
+	);
+}
 
 export {
 	setupTempDir,
@@ -118,4 +128,5 @@ export {
 	expect,
 	exitWithCodeOneAndMessage,
 	exitWithCodeZeroAndMessage,
+	sortObject,
 };

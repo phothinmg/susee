@@ -1,14 +1,16 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
 import ts from "typescript";
-import { exitWithCodeOneAndMessage } from "./test_helpers.js";
-import getConfig from "../src/lib/initialization/suseeConfig.js";
+import finalSuseeConfig, {
+	type Point,
+} from "../../src/lib/initialization/suseeConfig.js";
+import { exitWithCodeOneAndMessage, sortObject } from "../lib/test_helpers.js";
 
-describe("Get Config Tests", async () => {
-	it("If duplicate path found in susee.config return exit with 0 and warn message if it is provide ", (t, done) => {
+describe("finalSuseeConfig", async () => {
+	it("If duplicate path found in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
-		const temp = ts.sys.resolvePath("tests/get_config/duplicate");
+		const temp = ts.sys.resolvePath("tests/initialization/get_config/duplicate");
 		process.chdir(temp);
 		try {
 			exitWithCodeOneAndMessage(
@@ -21,8 +23,8 @@ describe("Get Config Tests", async () => {
 		}
 	});
 	// ===
-	it("If empty entries in susee.config return exit with 0 and warn message if it is provide ", (t, done) => {
-		const temp = ts.sys.resolvePath("tests/get_config/empty_entries");
+	it("If empty entries in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
+		const temp = ts.sys.resolvePath("tests/initialization/get_config/empty_entries");
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
 		process.chdir(temp);
@@ -37,8 +39,8 @@ describe("Get Config Tests", async () => {
 		}
 	});
 	// ===
-	it("If no susee.config file found, return exit with 0 and warn message if it is provide ", (t, done) => {
-		const temp = ts.sys.resolvePath("tests/get_config/not_found");
+	it("If no susee.config file found, return exit with 0 and warn message if it is provide ", (_t, done) => {
+		const temp = ts.sys.resolvePath("tests/initialization/get_config/not_found");
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
 		process.chdir(temp);
@@ -53,8 +55,8 @@ describe("Get Config Tests", async () => {
 		}
 	});
 	// ===
-	it("If one of entry file in susee.config file dose exits , return exit with 0 and warn message if it is provide ", (t, done) => {
-		const temp = ts.sys.resolvePath("tests/get_config/entry_not_found");
+	it("If one of entry file in susee.config file dose exits , return exit with 0 and warn message if it is provide ", (_t, done) => {
+		const temp = ts.sys.resolvePath("tests/initialization/get_config/entry_not_found");
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
 		process.chdir(temp);
@@ -70,22 +72,23 @@ describe("Get Config Tests", async () => {
 	});
 	//==
 	it("If no error", async () => {
-		const temp = ts.sys.resolvePath("tests/get_config/ok");
+		const temp = ts.sys.resolvePath("tests/initialization/get_config/ok");
 		const cwd = process.cwd();
 		process.chdir(temp);
 		try {
-			const config = await getConfig();
-
-			assert.deepEqual(config.points, [
-				{
+			const config = await finalSuseeConfig();
+			const actual = sortObject(config.points[0] as unknown as Point);
+			assert.deepEqual(
+				actual,
+				sortObject({
 					entry: "src/index.ts",
 					exportPath: ".",
 					format: "both",
-					outDir: "dist",
+					outDirPath: "dist",
 					renameDuplicates: true,
 					tsconfigFilePath: undefined,
-				},
-			]);
+				}),
+			);
 
 			assert.deepEqual(config.plugins, []);
 

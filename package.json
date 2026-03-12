@@ -24,8 +24,10 @@
   "scripts": {
     "build": "tsx build.ts",
     "test": "tsx --test",
+    "test:sc": "tsx --test tests/suseeConfig.test.ts",
+    "test:dep": "tsx --test tests/dependencies.test.ts",
     "fmt": "biome format --write",
-    "lint": "biome check src --write",
+    "lint": "biome check src --write && biome check tests --write",
     "prepare": "husky"
   },
   "keywords": [
