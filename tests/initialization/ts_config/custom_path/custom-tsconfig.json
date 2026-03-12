@@ -1,25 +1,25 @@
 {
-  "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "./dist",
+	"compilerOptions": {
+		"rootDir": ".",
+		"outDir": "./dist",
 
-    "module": "nodenext",
+		"module": "nodenext",
 
-    "target": "es2020",
-    "esModuleInterop": true,
+		"target": "es2020",
+		"esModuleInterop": true,
 
-    "lib": ["ESNext"],
-    "types": ["node"],
+		"lib": ["ESNext"],
+		"types": ["node"],
 
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
 
-    "strict": true,
-    "jsx": "react-jsx",
+		"strict": true,
+		"jsx": "react-jsx",
 
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true
-  }
+		"isolatedModules": true,
+		"noUncheckedSideEffectImports": true,
+		"moduleDetection": "force",
+		"skipLibCheck": true
+	}
 }

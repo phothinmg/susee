@@ -10,7 +10,9 @@ describe("finalSuseeConfig", async () => {
 	it("If duplicate path found in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
-		const temp = ts.sys.resolvePath("tests/initialization/get_config/duplicate");
+		const temp = ts.sys.resolvePath(
+			"tests/initialization/get_config/duplicate",
+		);
 		process.chdir(temp);
 		try {
 			exitWithCodeOneAndMessage(
@@ -24,7 +26,9 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If empty entries in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
-		const temp = ts.sys.resolvePath("tests/initialization/get_config/empty_entries");
+		const temp = ts.sys.resolvePath(
+			"tests/initialization/get_config/empty_entries",
+		);
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
 		process.chdir(temp);
@@ -40,7 +44,9 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If no susee.config file found, return exit with 0 and warn message if it is provide ", (_t, done) => {
-		const temp = ts.sys.resolvePath("tests/initialization/get_config/not_found");
+		const temp = ts.sys.resolvePath(
+			"tests/initialization/get_config/not_found",
+		);
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
 		process.chdir(temp);
@@ -56,7 +62,9 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If one of entry file in susee.config file dose exits , return exit with 0 and warn message if it is provide ", (_t, done) => {
-		const temp = ts.sys.resolvePath("tests/initialization/get_config/entry_not_found");
+		const temp = ts.sys.resolvePath(
+			"tests/initialization/get_config/entry_not_found",
+		);
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
 		process.chdir(temp);
