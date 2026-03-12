@@ -17,7 +17,6 @@ bbbb.cjs
 abc.json
 def.json
 .notes.txt
-
 # vitepress 
 docs/.vitepress/dist
 docs/.vitepress/cache
