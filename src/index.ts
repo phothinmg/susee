@@ -3,7 +3,7 @@ import type { SuSeeConfig } from "@suseejs/types";
 import utilities from "@suseejs/utils";
 import bundle from "./lib/bundle/index.js";
 import Compiler from "./lib/compile/index.js";
-import collections from "./lib/init/index.js";
+import collections from "./lib/initialization/index.js";
 
 /**
  * Main entry point for susee.

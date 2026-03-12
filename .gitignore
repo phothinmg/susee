@@ -16,7 +16,7 @@ aaaa.cjs
 bbbb.cjs
 abc.json
 def.json
-.note.txt
+.notes.txt
 # vitepress 
 docs/.vitepress/dist
 docs/.vitepress/cache

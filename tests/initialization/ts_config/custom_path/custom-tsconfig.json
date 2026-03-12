@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"rootDir": ".",
+		"outDir": "./dist",
+
+		"module": "nodenext",
+
+		"target": "es2020",
+		"esModuleInterop": true,
+
+		"lib": ["ESNext"],
+		"types": ["node"],
+
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
+
+		"strict": true,
+		"jsx": "react-jsx",
+
+		"isolatedModules": true,
+		"noUncheckedSideEffectImports": true,
+		"moduleDetection": "force",
+		"skipLibCheck": true
+	}
+}
