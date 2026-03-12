@@ -29,6 +29,7 @@
 		"test:dep": "tsx --test tests/initialization/dependencies.test.ts",
 		"test:init": "tsx --test tests/initialization/initializer.test.ts",
 		"test:bundle": "tsx --test tests/bundle/index.test.ts",
+		"test:compile": "tsx --test tests/compile/compiler.test.ts",
 		"test:tco": "tsx --test tests/initialization/dependencies.test.ts",
 		"fmt": "biome format --write",
 		"lint": "biome check src --write && biome check tests --write",

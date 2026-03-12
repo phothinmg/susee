@@ -6,7 +6,7 @@
 </div>
 <!-- markdownlint-enable MD033 -->
 
-[![npm version](https://img.shields.io/npm/v/susee)](https://www.npmjs.com/package/susee) [![license](https://img.shields.io/npm/l/susee)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/susee)](https://www.npmjs.com/package/susee) [![license](https://img.shields.io/npm/l/susee)](LICENSE) [![Socket Badge](https://badge.socket.dev/npm/package/susee/1.0.1)](https://badge.socket.dev/npm/package/susee/1.0.1) [![codecov](https://codecov.io/gh/phothinmg/susee/graph/badge.svg?token=6240Y3L0V1)](https://codecov.io/gh/phothinmg/susee)
 
 ## Overview
 
