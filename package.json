@@ -39,12 +39,12 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"@phothinmaung/resolves": "^1.0.0",
-		"@suseejs/dependencies": "^0.1.1",
 		"@suseejs/tcolor": "^0.1.0",
 		"@suseejs/transformer": "^0.1.0",
 		"@suseejs/tsconfig": "^0.1.1",
 		"@suseejs/types": "^0.1.11",
 		"@suseejs/utils": "^0.1.3",
+		"mhaehko": "^0.1.0",
 		"typescript": "^5.9.3"
 	},
 	"devDependencies": {
