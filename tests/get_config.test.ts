@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import ts from "typescript";
 import { exitWithCodeOneAndMessage } from "./test_helpers.js";
-import getConfig from "../src/lib/init/config.js";
+import getConfig from "../src/lib/initialization/suseeConfig.js";
 
 describe("Get Config Tests", async () => {
 	it("If duplicate path found in susee.config return exit with 0 and warn message if it is provide ", (t, done) => {

@@ -2,8 +2,8 @@ import tcolor from "@suseejs/tcolor";
 import type { CollatedPoint, CollatedReturn } from "@suseejs/types";
 import ts from "typescript";
 import checks from "./checks.js";
-import getConfig from "./config.js";
-import generateDependencies from "./deps.js";
+import getConfig from "./suseeConfig.js";
+import generateDependencies from "./dependencies.js";
 import getOptions from "./tsCompilerOptions.js";
 
 /**

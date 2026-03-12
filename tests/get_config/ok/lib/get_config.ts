@@ -1,3 +1,3 @@
-import getConfig from "../../../../src/lib/init/config.js";
+import getConfig from "../../../../src/lib/initialization/suseeConfig.js";
 
 await getConfig();

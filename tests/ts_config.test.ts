@@ -2,8 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import ts from "typescript";
 import type { Point } from "@suseejs/types";
-import getConfig from "../src/lib/init/config.js";
-import getOptions from "../src/lib/init/tsCompilerOptions.js";
+import getConfig from "../src/lib/initialization/suseeConfig.js";
+import getOptions from "../src/lib/initialization/tsCompilerOptions.js";
 
 describe("Tests for tsconfig and compiler options", () => {
 	it("Get correct options", async () => {
