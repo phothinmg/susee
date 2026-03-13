@@ -52,11 +52,9 @@ async function initializer(): Promise<InitializeResult> {
 				const _plugin = typeof plugin === "function" ? plugin() : plugin;
 				if (_plugin.type === "dependency") {
 					if (_plugin.async) {
-						__deps = await Promise.all(
-							__deps.map(async (d) => await _plugin.func(d, __opts.default)),
-						);
+						__deps = await _plugin.func(__deps, __opts.default);
 					} else {
-						__deps = __deps.map((d) => _plugin.func(d, __opts.default));
+						__deps = _plugin.func(__deps, __opts.default);
 					}
 				}
 			}
