@@ -1,0 +1,46 @@
+{
+  "name": "@suseejs/resolves",
+  "version": "0.0.1",
+  "description": "Run a list of functions in series, concurrently, or allSettled.",
+  "type": "module",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
+  "types": "lib/index.d.cts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./lib/index.d.cts",
+        "default": "./lib/index.cjs"
+      },
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      }
+    }
+  },
+  "keywords": [
+    "Promise",
+    "resolved",
+    "Susee"
+  ],
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Pho Thin Mg",
+    "email": "phothinmg@disroot.org",
+    "url": "https://phothinmg.github.io/"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suseejs/resolves.git"
+  },
+  "bugs": {
+    "url": "https://github.com/suseejs/resolves/issues"
+  },
+  "homepage": "https://github.com/suseejs/resolves#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}
