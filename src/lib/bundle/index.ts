@@ -1,6 +1,11 @@
 import path from "node:path";
 import tcolor from "@suseejs/tcolor";
-import type { DependenciesFiles } from "@suseejs/types";
+import type {
+	DependenciesFiles,
+	SuseePlugin,
+	SuseePluginFunction,
+} from "@suseejs/types";
+import { preProcessHooks } from "../../internalHooks.js";
 import type {
 	InitializePoint,
 	InitializeResult,
@@ -21,6 +26,58 @@ export interface BundledResult {
 	allowUpdatePackageJson: boolean;
 }
 // ------------------------------------------------------------------------------------//
+
+/**
+ * Applies an array of pre-process plugins to the given code.
+ * Pre-process plugins are of type "pre-process" and transform the given code.
+ * The plugins are applied in order and the result of the previous plugin is given as input to the next plugin.
+ * @param plugins - An array of plugins to apply.
+ * @param code - The code to transform.
+ * @param file - An optional file name to pass to the plugins.
+ * @returns The transformed code.
+ */
+async function preProcessPluginParser(
+	plugins: (SuseePlugin | SuseePluginFunction)[],
+	code: string,
+	file?: string | undefined,
+) {
+	if (plugins.length) {
+		for (const plugin of plugins) {
+			const _plugin = typeof plugin === "function" ? plugin() : plugin;
+			if (_plugin.type === "pre-process") {
+				if (_plugin.async) {
+					code = await _plugin.func(code, file);
+				} else {
+					code = _plugin.func(code, file);
+				}
+			}
+		}
+	}
+	return code;
+}
+
+/**
+ * Applies an array of pre-process hooks to the given code.
+ * Pre-process hooks are of type "pre-process" and transform the given code.
+ * The hooks are applied in order and the result of the previous hook is given as input to the next hook.
+ * @param code - The code to transform.
+ * @param file - An optional file name to pass to the hooks.
+ * @returns The transformed code.
+ */
+async function preProcessHooksParser(code: string, file?: string | undefined) {
+	if (preProcessHooks.length) {
+		for (const plugin of preProcessHooks) {
+			if (plugin.async) {
+				code = await plugin.func(code, file);
+			} else {
+				code = plugin.func(code, file);
+			}
+		}
+	}
+	return code;
+}
+
+// ----------------------------------------------------------------------------------
 
 async function bundler(point: InitializePoint): Promise<BundlePoint> {
 	const _name =
@@ -80,18 +137,10 @@ async function bundler(point: InitializePoint): Promise<BundlePoint> {
 	content = clearUnusedCode(content, point.fileName, compilerOptions);
 
 	// Call pre-process plugins
-	if (plugins.length) {
-		for (let plugin of plugins) {
-			plugin = typeof plugin === "function" ? plugin() : plugin;
-			if (plugin.type === "pre-process") {
-				if (plugin.async) {
-					content = await plugin.func(content);
-				} else {
-					content = plugin.func(content);
-				}
-			}
-		}
-	} //--
+	content = await preProcessPluginParser(plugins, content);
+	await utilities.wait(1000);
+	content = await preProcessHooksParser(content);
+	await utilities.wait(1000);
 	// Returns
 	console.timeEnd(
 		`${tcolor.cyan(`Bundled`)} -> ${tcolor.brightCyan(_name)} ${tcolor.cyan(`export path`)}`,

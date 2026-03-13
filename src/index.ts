@@ -1,7 +1,7 @@
 import tcolor from "@suseejs/tcolor";
 import bundle from "./lib/bundle/index.js";
 import Compiler from "./lib/compile/index.js";
-import collections from "./lib/initialization/index.js";
+import initializer from "./lib/initialization/index.js";
 import type { SuSeeConfig } from "./lib/types.js";
 import utilities from "./lib/utils.js";
 
@@ -16,7 +16,7 @@ import utilities from "./lib/utils.js";
 async function susee(): Promise<void> {
 	console.info(`${tcolor.cyan(`Susee Started`)} : `);
 	console.time(`${tcolor.cyan(`Susee Done`)}`);
-	const collected = await collections();
+	const collected = await initializer();
 	await utilities.wait(1000);
 	const bundled = await bundle(collected);
 	await utilities.wait(1000);
