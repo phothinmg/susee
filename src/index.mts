@@ -16,6 +16,7 @@ function suseeTerser(
   return {
     type: "post-process",
     async: true,
+    name: "@suseejs/plugin-terser",
     func: async function (code, _file) {
       const _code = (await terser.minify(code, terserMinifyOptions)).code;
       if (_code) {

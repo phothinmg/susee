@@ -1,7 +1,7 @@
 {
   "name": "@suseejs/plugin-terser",
-  "version": "1.0.2",
-  "description": "Susee plugin terser",
+  "version": "1.0.32",
+  "description": "A Susee plugin that minifies JavaScript code using the Terser library.",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -25,7 +25,9 @@
     "type": "git",
     "url": "git+https://github.com/suseejs/plugin-terser.git"
   },
-  "keywords": [],
+  "keywords": [
+    "Susee"
+  ],
   "author": {
     "name": "Pho Thin Mg",
     "email": "phothinmg@disroot.org",
@@ -37,7 +39,7 @@
   },
   "homepage": "https://github.com/suseejs/plugin-terser#readme",
   "devDependencies": {
-    "@suseejs/types": "^0.1.9",
+    "@suseejs/types": "^0.2.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
