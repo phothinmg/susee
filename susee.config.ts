@@ -1,4 +1,4 @@
-import type { SuSeeConfig } from "@suseejs/types";
+import type { SuSeeConfig } from "./src/lib/types.js";
 import suseeBannerText from "@suseejs/plugin-banner-text";
 import suseeTerser from "@suseejs/plugin-terser";
 
@@ -13,14 +13,14 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 `.trim();
 
 const config: SuSeeConfig = {
-	entryPoints: [
-		{
-			entry: "src/index.ts",
-			exportPath: ".",
-			format: "both",
-		},
-	],
-	plugins: [suseeBannerText(licenseText), suseeTerser()],
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: "both",
+    },
+  ],
+  plugins: [suseeBannerText(licenseText), suseeTerser()],
 };
 
 export default config;
