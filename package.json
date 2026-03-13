@@ -1,6 +1,6 @@
 {
 	"name": "susee",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"description": "Tiny TypeScript Bundler",
 	"type": "module",
 	"main": "dist/html.cjs",
