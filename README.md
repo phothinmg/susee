@@ -1,6 +1,8 @@
+<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD041 -->
 <div align="center">
-<img src="https://github.com/suseejs/dependencies/blob/main/susee.png" width="160" height="160" alt="susee">
-<h1>utils</h1>
+<img src="https://susee.phothin.dev/logo/susee.webp" width="160" height="160" alt="susee" />
+  <h1>Susee Utilities</h1>
 </div>
 
 Utilities for suseejs
