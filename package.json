@@ -40,6 +40,12 @@
     "url": "https://github.com/suseejs/resolves/issues"
   },
   "homepage": "https://github.com/suseejs/resolves#readme",
+  "files": [
+    "lib/**/*",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
   "publishConfig": {
     "access": "public"
   }
