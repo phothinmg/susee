@@ -7,7 +7,7 @@ describe("Rename Duplicates", () => {
   it("rename and called in property assignment", async (t) => {
     const cwd = process.cwd();
     const temp = ts.sys.resolvePath(
-      "tests/bundle/duplicate_rename/property_assignment",
+      "tests/hooks/duplicate_rename/property_assignment",
     );
     process.chdir(temp);
     try {
@@ -23,7 +23,7 @@ describe("Rename Duplicates", () => {
   it("rename and called in return statement", async (t) => {
     const cwd = process.cwd();
     const temp = ts.sys.resolvePath(
-      "tests/bundle/duplicate_rename/return_statement",
+      "tests/hooks/duplicate_rename/return_statement",
     );
     process.chdir(temp);
     try {

@@ -19,4 +19,6 @@ def.json
 .notes.txt
 s
 out
-site/
+ssr
+site
+

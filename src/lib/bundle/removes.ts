@@ -144,8 +144,6 @@ let properties: string[] = [];
 const typeObj: TypeObj = {};
 const typesNames: string[] = [];
 
-
-
 /**
  * A bundle handler that removes all imports from the given source files.
  * @param {string[]} removedStatements - An array of strings to be removed from the source files.
