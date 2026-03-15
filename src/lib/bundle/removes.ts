@@ -144,20 +144,7 @@ let properties: string[] = [];
 const typeObj: TypeObj = {};
 const typesNames: string[] = [];
 
-/**
- * Finds all the properties accessed in the given node.
- * @param {ts.Node} node - The node to search through.
- * @returns {string[]} - An array of all the properties accessed.
- */
-// function findProperty(node: ts.Node): string[] {
-//   const properties: string[] = [];
-//   if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression)) {
-//     properties.push(node.expression.text);
-//   }
 
-//   node.forEachChild((n) => findProperty(n));
-//   return properties;
-// }
 
 /**
  * A bundle handler that removes all imports from the given source files.

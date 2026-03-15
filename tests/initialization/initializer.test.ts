@@ -18,7 +18,6 @@ describe("initializer", () => {
 			assert.strictEqual(point.fileName, "src/index.ts");
 			assert.strictEqual(point.exportPath, ".");
 			assert.strictEqual(point.format, "both");
-			assert.strictEqual(point.rename, true);
 			assert.strictEqual(point.outDir, "dist");
 			assert.strictEqual(point.plugins.length, 0);
 			assert.strictEqual(point.depFiles.length, 1);

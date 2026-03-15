@@ -1,0 +1,5 @@
+site_name: Susee
+nav:
+  - Home: index.md
+  - About: about.md
+theme: readthedocs
