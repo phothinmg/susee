@@ -22,3 +22,6 @@ out
 ssr
 site
 
+## Vitepress
+docs/.vitepress/dist
+docs/.vitepress/cache

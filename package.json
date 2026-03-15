@@ -33,7 +33,10 @@
     "lint:test": "biome check tests --write",
     "prepare": "husky",
     "deploy": "mkdocs gh-deploy",
-    "dev": "mkdocs serve"
+    "dev": "mkdocs serve",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "bundler",
@@ -62,7 +65,8 @@
     "@suseejs/plugin-terser": "^1.0.32",
     "@types/node": "^25.1.0",
     "husky": "^9.1.7",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "vitepress": "^2.0.0-alpha.16"
   },
   "files": [
     "package.json",
