@@ -59,7 +59,6 @@ async function bundler(point: InitializedPoint): Promise<BundledPoint> {
 		`> ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 	);
 	let depsFiles = point.depFiles;
-	const reName = point.rename;
 	const compilerOptions = point.tsOptions.default;
 	const plugins = point.plugins;
 	let removedStatements: string[] = [];

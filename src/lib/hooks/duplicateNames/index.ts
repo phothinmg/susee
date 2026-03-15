@@ -5,7 +5,6 @@ import transformFunction from "@suseejs/transformer";
 import type {
 	BundleHandler,
 	DependenciesFile,
-	DependencyPlugin,
 	DuplicatesNameMap,
 	NamesSets,
 } from "@suseejs/types";

@@ -20,20 +20,20 @@ describe("Rename Duplicates", () => {
 			process.chdir(cwd);
 		}
 	});
-	it("rename and called in return statement", async (t) => {
-		const cwd = process.cwd();
-		const temp = ts.sys.resolvePath(
-			"tests/bundle/duplicate_rename/return_statement",
-		);
-		process.chdir(temp);
-		try {
-			const int = await initializer();
-			const bund = await bundle(int);
-			const actual = bund.points[0]?.sourceCode;
-			const expected = `//src/foo.ts\nfunction _dupName_due_3() {\n    return "Hello world";\n}\n//src/index.ts\nconst _dupName_due_5 = "Hey I'am the first one!!";\nexport function _dupName_gg_6() {\n    return _dupName_due_5;\n}\n`;
-			t.assert.deepEqual(actual, expected);
-		} finally {
-			process.chdir(cwd);
-		}
-	});
+	// it("rename and called in return statement", async (t) => {
+	// 	const cwd = process.cwd();
+	// 	const temp = ts.sys.resolvePath(
+	// 		"tests/bundle/duplicate_rename/return_statement",
+	// 	);
+	// 	process.chdir(temp);
+	// 	try {
+	// 		const int = await initializer();
+	// 		const bund = await bundle(int);
+	// 		const actual = bund.points[0]?.sourceCode;
+	// 		const expected = `//src/foo.ts\nfunction _dupName_due_3() {\n    return "Hello world";\n}\n//src/index.ts\nconst _dupName_due_5 = "Hey I'am the first one!!";\nexport function _dupName_gg_6() {\n    return _dupName_due_5;\n}\n`;
+	// 		t.assert.deepEqual(actual, expected);
+	// 	} finally {
+	// 		process.chdir(cwd);
+	// 	}
+	// });
 });

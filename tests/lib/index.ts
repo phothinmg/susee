@@ -11,7 +11,18 @@ const jobs = [
 			const cp = exec(testScript);
 			cp.stdout?.pipe(process.stdout);
 			cp.stderr?.pipe(process.stderr);
-			cp.once("exit", (code) => (code === 0 ? resolve() : reject()));
+			cp.once("error", (error) => reject(error));
+			cp.once("close", (code, signal) => {
+				if (code === 0) {
+					resolve();
+					return;
+				}
+				reject(
+					new Error(
+						`Coverage tests failed (code: ${code ?? "null"}, signal: ${signal ?? "none"})`,
+					),
+				);
+			});
 		});
 	},
 	async () => {
@@ -29,7 +40,9 @@ const jobs = [
 		}
 	},
 	async () => {
-		await fs.promises.unlink("lcov.info");
+		if (fs.existsSync("lcov.info")) {
+			await fs.promises.unlink("lcov.info");
+		}
 	},
 ];
 
