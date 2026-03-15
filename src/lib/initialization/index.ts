@@ -1,18 +1,18 @@
-import tcolor from "@suseejs/tcolor";
 import type {
 	DependenciesFiles,
 	SuseePlugin,
 	SuseePluginFunction,
 } from "@suseejs/types";
 import ts from "typescript";
-import { depHooks } from "../../internalHooks.js";
-import utilities from "../utils.js";
+import { depHooksParser } from "../hooks/calledFunc.js";
+import internalHooks from "../hooks/index.js";
+import utils from "../utils.js";
 import compilerOptions from "./compilerOptions.js";
 import generateDependencies from "./dependencies.js";
 import finalSuseeConfig from "./suseeConfig.js";
 import typeCheck from "./typeCheck.js";
 
-export interface InitializePoint {
+export interface InitializedPoint {
 	fileName: string;
 	exportPath: "." | `./${string}`;
 	format: "commonjs" | "esm" | "both";
@@ -27,61 +27,9 @@ export interface InitializePoint {
 	plugins: (SuseePlugin | SuseePluginFunction)[];
 }
 
-export interface InitializeResult {
-	points: InitializePoint[];
+export interface InitializedResult {
+	points: InitializedPoint[];
 	allowUpdatePackageJson: boolean;
-}
-
-/**
- * Applies an array of dependency plugins to the given DependenciesFiles.
- * Dependency plugins are of type "dependency" and transform the given DependenciesFiles.
- * The plugins are applied in order and the result of the previous plugin is given as input to the next plugin.
- * @param depFiles - The DependenciesFiles to transform.
- * @param plugins - An array of plugins to apply.
- * @param compilerOptions - The compiler options to pass to the plugins.
- * @returns The transformed DependenciesFiles.
- */
-async function depPluginParser(
-	depFiles: DependenciesFiles,
-	plugins: (SuseePlugin | SuseePluginFunction)[],
-	compilerOptions: ts.CompilerOptions,
-) {
-	if (plugins.length) {
-		for (const plugin of plugins) {
-			const _plugin = typeof plugin === "function" ? plugin() : plugin;
-			if (_plugin.type === "dependency") {
-				if (_plugin.async) {
-					depFiles = await _plugin.func(depFiles, compilerOptions);
-				} else {
-					depFiles = _plugin.func(depFiles, compilerOptions);
-				}
-			}
-		}
-	}
-	return depFiles;
-}
-/**
- * Applies an array of dependency hooks to the given DependenciesFiles.
- * Dependency hooks are of type "dependency-hook" and transform the given DependenciesFiles.
- * The hooks are applied in order and the result of the previous hook is given as input to the next hook.
- * @param depFiles - The DependenciesFiles to transform.
- * @param compilerOptions - The compiler options to pass to the hooks.
- * @returns The transformed DependenciesFiles.
- */
-async function depHookParser(
-	depFiles: DependenciesFiles,
-	compilerOptions: ts.CompilerOptions,
-) {
-	if (depHooks.length) {
-		for (const hook of depHooks) {
-			if (hook.async) {
-				depFiles = await hook.func(depFiles, compilerOptions);
-			} else {
-				depFiles = hook.func(depFiles, compilerOptions);
-			}
-		}
-	}
-	return depFiles;
 }
 
 /**
@@ -90,12 +38,11 @@ async function depHookParser(
  * The result is an array of InitializePoint objects containing the collected data from each point.
  * @returns A promise that resolves to an InitializeResult object containing the collected data.
  */
-async function initializer(): Promise<InitializeResult> {
-	console.time(`${tcolor.cyan("Collected Data")}`);
+async function initializer(): Promise<InitializedResult> {
 	const __config = await finalSuseeConfig();
 	const points = __config.points;
 	const plugins = __config.plugins;
-	const result: InitializePoint[] = [];
+	const result: InitializedPoint[] = [];
 	for (const point of points) {
 		const __opts = compilerOptions(point);
 		let __deps = await generateDependencies(point.entry);
@@ -104,10 +51,19 @@ async function initializer(): Promise<InitializeResult> {
 			ts.sys.exit(1);
 		}
 		// call dependency plugins and hooks
-		__deps = await depPluginParser(__deps, plugins, __opts.default);
-		await utilities.wait(1000);
-		__deps = await depHookParser(__deps, __opts.default);
-		await utilities.wait(1000);
+		__deps = await utils.plugins.depPluginParser(
+			plugins,
+			__deps,
+			__opts.default,
+		);
+		// ---
+		__deps = await depHooksParser(
+			internalHooks.dep(),
+			__deps,
+			__opts.default,
+			point.renameDuplicates,
+		);
+		// --
 		const c = {
 			fileName: point.entry,
 			exportPath: point.exportPath,
@@ -121,14 +77,13 @@ async function initializer(): Promise<InitializeResult> {
 			},
 			depFiles: __deps,
 			plugins: plugins,
-		} as InitializePoint;
+		} as InitializedPoint;
 		result.push(c);
 	}
-	console.timeEnd(`${tcolor.cyan("Collected Data")}`);
 	return {
 		points: result,
 		allowUpdatePackageJson: __config.allowUpdatePackageJson,
-	} as InitializeResult;
+	} as InitializedResult;
 }
 
 export default initializer;

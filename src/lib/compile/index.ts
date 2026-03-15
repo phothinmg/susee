@@ -2,8 +2,10 @@ import path from "node:path";
 import tcolor from "@suseejs/tcolor";
 import type { OutFiles } from "@suseejs/types";
 import ts from "typescript";
-import type { BundledResult, BundlePoint } from "../bundle/index.js";
-import utilities from "../utils.js";
+import type { BundledPoint, BundledResult } from "../bundle/index.js";
+import { postProcessHooksParser } from "../hooks/calledFunc.js";
+import internalHooks from "../hooks/index.js";
+import utils from "../utils.js";
 import createHost from "./host.js";
 import writePackage from "./package.js";
 
@@ -30,17 +32,14 @@ class Compiler {
 	 * @param point - a point containing the file name, source code, format, and plugins.
 	 * @returns A promise that resolves when the compilation is complete.
 	 */
-	private async _commonjs(point: BundlePoint) {
+	private async _commonjs(point: BundledPoint) {
 		const isMain = point.exportPath === ".";
-		const _name = isMain
-			? "Main"
-			: utilities.splitCamelCase(point.exportPath.slice(2));
 		console.time(
-			`${tcolor.cyan(`Compiled CJS`)} -> ${tcolor.brightCyan(_name)} ${tcolor.cyan(`export path`)}`,
+			`  ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
-		const fileName = point.fileName;
-		const sourceCode = point.bundledContent;
+		const fileName = point.entryFileName;
+		const sourceCode = point.sourceCode;
 		const format = point.format;
 		const plugins = point.plugins;
 		const compilerOptions = point.tsOptions.cjs;
@@ -52,23 +51,20 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
-			const ext = path.extname(outName);
 			// ------------------------------------
+			const ext = path.extname(outName);
 			if (ext === ".js") {
-				if (plugins.length) {
-					for (let plugin of plugins) {
-						plugin = typeof plugin === "function" ? plugin() : plugin;
-						if (plugin.type === "post-process") {
-							if (plugin.async) {
-								content = await plugin.func(content, outName);
-							} else {
-								content = plugin.func(content, outName);
-							}
-						}
-					}
-				}
+				content = await utils.plugins.postProcessPluginParser(
+					plugins,
+					content,
+					outName,
+				);
+				content = await postProcessHooksParser(
+					internalHooks.post(),
+					content,
+					outName,
+				);
 			}
-
 			//----------------------------------------------------------------
 
 			if (this._isUpdate()) {
@@ -89,14 +85,11 @@ class Compiler {
 			outName = outName.replace(/.js/g, ".cjs");
 			outName = outName.replace(/.map.js/g, ".map.cjs");
 			outName = outName.replace(/.d.ts/g, ".d.cts");
-			await utilities.wait(500);
-			if (format === "commonjs") {
-				await utilities.clearFolder(path.dirname(outName));
-			}
-			await utilities.writeCompileFile(outName, content);
+			//await utils.wait(500);
+			await utils.file.writeFile(outName, content);
 		});
 		console.timeEnd(
-			`${tcolor.cyan(`Compiled CJS`)} -> ${tcolor.brightCyan(_name)} ${tcolor.cyan(`export path`)}`,
+			`  ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 	}
 	/**
@@ -104,17 +97,14 @@ class Compiler {
 	 * @param point - a point containing the file name, source code, format, and plugins.
 	 * @returns A promise that resolves when the compilation is complete.
 	 */
-	private async _esm(point: BundlePoint) {
+	private async _esm(point: BundledPoint) {
 		const isMain = point.exportPath === ".";
-		const _name = isMain
-			? "Main"
-			: utilities.splitCamelCase(point.exportPath.slice(2));
 		console.time(
-			`${tcolor.cyan(`Compiled ESM`)} -> ${tcolor.brightCyan(_name)} ${tcolor.cyan(`export path`)}`,
+			`  ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
-		const fileName = point.fileName;
-		const sourceCode = point.bundledContent;
+		const fileName = point.entryFileName;
+		const sourceCode = point.sourceCode;
 		const format = point.format;
 		const plugins = point.plugins;
 		const compilerOptions = point.tsOptions.esm;
@@ -129,18 +119,16 @@ class Compiler {
 			const ext = path.extname(outName);
 			// ------------------------------------
 			if (ext === ".js") {
-				if (plugins.length) {
-					for (let plugin of plugins) {
-						plugin = typeof plugin === "function" ? plugin() : plugin;
-						if (plugin.type === "post-process") {
-							if (plugin.async) {
-								content = await plugin.func(content, outName);
-							} else {
-								content = plugin.func(content, outName);
-							}
-						}
-					}
-				}
+				content = await utils.plugins.postProcessPluginParser(
+					plugins,
+					content,
+					outName,
+				);
+				content = await postProcessHooksParser(
+					internalHooks.post(),
+					content,
+					outName,
+				);
 			}
 			//----------------------------------------------------------------
 
@@ -159,14 +147,11 @@ class Compiler {
 			outName = outName.replace(/.js/g, ".mjs");
 			outName = outName.replace(/.map.js/g, ".map.mjs");
 			outName = outName.replace(/.d.ts/g, ".d.mts");
-			await utilities.wait(500);
-			if (format !== "commonjs") {
-				await utilities.clearFolder(path.dirname(outName));
-			}
-			await utilities.writeCompileFile(outName, content);
+			//await utils.wait(500);
+			await utils.file.writeFile(outName, content);
 		});
 		console.timeEnd(
-			`${tcolor.cyan(`Compiled ESM`)} -> ${tcolor.brightCyan(_name)} ${tcolor.cyan(`export path`)}`,
+			`  ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 	}
 	/**
@@ -179,7 +164,7 @@ class Compiler {
 	 */
 	async compile() {
 		for (const point of this.object.points) {
-			await utilities.wait(500);
+			await utils.file.clearFolder(point.outDir);
 			switch (point.format) {
 				case "commonjs":
 					await this._commonjs(point);
@@ -195,14 +180,14 @@ class Compiler {
 					break;
 				case "both":
 					await this._esm(point);
-					await utilities.wait(1000);
+					await utils.wait(1000);
 					await this._commonjs(point);
 					if (this._isUpdate()) {
 						await writePackage(this.files, point.exportPath);
 					}
 					break;
 			}
-			await utilities.wait(500);
+			await utils.wait(500);
 		}
 	}
 }

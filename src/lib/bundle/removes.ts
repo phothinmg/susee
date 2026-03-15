@@ -1,4 +1,4 @@
-import resolves from "@phothinmaung/resolves";
+import resolves from "@suseejs/resolves";
 import transformFunction from "@suseejs/transformer";
 import type {
 	BundleHandler,
@@ -6,8 +6,8 @@ import type {
 	RequireImportObject,
 	TypeObj,
 } from "@suseejs/types";
-import utilities from "@suseejs/utils";
 import ts from "typescript";
+import utils from "../utils.js";
 
 /**
  * A bundle handler that takes a list of source files and transforms them into renamed source files.
@@ -33,7 +33,7 @@ function esmExportRemoveHandler(
 			const { factory } = context;
 			const visitor = (node: ts.Node): ts.Node => {
 				// --- Case 1: Strip "export" modifiers ---
-				const inside_nameSpace = utilities.isInsideNamespace(node);
+				const inside_nameSpace = utils.check.isInsideNamespace(node);
 				if (!inside_nameSpace) {
 					if (
 						ts.isFunctionDeclaration(node) ||
@@ -149,15 +149,15 @@ const typesNames: string[] = [];
  * @param {ts.Node} node - The node to search through.
  * @returns {string[]} - An array of all the properties accessed.
  */
-function findProperty(node: ts.Node) {
-	const properties: string[] = [];
-	if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression)) {
-		properties.push(node.expression.text);
-	}
+// function findProperty(node: ts.Node): string[] {
+//   const properties: string[] = [];
+//   if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression)) {
+//     properties.push(node.expression.text);
+//   }
 
-	node.forEachChild((n) => findProperty(n));
-	return properties;
-}
+//   node.forEachChild((n) => findProperty(n));
+//   return properties;
+// }
 
 /**
  * A bundle handler that removes all imports from the given source files.
@@ -194,7 +194,7 @@ function importAllRemoveHandler(
 		const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
 			const { factory } = context;
 			const visitor = (node: ts.Node): ts.Node => {
-				properties = [...properties, ...findProperty(node)];
+				properties = [...properties, ...utils.findProperty(node)];
 				const obj: RequireImportObject = {
 					isNamespace: false,
 					isTypeOnly: false,
@@ -223,7 +223,7 @@ function importAllRemoveHandler(
 					// If this qualified name refers to a type-only import-equals alias, DO NOT rewrite.
 					// Rewriting (Foo.Bar -> Bar) was intended to support converting to named imports,
 					// but for type-only namespace imports we will emit `import type * as Foo from "..."`.
-					if (utilities.checkModuleType(sourceFile, file).isCommonJs) {
+					if (utils.check.moduleType(sourceFile, file).isCommonJs) {
 						if (left !== "ts" && !typeOnlyImportEquals.has(left)) {
 							return factory.updateTypeReferenceNode(
 								node,

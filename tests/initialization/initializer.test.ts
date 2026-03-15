@@ -31,26 +31,4 @@ describe("initializer", () => {
 			process.chdir(cwd);
 		}
 	});
-
-	//   it("applies dependency plugins in order", async () => {
-	//     const cwd = process.cwd();
-	//     const temp = ts.sys.resolvePath("tests/initialization/initializer/plugins");
-	//     process.chdir(temp);
-	//     try {
-	//       const result = await initializer();
-	//       assert.strictEqual(result.allowUpdatePackageJson, false);
-	//       assert.strictEqual(result.points.length, 1);
-
-	//       const point = result.points[0];
-	//       assert.ok(point);
-	//       assert.strictEqual(point.plugins.length, 2);
-	//       //assert.strictEqual(point.depFiles.length, 1);
-	//       const depFile = point.depFiles[0];
-	//       assert.ok(depFile);
-	//       assert.match(depFile.content, /\/\* sync \*\//);
-	//       assert.match(depFile.content, /\/\* async \*\//);
-	//     } finally {
-	//       process.chdir(cwd);
-	//     }
-	//   });
 });

@@ -3,14 +3,16 @@ import path from "node:path";
 import { describe, it } from "node:test";
 import ts from "typescript";
 import Compiler from "../../src/lib/compile/index.js";
-import utilities from "../../src/lib/utils.js";
+import utils from "../../src/lib/utils.js";
 
 type WriteCall = { file: string; content: string };
 
-type TestUtils = {
-	wait: (time: number) => Promise<void>;
-	clearFolder: (folderPath: string) => Promise<void>;
-	writeCompileFile: (file: string, content: string) => Promise<void>;
+type MutableUtils = {
+	wait: typeof utils.wait;
+	file: {
+		clearFolder: typeof utils.file.clearFolder;
+		writeFile: typeof utils.file.writeFile;
+	};
 };
 
 function createPoint(
@@ -18,10 +20,9 @@ function createPoint(
 	overrides?: Partial<Record<string, unknown>>,
 ) {
 	return {
-		fileName: "src/index.ts",
+		entryFileName: "src/index.ts",
 		exportPath: ".",
 		format,
-		rename: true,
 		outDir: "dist",
 		tsOptions: {
 			cjs: {
@@ -60,7 +61,7 @@ function createPoint(
 				},
 			}),
 		],
-		bundledContent: ["const value: number = 1;", "export default value;"].join(
+		sourceCode: ["const value: number = 1;", "export default value;"].join(
 			"\n",
 		),
 		...overrides,
@@ -75,18 +76,18 @@ describe("Compiler", () => {
 	it("compiles both format and writes package update outputs", async () => {
 		const writeCalls: WriteCall[] = [];
 		const clearedFolders: string[] = [];
-		const utils = utilities as unknown as TestUtils;
+		const mutableUtils = utils as MutableUtils;
 		const original = {
 			wait: utils.wait,
-			clearFolder: utils.clearFolder,
-			writeCompileFile: utils.writeCompileFile,
+			clearFolder: utils.file.clearFolder,
+			writeFile: utils.file.writeFile,
 		};
 
-		utils.wait = async () => {};
-		utils.clearFolder = async (folderPath: string) => {
+		mutableUtils.wait = async () => {};
+		mutableUtils.file.clearFolder = async (folderPath: string) => {
 			clearedFolders.push(folderPath);
 		};
-		utils.writeCompileFile = async (file: string, content: string) => {
+		mutableUtils.file.writeFile = async (file: string, content: string) => {
 			writeCalls.push({ file: path.normalize(file), content });
 		};
 
@@ -120,27 +121,27 @@ describe("Compiler", () => {
 			assert.match(jsOutput, /\/\* post-async \*\//);
 			assert.ok(clearedFolders.length > 0);
 		} finally {
-			utils.wait = original.wait;
-			utils.clearFolder = original.clearFolder;
-			utils.writeCompileFile = original.writeCompileFile;
+			mutableUtils.wait = original.wait;
+			mutableUtils.file.clearFolder = original.clearFolder;
+			mutableUtils.file.writeFile = original.writeFile;
 		}
 	});
 
 	it("compiles esm and commonjs points without package update", async () => {
 		const writeCalls: WriteCall[] = [];
 		const clearedFolders: string[] = [];
-		const utils = utilities as unknown as TestUtils;
+		const mutableUtils = utils as MutableUtils;
 		const original = {
 			wait: utils.wait,
-			clearFolder: utils.clearFolder,
-			writeCompileFile: utils.writeCompileFile,
+			clearFolder: utils.file.clearFolder,
+			writeFile: utils.file.writeFile,
 		};
 
-		utils.wait = async () => {};
-		utils.clearFolder = async (folderPath: string) => {
+		mutableUtils.wait = async () => {};
+		mutableUtils.file.clearFolder = async (folderPath: string) => {
 			clearedFolders.push(folderPath);
 		};
-		utils.writeCompileFile = async (file: string, content: string) => {
+		mutableUtils.file.writeFile = async (file: string, content: string) => {
 			writeCalls.push({ file: path.normalize(file), content });
 		};
 
@@ -148,11 +149,11 @@ describe("Compiler", () => {
 			const compiler = new Compiler({
 				points: [
 					createPoint("esm", {
-						fileName: "src/esm-entry.ts",
+						entryFileName: "src/esm-entry.ts",
 						exportPath: "./esm-entry",
 					}) as never,
 					createPoint("commonjs", {
-						fileName: "src/cjs-entry.ts",
+						entryFileName: "src/cjs-entry.ts",
 						exportPath: "./cjs-entry",
 					}) as never,
 				],
@@ -167,9 +168,9 @@ describe("Compiler", () => {
 			assert.ok(!outFiles.some((f) => f.endsWith("package.json")));
 			assert.ok(clearedFolders.length >= 2);
 		} finally {
-			utils.wait = original.wait;
-			utils.clearFolder = original.clearFolder;
-			utils.writeCompileFile = original.writeCompileFile;
+			mutableUtils.wait = original.wait;
+			mutableUtils.file.clearFolder = original.clearFolder;
+			mutableUtils.file.writeFile = original.writeFile;
 		}
 	});
 });

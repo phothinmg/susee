@@ -1,4 +1,4 @@
-import type { SuSeeConfig } from "@suseejs/types";
+import type { SuSeeConfig } from "../../../../src/lib/types.js";
 
 export default {
 	entryPoints: [

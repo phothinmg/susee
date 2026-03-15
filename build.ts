@@ -1,12 +1,11 @@
 import utils from "@suseejs/utils";
 import { exec } from "node:child_process";
 import { susee } from "./src/index.js";
-import utilities from "@suseejs/utils";
 
 async function writeBin() {
-	const filePath = utils.resolvePath("bin/index.mjs");
+	const filePath = utils.file.resolvePath("bin/index.mjs");
 	const text = `#!/usr/bin/env node\nimport  {susee} from "../dist/index.mjs";\nawait susee();`;
-	await utilities.writeCompileFile(filePath, text);
+	await utils.file.writeFile(filePath, text);
 }
 
 async function build() {

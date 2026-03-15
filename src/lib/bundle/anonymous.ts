@@ -1,5 +1,5 @@
 import path from "node:path";
-import resolves from "@phothinmaung/resolves";
+import resolves from "@suseejs/resolves";
 import transformFunction from "@suseejs/transformer";
 import type {
 	BundleHandler,
@@ -7,14 +7,14 @@ import type {
 	NamesSets,
 } from "@suseejs/types";
 import ts from "typescript";
-import uniqueName from "./uniqueName.js";
+import utils from "../utils.js";
 
 const exportDefaultExportNameMap: NamesSets = [];
 const exportDefaultImportNameMap: NamesSets = [];
 
 const prefixKey = "AnonymousName";
 
-const genName = uniqueName().setPrefix({
+const genName = utils.uniqueName().setPrefix({
 	key: prefixKey,
 	value: "__anonymous__",
 });

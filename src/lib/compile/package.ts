@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Exports, OutFiles } from "@suseejs/types";
 import ts from "typescript";
-import utilities from "../utils.js";
+import utils from "../utils.js";
 
 const isCjs = (files: OutFiles) => files.commonjs && files.commonjsTypes;
 const isEsm = (files: OutFiles) => files.esm && files.esmTypes;
@@ -86,7 +86,7 @@ async function writePackage(
 		exports,
 		...rest
 	} = pkgtext;
-	await utilities.wait(500);
+	await utils.wait(500);
 	type = "module";
 
 	let _main: Record<string, string> = {};
@@ -116,7 +116,7 @@ async function writePackage(
 			exports: { ...normalizedExports, ...getExports(files, exportPath) },
 		};
 	}
-	await utilities.wait(1000);
+	await utils.wait(1000);
 	const pkgJson = {
 		name,
 		version,
@@ -128,7 +128,7 @@ async function writePackage(
 		..._exports,
 		...rest,
 	};
-	utilities.writeCompileFile(pkgFile, JSON.stringify(pkgJson, null, 2));
+	utils.file.writeFile(pkgFile, JSON.stringify(pkgJson, null, 2));
 }
 
 export default writePackage;

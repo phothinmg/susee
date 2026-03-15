@@ -122,11 +122,11 @@ function sortObject(obj: any) {
 }
 
 export {
-	setupTempDir,
-	readJson,
-	fileExists,
-	expect,
 	exitWithCodeOneAndMessage,
 	exitWithCodeZeroAndMessage,
+	expect,
+	fileExists,
+	readJson,
+	setupTempDir,
 	sortObject,
 };

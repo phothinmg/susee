@@ -1,4 +1,6 @@
+import resolves from "@suseejs/resolves";
 import transformFunction from "@suseejs/transformer";
+import type { PreProcessPlugin } from "@suseejs/types";
 import ts from "typescript";
 
 export interface ClearUnusedOptions {
@@ -23,12 +25,7 @@ function collectBindingNames(name: ts.BindingName, out: string[]) {
  *
  * Limitations: this works on a single-file basis and does not analyze cross-file usages.
  */
-function clearUnusedCode(
-	content: string,
-	file: string,
-	compilerOptions: ts.CompilerOptions,
-	options: ClearUnusedOptions = { treatExportsAsUsed: true },
-) {
+function clearUnusedCode(content: string, file: string) {
 	const sourceFile = ts.createSourceFile(
 		file,
 		content,
@@ -124,7 +121,7 @@ function clearUnusedCode(
 	const unused = new Set<string>();
 	defined.forEach((meta, name) => {
 		if (used.has(name)) return;
-		if (options.treatExportsAsUsed && meta.exported) return;
+		if (meta.exported) return;
 		unused.add(name);
 	});
 
@@ -236,8 +233,24 @@ function clearUnusedCode(
 		return (root) => ts.visitNode(root, visitor) as ts.SourceFile;
 	};
 
-	const output = transformFunction(transformer, sourceFile, compilerOptions);
+	const output = transformFunction(
+		transformer,
+		sourceFile,
+		ts.getDefaultCompilerOptions(),
+	);
 	return output;
 }
 
-export default clearUnusedCode;
+function suseeInternalCleanUnusedCode(): PreProcessPlugin {
+	return {
+		type: "pre-process",
+		async: true,
+		func: async (code, file) => {
+			const toResolve = resolves([[clearUnusedCode, code, file]]);
+			const c = await toResolve.allSettled();
+			return c[0];
+		},
+	};
+}
+
+export default suseeInternalCleanUnusedCode;

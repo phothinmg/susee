@@ -1,4 +1,4 @@
-import resolves from "@phothinmaung/resolves";
+import resolves from "@suseejs/resolves";
 import tcolor from "@suseejs/tcolor";
 import type { DependenciesFiles } from "@suseejs/types";
 import ts from "typescript";

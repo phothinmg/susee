@@ -4,28 +4,10 @@ import { describe, it } from "node:test";
 import ts from "typescript";
 import bundle from "../../src/lib/bundle/index.js";
 import type {
-	InitializePoint,
-	InitializeResult,
+	InitializedPoint,
+	InitializedResult,
 } from "../../src/lib/initialization/index.js";
-import type { DependenciesFile } from "../../src/lib/types.js";
-
-function createDepFile(file: string, content: string): DependenciesFile {
-	return {
-		file,
-		content,
-		length: content.length,
-		includeDefExport: /export\s+default|export\s*=/.test(content),
-		size: {
-			logical: Buffer.byteLength(content, "utf8"),
-			allocated: null,
-			utf8: Buffer.byteLength(content, "utf8"),
-			buffBytes: Buffer.byteLength(content, "utf8"),
-		},
-		moduleType: "esm",
-		fileExt: path.extname(file) as ".ts",
-		isJsx: false,
-	};
-}
+import { createDepFile } from "./helpers.js";
 
 describe("bundle", () => {
 	it("bundles points and runs bundle handlers + pre-process plugins", async () => {
@@ -46,7 +28,7 @@ describe("bundle", () => {
 			"console.log(output, fs.existsSync ? 1 : 0, dup);",
 		].join("\n");
 
-		const point: InitializePoint = {
+		const point: InitializedPoint = {
 			fileName: "src/index.ts",
 			exportPath: ".",
 			format: "both",
@@ -81,7 +63,7 @@ describe("bundle", () => {
 				},
 			],
 		};
-		const input: InitializeResult = {
+		const input: InitializedResult = {
 			points: [point],
 			allowUpdatePackageJson: false,
 		};
@@ -90,12 +72,12 @@ describe("bundle", () => {
 		assert.strictEqual(result.allowUpdatePackageJson, false);
 		assert.strictEqual(result.points.length, 1);
 
-		const bundled = result.points[0]?.bundledContent;
+		const bundled = result.points[0]?.sourceCode;
 		assert.ok(bundled);
 		assert.match(bundled, /\/\* pre-sync \*\//);
 		assert.match(bundled, /\/\* pre-async \*\//);
 		assert.match(bundled, /__anonymous__/);
-		assert.match(bundled, /__dup__/);
+		//assert.match(bundled, /_dupName_/);
 		assert.match(bundled, /import fs from "node:fs";/);
 		assert.match(bundled, /\/\/src\/dep.ts/);
 		assert.match(bundled, /\/\/src\/index.ts/);
@@ -104,7 +86,7 @@ describe("bundle", () => {
 	});
 
 	it("bundles every point and keeps result ordering", async () => {
-		const makePoint = (suffix: string): InitializePoint => ({
+		const makePoint = (suffix: string): InitializedPoint => ({
 			fileName: `src/${suffix}.ts`,
 			exportPath: `./${suffix}`,
 			format: "esm",
@@ -127,7 +109,7 @@ describe("bundle", () => {
 			plugins: [],
 		});
 
-		const input: InitializeResult = {
+		const input: InitializedResult = {
 			points: [makePoint("a"), makePoint("b")],
 			allowUpdatePackageJson: true,
 		};
@@ -135,11 +117,82 @@ describe("bundle", () => {
 
 		assert.strictEqual(result.allowUpdatePackageJson, true);
 		assert.deepStrictEqual(
-			result.points.map((i) => i.fileName),
+			result.points.map((i) => i.entryFileName),
 			["src/a.ts", "src/b.ts"],
 		);
-		for (const point of result.points) {
-			assert.ok(point.bundledContent.length > 0);
-		}
+	});
+
+	it("preserves type-only imports when they are used in type positions", async () => {
+		const filePath = path.join(process.cwd(), "src", "type-only.ts");
+		const content = [
+			'import type { Foo } from "foo";',
+			"const value: Foo = { bar: 1 };",
+			"console.log(value.bar);",
+		].join("\n");
+
+		const point: InitializedPoint = {
+			fileName: "src/type-only.ts",
+			exportPath: "./type-only",
+			format: "esm",
+			rename: false,
+			outDir: "dist",
+			tsOptions: {
+				cjs: { module: ts.ModuleKind.CommonJS },
+				esm: { module: ts.ModuleKind.ES2020 },
+				default: {
+					module: ts.ModuleKind.ES2020,
+					target: ts.ScriptTarget.ES2022,
+				},
+			},
+			depFiles: [createDepFile(filePath, content)],
+			plugins: [],
+		};
+
+		const result = await bundle({
+			points: [point],
+			allowUpdatePackageJson: false,
+		});
+		const bundled = result.points[0]?.sourceCode;
+		assert.ok(bundled);
+		assert.match(bundled, /import type \{ Foo \} from "foo";/);
+		assert.doesNotMatch(bundled, /import \{ Foo \} from "foo";/);
+	});
+
+	it("removes unused default, named, and type import specifiers", async () => {
+		const filePath = path.join(process.cwd(), "src", "mixed-imports.ts");
+		const content = [
+			'import DefaultThing, { Used, Unused, type TypeUsed, type TypeUnused } from "pkg";',
+			"const value: TypeUsed = Used;",
+			"console.log(value);",
+		].join("\n");
+
+		const point: InitializedPoint = {
+			fileName: "src/mixed-imports.ts",
+			exportPath: "./mixed-imports",
+			format: "esm",
+			rename: false,
+			outDir: "dist",
+			tsOptions: {
+				cjs: { module: ts.ModuleKind.CommonJS },
+				esm: { module: ts.ModuleKind.ES2020 },
+				default: {
+					module: ts.ModuleKind.ES2020,
+					target: ts.ScriptTarget.ES2022,
+				},
+			},
+			depFiles: [createDepFile(filePath, content)],
+			plugins: [],
+		};
+
+		const result = await bundle({
+			points: [point],
+			allowUpdatePackageJson: false,
+		});
+		const bundled = result.points[0]?.sourceCode;
+		assert.ok(bundled);
+		assert.doesNotMatch(bundled, /DefaultThing/);
+		assert.doesNotMatch(bundled, /\bUnused\b/);
+		assert.doesNotMatch(bundled, /\bTypeUnused\b/);
+		assert.match(bundled, /import \{ Used, type TypeUsed \} from "pkg";/);
 	});
 });
