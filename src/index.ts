@@ -8,21 +8,21 @@ import { initializer } from "./lib/initialization/index.js";
 import type { SuSeeConfig } from "./lib/types.js";
 
 const packageContent = fs.readFileSync(
-  path.resolve(process.cwd(), "package.json"),
-  "utf8",
+	path.resolve(process.cwd(), "package.json"),
+	"utf8",
 );
 const pkg = JSON.parse(packageContent);
 const name = pkg.name ?? "";
 const version = pkg.version ?? "";
 let pkg_nv = "";
 if (name !== "" && version !== "") {
-  pkg_nv = `${name}@${version}`;
+	pkg_nv = `${name}@${version}`;
 } else if (name !== "" && version === "") {
-  pkg_nv = `${name}`;
+	pkg_nv = `${name}`;
 } else if (name === "" && version !== "") {
-  pkg_nv = `the project@${version}`;
+	pkg_nv = `the project@${version}`;
 } else {
-  pkg_nv = "the project";
+	pkg_nv = "the project";
 }
 
 /**
@@ -37,18 +37,18 @@ if (name !== "" && version !== "") {
  * process is complete.
  */
 async function susee(): Promise<void> {
-  console.time(`susee > ${tcolor.cyan(`Done in`)}`);
-  console.time(
-    `susee > ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `,
-  );
-  const initialized = await initializer();
-  console.timeEnd(
-    `susee > ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `,
-  );
-  const bundled = await bundle(initialized);
-  const compiler = new Compiler(bundled);
-  await compiler.compile();
-  console.timeEnd(`susee > ${tcolor.cyan(`Done in`)}`);
+	console.time(`susee > ${tcolor.cyan(`Done in`)}`);
+	console.time(
+		`susee > ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `,
+	);
+	const initialized = await initializer();
+	console.timeEnd(
+		`susee > ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `,
+	);
+	const bundled = await bundle(initialized);
+	const compiler = new Compiler(bundled);
+	await compiler.compile();
+	console.timeEnd(`susee > ${tcolor.cyan(`Done in`)}`);
 }
 
 export type { SuSeeConfig };
