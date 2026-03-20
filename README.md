@@ -2,15 +2,15 @@
 <!-- markdownlint-disable MD041 -->
 <div align="center">
 <img src="https://susee.phothin.dev/logo/susee.webp" width="160" height="160" alt="susee" />
-  <h1>susee</h1>
+  <h1>Susee</h1>
 </div>
 <!-- markdownlint-enable MD033 -->
 
 [![npm version](https://img.shields.io/npm/v/susee)](https://www.npmjs.com/package/susee) [![license](https://img.shields.io/npm/l/susee)](LICENSE) [![Socket Badge](https://badge.socket.dev/npm/package/susee/1.0.1)](https://badge.socket.dev/npm/package/susee/1.0.1) [![codecov](https://codecov.io/gh/phothinmg/susee/graph/badge.svg?token=6240Y3L0V1)](https://codecov.io/gh/phothinmg/susee)
 
-## Overview
+## About
 
-`susee` is a TypeScript bundler that processes a package's local dependency tree and emits compiled artifacts in multiple module formats. Unlike general-purpose bundlers that target browser environments or bundle `node_modules`, `susee` focuses on library authorship: it collates local TypeScript files, merges them into cohesive bundles, compiles them through the TypeScript compiler, and generates properly formatted outputs for consumption as npm packages.
+**Susee** is a simple TypeScript bundler designed for `npm` library authorship (_not application bundler_) that processes a package's local dependency tree and emits compiled artifacts in multiple module formats and collates local TypeScript files, merges them into cohesive bundles, compiles them through the TypeScript compiler, and generates properly formatted outputs for consumption as `npm` packages.
 
 ## Key Features
 
@@ -187,6 +187,7 @@ Output file name hints (produced by the compiler):
 ## Limitations & notes
 
 - The bundler only processes local TypeScript files and does not bundle `node_modules` packages.
+- Only support `.ts` , `.mts` and `.cts` file extensions.
 - The entry file should be an ESM-compatible TypeScript file.
 - Exports from the entry file are not removed — only dependency exports may be stripped during bundling.
 
