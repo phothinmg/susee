@@ -2,32 +2,10 @@ import path from "node:path";
 import tcolor from "@suseejs/tcolor";
 import type { OutFiles } from "@suseejs/types";
 import ts from "typescript";
-import type { BundledPoint, BundledResult } from "../bundle/index.js";
-import InternalHooks from "../hooks/index.js";
-import utils from "../utils.js";
+import type { BundledResult, BundlePoint } from "../bundle/index.js";
+import utilities from "../utils.js";
 import createHost from "./host.js";
 import writePackage from "./package.js";
-
-const parsePostPluginsAndHooks = async (
-	outName: string,
-	content: string,
-	plugins: BundledPoint["plugins"],
-) => {
-	const ext = path.extname(outName);
-	if (ext === ".js") {
-		content = await utils.plugins.postProcessPluginParser(
-			plugins,
-			content,
-			outName,
-		);
-		content = await InternalHooks.postProcessHooksParser(
-			InternalHooks.getPostHooks(),
-			content,
-			outName,
-		);
-	}
-	return content;
-};
 
 class Compiler {
 	private files: OutFiles;
@@ -52,15 +30,19 @@ class Compiler {
 	 * @param point - a point containing the file name, source code, format, and plugins.
 	 * @returns A promise that resolves when the compilation is complete.
 	 */
-	private async _commonjs(point: BundledPoint) {
+	private async _commonjs(point: BundlePoint) {
 		const isMain = point.exportPath === ".";
+		const _name = isMain
+			? "Main"
+			: utilities.splitCamelCase(point.exportPath.slice(2));
 		console.time(
-			`  ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`        ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
-		const fileName = point.entryFileName;
-		const sourceCode = point.sourceCode;
+		const fileName = point.fileName;
+		const sourceCode = point.bundledContent;
 		const format = point.format;
+		const plugins = point.plugins;
 		const compilerOptions = point.tsOptions.cjs;
 
 		// create host
@@ -70,7 +52,23 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
-			content = await parsePostPluginsAndHooks(outName, content, point.plugins);
+			const ext = path.extname(outName);
+			// ------------------------------------
+			if (ext === ".js") {
+				if (plugins.length) {
+					for (let plugin of plugins) {
+						plugin = typeof plugin === "function" ? plugin() : plugin;
+						if (plugin.type === "post-process") {
+							if (plugin.async) {
+								content = await plugin.func(content, outName);
+							} else {
+								content = plugin.func(content, outName);
+							}
+						}
+					}
+				}
+			}
+
 			//----------------------------------------------------------------
 
 			if (this._isUpdate()) {
@@ -91,10 +89,14 @@ class Compiler {
 			outName = outName.replace(/.js/g, ".cjs");
 			outName = outName.replace(/.map.js/g, ".map.cjs");
 			outName = outName.replace(/.d.ts/g, ".d.cts");
-			await utils.file.writeFile(outName, content);
+			await utilities.wait(500);
+			if (format === "commonjs") {
+				await utilities.clearFolder(path.dirname(outName));
+			}
+			await utilities.writeCompileFile(outName, content);
 		});
 		console.timeEnd(
-			`  ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`        ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 	}
 	/**
@@ -102,15 +104,19 @@ class Compiler {
 	 * @param point - a point containing the file name, source code, format, and plugins.
 	 * @returns A promise that resolves when the compilation is complete.
 	 */
-	private async _esm(point: BundledPoint) {
+	private async _esm(point: BundlePoint) {
 		const isMain = point.exportPath === ".";
+		const _name = isMain
+			? "Main"
+			: utilities.splitCamelCase(point.exportPath.slice(2));
 		console.time(
-			`  ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`        ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
-		const fileName = point.entryFileName;
-		const sourceCode = point.sourceCode;
+		const fileName = point.fileName;
+		const sourceCode = point.bundledContent;
 		const format = point.format;
+		const plugins = point.plugins;
 		const compilerOptions = point.tsOptions.esm;
 
 		// create host
@@ -120,7 +126,22 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
-			content = await parsePostPluginsAndHooks(outName, content, point.plugins);
+			const ext = path.extname(outName);
+			// ------------------------------------
+			if (ext === ".js") {
+				if (plugins.length) {
+					for (let plugin of plugins) {
+						plugin = typeof plugin === "function" ? plugin() : plugin;
+						if (plugin.type === "post-process") {
+							if (plugin.async) {
+								content = await plugin.func(content, outName);
+							} else {
+								content = plugin.func(content, outName);
+							}
+						}
+					}
+				}
+			}
 			//----------------------------------------------------------------
 
 			if (this._isUpdate()) {
@@ -138,11 +159,14 @@ class Compiler {
 			outName = outName.replace(/.js/g, ".mjs");
 			outName = outName.replace(/.map.js/g, ".map.mjs");
 			outName = outName.replace(/.d.ts/g, ".d.mts");
-			//await utils.wait(500);
-			await utils.file.writeFile(outName, content);
+			await utilities.wait(500);
+			if (format !== "commonjs") {
+				await utilities.clearFolder(path.dirname(outName));
+			}
+			await utilities.writeCompileFile(outName, content);
 		});
 		console.timeEnd(
-			`  ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`        ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 	}
 	/**
@@ -155,7 +179,7 @@ class Compiler {
 	 */
 	async compile() {
 		for (const point of this.object.points) {
-			await utils.file.clearFolder(point.outDir);
+			await utilities.wait(500);
 			switch (point.format) {
 				case "commonjs":
 					await this._commonjs(point);
@@ -171,14 +195,14 @@ class Compiler {
 					break;
 				case "both":
 					await this._esm(point);
-					await utils.wait(1000);
+					await utilities.wait(1000);
 					await this._commonjs(point);
 					if (this._isUpdate()) {
 						await writePackage(this.files, point.exportPath);
 					}
 					break;
 			}
-			await utils.wait(500);
+			await utilities.wait(500);
 		}
 	}
 }

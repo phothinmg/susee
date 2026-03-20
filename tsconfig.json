@@ -44,5 +44,13 @@
 		"moduleDetection": "force",
 		"skipLibCheck": true
 	},
-	"include": ["src/**/*", "tests/**/*", "a.ts", "b.ts", "build.ts", "sr"]
+	"include": [
+		"src/**/*",
+		"tests/**/*",
+		"b.ts",
+		"build.ts",
+		"ssr",
+		"a.ts",
+		"v2/**/*"
+	]
 }

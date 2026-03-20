@@ -6,8 +6,9 @@ import type {
 	RequireImportObject,
 	TypeObj,
 } from "@suseejs/types";
+//import utilities from "@suseejs/utils";
 import ts from "typescript";
-import utils from "../utils.js";
+import utilities from "../utils.js";
 
 /**
  * A bundle handler that takes a list of source files and transforms them into renamed source files.
@@ -33,7 +34,7 @@ function esmExportRemoveHandler(
 			const { factory } = context;
 			const visitor = (node: ts.Node): ts.Node => {
 				// --- Case 1: Strip "export" modifiers ---
-				const inside_nameSpace = utils.check.isInsideNamespace(node);
+				const inside_nameSpace = utilities.isInsideNamespace(node);
 				if (!inside_nameSpace) {
 					if (
 						ts.isFunctionDeclaration(node) ||
@@ -145,6 +146,21 @@ const typeObj: TypeObj = {};
 const typesNames: string[] = [];
 
 /**
+ * Finds all the properties accessed in the given node.
+ * @param {ts.Node} node - The node to search through.
+ * @returns {string[]} - An array of all the properties accessed.
+ */
+function findProperty(node: ts.Node) {
+	const properties: string[] = [];
+	if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression)) {
+		properties.push(node.expression.text);
+	}
+
+	node.forEachChild((n) => findProperty(n));
+	return properties;
+}
+
+/**
  * A bundle handler that removes all imports from the given source files.
  * @param {string[]} removedStatements - An array of strings to be removed from the source files.
  * @param {ts.CompilerOptions} compilerOptions - The options for the TypeScript compiler.
@@ -179,7 +195,7 @@ function importAllRemoveHandler(
 		const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
 			const { factory } = context;
 			const visitor = (node: ts.Node): ts.Node => {
-				properties = [...properties, ...utils.findProperty(node)];
+				properties = [...properties, ...findProperty(node)];
 				const obj: RequireImportObject = {
 					isNamespace: false,
 					isTypeOnly: false,
@@ -208,7 +224,7 @@ function importAllRemoveHandler(
 					// If this qualified name refers to a type-only import-equals alias, DO NOT rewrite.
 					// Rewriting (Foo.Bar -> Bar) was intended to support converting to named imports,
 					// but for type-only namespace imports we will emit `import type * as Foo from "..."`.
-					if (utils.check.moduleType(sourceFile, file).isCommonJs) {
+					if (utilities.checkModuleType(sourceFile, file).isCommonJs) {
 						if (left !== "ts" && !typeOnlyImportEquals.has(left)) {
 							return factory.updateTypeReferenceNode(
 								node,

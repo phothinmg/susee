@@ -4,17 +4,17 @@ import type {
 	SuseePluginFunction,
 } from "@suseejs/types";
 import ts from "typescript";
-import InternalHooks from "../hooks/index.js";
-import utils from "../utils.js";
-import finalCompilerOptions from "./compilerOptions.js";
+import utilities from "../utils.js";
+import compilerOptions from "./compilerOptions.js";
 import generateDependencies from "./dependencies.js";
 import finalSuseeConfig from "./suseeConfig.js";
 import typeCheck from "./typeCheck.js";
 
-export interface InitializedPoint {
+export interface InitializePoint {
 	fileName: string;
 	exportPath: "." | `./${string}`;
 	format: "commonjs" | "esm" | "both";
+	rename: boolean;
 	outDir: string;
 	tsOptions: {
 		cjs: ts.CompilerOptions;
@@ -25,9 +25,38 @@ export interface InitializedPoint {
 	plugins: (SuseePlugin | SuseePluginFunction)[];
 }
 
-export interface InitializedResult {
-	points: InitializedPoint[];
+export interface InitializeResult {
+	points: InitializePoint[];
 	allowUpdatePackageJson: boolean;
+}
+
+/**
+ * Applies an array of dependency plugins to the given DependenciesFiles.
+ * Dependency plugins are of type "dependency" and transform the given DependenciesFiles.
+ * The plugins are applied in order and the result of the previous plugin is given as input to the next plugin.
+ * @param depFiles - The DependenciesFiles to transform.
+ * @param plugins - An array of plugins to apply.
+ * @param compilerOptions - The compiler options to pass to the plugins.
+ * @returns The transformed DependenciesFiles.
+ */
+async function depPluginParser(
+	depFiles: DependenciesFiles,
+	plugins: (SuseePlugin | SuseePluginFunction)[],
+	compilerOptions: ts.CompilerOptions,
+) {
+	if (plugins.length) {
+		for (const plugin of plugins) {
+			const _plugin = typeof plugin === "function" ? plugin() : plugin;
+			if (_plugin.type === "dependency") {
+				if (_plugin.async) {
+					depFiles = await _plugin.func(depFiles, compilerOptions);
+				} else {
+					depFiles = _plugin.func(depFiles, compilerOptions);
+				}
+			}
+		}
+	}
+	return depFiles;
 }
 
 /**
@@ -36,51 +65,41 @@ export interface InitializedResult {
  * The result is an array of InitializePoint objects containing the collected data from each point.
  * @returns A promise that resolves to an InitializeResult object containing the collected data.
  */
-async function initializer(): Promise<InitializedResult> {
-	const suseeFinalConfig = await finalSuseeConfig();
-	const points = suseeFinalConfig.points;
-	const plugins = suseeFinalConfig.plugins;
-	const result: InitializedPoint[] = [];
+async function initializer(): Promise<InitializeResult> {
+	const __config = await finalSuseeConfig();
+	const points = __config.points;
+	const plugins = __config.plugins;
+	const result: InitializePoint[] = [];
 	for (const point of points) {
-		const tsCompilerOptions = finalCompilerOptions(point);
-		let depsFiles = await generateDependencies(point.entry);
-		const typeChecked = await typeCheck(depsFiles, tsCompilerOptions.esm);
+		const __opts = compilerOptions(point);
+		let __deps = await generateDependencies(point.entry);
+		const typeChecked = await typeCheck(__deps, __opts.esm);
 		if (!typeChecked) {
 			ts.sys.exit(1);
 		}
 		// call dependency plugins and hooks
-		depsFiles = await utils.plugins.depPluginParser(
-			plugins,
-			depsFiles,
-			tsCompilerOptions.default,
-		);
-		// ---
-		depsFiles = await InternalHooks.depHooksParser(
-			InternalHooks.getDepHooks(),
-			depsFiles,
-			tsCompilerOptions.default,
-			point.renameDuplicates,
-		);
-		// --
+		__deps = await depPluginParser(__deps, plugins, __opts.default);
+		await utilities.wait(1000);
 		const c = {
 			fileName: point.entry,
 			exportPath: point.exportPath,
 			format: point.format,
+			rename: point.renameDuplicates,
 			outDir: point.outDirPath,
 			tsOptions: {
-				cjs: tsCompilerOptions.commonjs,
-				esm: tsCompilerOptions.esm,
-				default: tsCompilerOptions.default,
+				cjs: __opts.commonjs,
+				esm: __opts.esm,
+				default: __opts.default,
 			},
-			depFiles: depsFiles,
+			depFiles: __deps,
 			plugins: plugins,
-		} as InitializedPoint;
+		} as InitializePoint;
 		result.push(c);
 	}
 	return {
 		points: result,
-		allowUpdatePackageJson: suseeFinalConfig.allowUpdatePackageJson,
-	} as InitializedResult;
+		allowUpdatePackageJson: __config.allowUpdatePackageJson,
+	} as InitializeResult;
 }
 
 export default initializer;

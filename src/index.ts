@@ -6,7 +6,6 @@ import bundle from "./lib/bundle/index.js";
 import Compiler from "./lib/compile/index.js";
 import initializer from "./lib/initialization/index.js";
 import type { SuSeeConfig } from "./lib/types.js";
-import utils from "./lib/utils.js";
 
 const packageContent = fs.readFileSync(
 	path.resolve(process.cwd(), "package.json"),
@@ -35,16 +34,18 @@ if (name !== "" && version !== "") {
  * The function will return a promise that resolves when the compilation is done.
  */
 async function susee(): Promise<void> {
-	console.time(`${tcolor.cyan(`Done in`)}`);
-	console.time(`${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
+	console.time(`susee > ${tcolor.cyan(`Done in`)}`);
+	console.time(
+		`susee > ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `,
+	);
 	const initialized = await initializer();
-	console.timeEnd(`${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
-	await utils.wait(300);
+	console.timeEnd(
+		`susee > ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `,
+	);
 	const bundled = await bundle(initialized);
-	await utils.wait(300);
 	const compiler = new Compiler(bundled);
 	await compiler.compile();
-	console.timeEnd(`${tcolor.cyan(`Done in`)}`);
+	console.timeEnd(`susee > ${tcolor.cyan(`Done in`)}`);
 }
 
 export type { SuSeeConfig };

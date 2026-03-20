@@ -3,6 +3,7 @@ import tcolor from "@suseejs/tcolor";
 import type { SuseePlugin, SuseePluginFunction } from "@suseejs/types";
 import ts from "typescript";
 import type { EntryPoint, SuSeeConfig } from "../types.js";
+import utilities from "../utils.js";
 
 export interface Point {
 	entry: string;
@@ -101,7 +102,7 @@ async function finalSuseeConfig(): Promise<FinalSuseeConfig> {
 	const config = _default.default;
 	const entryCheck = resolves([[checkEntries, config.entryPoints]]);
 	await entryCheck.series();
-	//await utils.wait(1000);
+	await utilities.wait(1000);
 	const out_dir = config.outDir ?? "dist";
 	const points: Point[] = [];
 	for (const ent of config.entryPoints) {

@@ -1,14 +1,14 @@
 import { Buffer } from "node:buffer";
 import fs from "node:fs";
 import path from "node:path";
-import dependencies from "@suseejs/dependencies";
 import type {
 	DependenciesFile,
 	DependenciesFiles,
 	JSExts,
 } from "@suseejs/types";
+import mhaehko from "mhaehko";
 import ts from "typescript";
-import utils from "../utils.js";
+import utilities from "../utils.js";
 
 async function fileSizes(path: string) {
 	const s = await fs.promises.stat(path);
@@ -31,8 +31,8 @@ const checkExport = (str: string, file: string) => {
 async function generateDependencies(
 	entryFile: string,
 ): Promise<DependenciesFiles> {
-	const deps = await dependencies(entryFile);
-	const sorted = deps.sort(); // get dependencies graph
+	const deps = await mhaehko(entryFile);
+	const sorted = deps.sort(); // get mhaehko graph
 	const _DependenciesFiles: DependenciesFiles = [];
 
 	for (const dep of sorted) {
@@ -48,7 +48,7 @@ async function generateDependencies(
 			ts.ScriptTarget.Latest,
 			true,
 		);
-		const _moduleTypes = utils.check.moduleType(_sourceFile, file);
+		const _moduleTypes = utilities.checkModuleType(_sourceFile, file);
 		const _types = _moduleTypes.isCommonJs ? "cjs" : "esm";
 		const _files = {
 			file,
@@ -63,7 +63,7 @@ async function generateDependencies(
 			},
 			moduleType: _types,
 			fileExt: _ext,
-			isJsx: utils.check.isJsxContent(content),
+			isJsx: utilities.isJsxContent(content),
 		} as DependenciesFile;
 		_DependenciesFiles.push(_files);
 	}

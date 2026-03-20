@@ -1,74 +1,83 @@
 import path from "node:path";
 import tcolor from "@suseejs/tcolor";
-import transformFunction from "@suseejs/transformer";
-import type { DependenciesFiles } from "@suseejs/types";
-import ts from "typescript";
-import InternalHooks from "../hooks/index.js";
 import type {
-	InitializedPoint,
-	InitializedResult,
+	DependenciesFiles,
+	SuseePlugin,
+	SuseePluginFunction,
+} from "@suseejs/types";
+import type {
+	InitializePoint,
+	InitializeResult,
 } from "../initialization/index.js";
-import utils from "../utils.js";
+import utilities from "../utils.js";
+import anonymousHandler from "./anonymous.js";
+import duplicates from "./duplicate.js";
 import mergeImportsStatement from "./mergeImports.js";
 import removeHandlers from "./removes.js";
+import clearUnusedCode from "./unusedCode.js";
 
 // ------------------------------------------------------------------------------------//
-
-export interface BundledPoint {
-	entryFileName: string;
-	sourceCode: string;
-	tsOptions: InitializedPoint["tsOptions"];
-	exportPath: InitializedPoint["exportPath"];
-	format: InitializedPoint["format"];
-	plugins: InitializedPoint["plugins"];
-	outDir: InitializedPoint["outDir"];
+export interface BundlePoint extends InitializePoint {
+	bundledContent: string;
 }
 export interface BundledResult {
-	points: BundledPoint[];
+	points: BundlePoint[];
 	allowUpdatePackageJson: boolean;
 }
-// ----------------------------------------------------------------------------------
-const astTransformer = (
-	content: string,
-	file: string,
-	compilerOptions: ts.CompilerOptions,
-	func: (node: ts.Node, factory: ts.NodeFactory, file: string) => ts.Node,
-): string => {
-	const sourceFile = ts.createSourceFile(
-		file,
-		content,
-		ts.ScriptTarget.Latest,
-		true,
-	);
-	const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
-		const { factory } = context;
-		const visitor = (node: ts.Node): ts.Node => {
-			node = func(node, factory, file);
-			return ts.visitEachChild(node, visitor, context);
-		};
-		return (rootNode) => ts.visitNode(rootNode, visitor) as ts.SourceFile;
-	};
-	return transformFunction(transformer, sourceFile, compilerOptions);
-};
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------//
 
-async function bundler(point: InitializedPoint): Promise<BundledPoint> {
+/**
+ * Applies an array of pre-process plugins to the given code.
+ * Pre-process plugins are of type "pre-process" and transform the given code.
+ * The plugins are applied in order and the result of the previous plugin is given as input to the next plugin.
+ * @param plugins - An array of plugins to apply.
+ * @param code - The code to transform.
+ * @param file - An optional file name to pass to the plugins.
+ * @returns The transformed code.
+ */
+async function preProcessPluginParser(
+	plugins: (SuseePlugin | SuseePluginFunction)[],
+	code: string,
+	file?: string | undefined,
+) {
+	if (plugins.length) {
+		for (const plugin of plugins) {
+			const _plugin = typeof plugin === "function" ? plugin() : plugin;
+			if (_plugin.type === "pre-process") {
+				if (_plugin.async) {
+					code = await _plugin.func(code, file);
+				} else {
+					code = _plugin.func(code, file);
+				}
+			}
+		}
+	}
+	return code;
+}
+
+// ----------------------------------------------------------------------------------
+
+async function bundler(point: InitializePoint): Promise<BundlePoint> {
+	const _name =
+		point.exportPath === "."
+			? "Main"
+			: utilities.splitCamelCase(point.exportPath.slice(2));
 	console.time(
-		`> ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+		`      > ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 	);
 	let depsFiles = point.depFiles;
+	const reName = point.rename;
 	const compilerOptions = point.tsOptions.default;
 	const plugins = point.plugins;
 	let removedStatements: string[] = [];
 
 	// Handling anonymous imports and exports
-	//depsFiles = await anonymousHandler(depsFiles, compilerOptions);
-
+	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
 	// Remove Imports
 	const removed = await removeHandlers(removedStatements, compilerOptions);
 	depsFiles = depsFiles.map(removed[0]);
 	// Remove Exports from dependencies only
-	// not remove exports from entry file depsFiles: DependenciesFiles;
+	// not remove exports from entry file
 	const deps_files = depsFiles
 		.slice(0, -1)
 		.map(removed[1]) as DependenciesFiles;
@@ -100,56 +109,23 @@ async function bundler(point: InitializedPoint): Promise<BundledPoint> {
 	// remove ;
 	content = content.replace(/^s*;\s*$/gm, "").trim();
 
-	// Call pre-process plugins
-	content = await utils.plugins.preProcessPluginParser(
-		plugins,
-		content,
-		point.fileName,
-	);
-	// Call pre-process internal hooks
-	content = await InternalHooks.preProcessHooksParser(
-		InternalHooks.getPreHooks(),
-		content,
-		point.fileName,
-	);
-	const entryFileName = point.fileName;
-	// call ast plugins
-	if (plugins.length) {
-		for (const plugin of plugins) {
-			const _plugin = typeof plugin === "function" ? plugin() : plugin;
-			if (_plugin.type === "ast") {
-				content = astTransformer(
-					content,
-					entryFileName,
-					compilerOptions,
-					_plugin.func,
-				);
-			}
-		}
+	if (reName) {
+		content = duplicates(content, point.fileName, compilerOptions);
 	}
-	await utils.wait(1000);
-	const tsOptions = point.tsOptions;
-	const format = point.format;
-	const exportPath = point.exportPath;
-	const sourceCode = content;
-	const result: BundledPoint = {
-		entryFileName,
-		sourceCode,
-		tsOptions,
-		exportPath,
-		format,
-		plugins,
-		outDir: point.outDir,
-	};
+	content = clearUnusedCode(content, point.fileName, compilerOptions);
+
+	// Call pre-process plugins
+	content = await preProcessPluginParser(plugins, content);
+	await utilities.wait(1000);
 	// Returns
 	console.timeEnd(
-		`> ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+		`      > ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 	);
-	return result;
+	return { bundledContent: content, ...point } as BundlePoint;
 }
 
-async function bundle(object: InitializedResult) {
-	const points: BundledPoint[] = [];
+async function bundle(object: InitializeResult) {
+	const points: BundlePoint[] = [];
 	for (const point of object.points) {
 		const _point = await bundler(point);
 		points.push(_point);

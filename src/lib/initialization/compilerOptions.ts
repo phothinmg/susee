@@ -2,7 +2,7 @@ import TsConfig from "@suseejs/tsconfig";
 import ts from "typescript";
 import type { Point } from "./suseeConfig.js";
 
-class FinalCompilerOptions {
+class CompilerOptions {
 	private _point: Point;
 	private _options: ts.CompilerOptions;
 	constructor(point: Point) {
@@ -10,15 +10,15 @@ class FinalCompilerOptions {
 		this._options = {};
 	}
 	private __init() {
-		const tsConfig = new TsConfig(this._point.tsconfigFilePath);
-		tsConfig.removeCompilerOption("rootDir");
-		tsConfig.removeCompilerOption("module");
-		tsConfig.editCompilerOptions({
+		const __opts = new TsConfig(this._point.tsconfigFilePath);
+		__opts.removeCompilerOption("rootDir");
+		__opts.removeCompilerOption("module");
+		__opts.editCompilerOptions({
 			moduleResolution: ts.ModuleResolutionKind.NodeNext,
 			outDir: this._point.outDirPath,
 			allowJs: true,
 		});
-		this._options = tsConfig.getCompilerOptions();
+		this._options = __opts.getCompilerOptions();
 	}
 	private __init2() {
 		this.__init();
@@ -61,8 +61,8 @@ class FinalCompilerOptions {
  * @param {Point} point - The point to generate compiler options for.
  * @returns {CompilerOptions}
  */
-function finalCompilerOptions(point: Point): FinalCompilerOptions {
-	return new FinalCompilerOptions(point);
+function compilerOptions(point: Point): CompilerOptions {
+	return new CompilerOptions(point);
 }
 
-export default finalCompilerOptions;
+export default compilerOptions;
