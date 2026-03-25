@@ -1,7 +1,7 @@
 import type {
-  DependenciesFiles,
-  SuseePlugin,
-  SuseePluginFunction,
+	DependenciesFiles,
+	SuseePlugin,
+	SuseePluginFunction,
 } from "@suseejs/types";
 import ts from "typescript";
 import { compilerOptions } from "./compilerOptions.js";
@@ -10,23 +10,23 @@ import { finalSuseeConfig } from "./suseeConfig.js";
 import { typeCheck } from "./typeCheck.js";
 
 export interface InitializePoint {
-  fileName: string;
-  exportPath: "." | `./${string}`;
-  format: ("commonjs" | "esm" | "browser")[];
-  rename: boolean;
-  outDir: string;
-  tsOptions: {
-    cjs: ts.CompilerOptions;
-    esm: ts.CompilerOptions;
-    default: ts.CompilerOptions;
-  };
-  depFiles: DependenciesFiles;
-  plugins: (SuseePlugin | SuseePluginFunction)[];
+	fileName: string;
+	exportPath: "." | `./${string}`;
+	format: ("commonjs" | "esm" | "browser")[];
+	rename: boolean;
+	outDir: string;
+	tsOptions: {
+		cjs: ts.CompilerOptions;
+		esm: ts.CompilerOptions;
+		default: ts.CompilerOptions;
+	};
+	depFiles: DependenciesFiles;
+	plugins: (SuseePlugin | SuseePluginFunction)[];
 }
 
 export interface InitializeResult {
-  points: InitializePoint[];
-  allowUpdatePackageJson: boolean;
+	points: InitializePoint[];
+	allowUpdatePackageJson: boolean;
 }
 
 /**
@@ -39,23 +39,23 @@ export interface InitializeResult {
  * @returns The transformed DependenciesFiles.
  */
 async function depPluginParser(
-  depFiles: DependenciesFiles,
-  plugins: (SuseePlugin | SuseePluginFunction)[],
-  compilerOptions: ts.CompilerOptions,
+	depFiles: DependenciesFiles,
+	plugins: (SuseePlugin | SuseePluginFunction)[],
+	compilerOptions: ts.CompilerOptions,
 ) {
-  if (plugins.length) {
-    for (const plugin of plugins) {
-      const _plugin = typeof plugin === "function" ? plugin() : plugin;
-      if (_plugin.type === "dependency") {
-        if (_plugin.async) {
-          depFiles = await _plugin.func(depFiles, compilerOptions);
-        } else {
-          depFiles = _plugin.func(depFiles, compilerOptions);
-        }
-      }
-    }
-  }
-  return depFiles;
+	if (plugins.length) {
+		for (const plugin of plugins) {
+			const _plugin = typeof plugin === "function" ? plugin() : plugin;
+			if (_plugin.type === "dependency") {
+				if (_plugin.async) {
+					depFiles = await _plugin.func(depFiles, compilerOptions);
+				} else {
+					depFiles = _plugin.func(depFiles, compilerOptions);
+				}
+			}
+		}
+	}
+	return depFiles;
 }
 
 /**
@@ -65,39 +65,39 @@ async function depPluginParser(
  * @returns A promise that resolves to an InitializeResult object containing the collected data.
  */
 async function initializer(): Promise<InitializeResult> {
-  const __config = await finalSuseeConfig();
-  const points = __config.points;
-  const plugins = __config.plugins;
-  const result: InitializePoint[] = [];
-  for (const point of points) {
-    const __opts = compilerOptions(point);
-    let __deps = await generateDependencies(point.entry);
-    const typeChecked = await typeCheck(__deps, __opts.esm);
-    if (!typeChecked) {
-      ts.sys.exit(1);
-    }
-    // call dependency plugins and hooks
-    __deps = await depPluginParser(__deps, plugins, __opts.default);
-    const c = {
-      fileName: point.entry,
-      exportPath: point.exportPath,
-      format: point.format,
-      rename: point.renameDuplicates,
-      outDir: point.outDirPath,
-      tsOptions: {
-        cjs: __opts.commonjs,
-        esm: __opts.esm,
-        default: __opts.default,
-      },
-      depFiles: __deps,
-      plugins: plugins,
-    } as InitializePoint;
-    result.push(c);
-  }
-  return {
-    points: result,
-    allowUpdatePackageJson: __config.allowUpdatePackageJson,
-  } as InitializeResult;
+	const __config = await finalSuseeConfig();
+	const points = __config.points;
+	const plugins = __config.plugins;
+	const result: InitializePoint[] = [];
+	for (const point of points) {
+		const __opts = compilerOptions(point);
+		let __deps = await generateDependencies(point.entry);
+		const typeChecked = await typeCheck(__deps, __opts.esm);
+		if (!typeChecked) {
+			ts.sys.exit(1);
+		}
+		// call dependency plugins and hooks
+		__deps = await depPluginParser(__deps, plugins, __opts.default);
+		const c = {
+			fileName: point.entry,
+			exportPath: point.exportPath,
+			format: point.format,
+			rename: point.renameDuplicates,
+			outDir: point.outDirPath,
+			tsOptions: {
+				cjs: __opts.commonjs,
+				esm: __opts.esm,
+				default: __opts.default,
+			},
+			depFiles: __deps,
+			plugins: plugins,
+		} as InitializePoint;
+		result.push(c);
+	}
+	return {
+		points: result,
+		allowUpdatePackageJson: __config.allowUpdatePackageJson,
+	} as InitializeResult;
 }
 
 export { initializer };
