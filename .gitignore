@@ -1,7 +1,6 @@
 node_modules
 # Build output dirs
 dist
-bin
 # Notes
 _docs
 _opt
@@ -17,11 +16,9 @@ bbbb.cjs
 abc.json
 def.json
 .notes.txt
-s
 out
-ssr
-site
-ss
+sr
+rc
 
 ## Vitepress
 docs/.vitepress/dist

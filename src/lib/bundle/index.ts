@@ -5,11 +5,11 @@ import type {
 	SuseePlugin,
 	SuseePluginFunction,
 } from "@suseejs/types";
+import utils from "@suseejs/utils";
 import type {
 	InitializePoint,
 	InitializeResult,
 } from "../initialization/index.js";
-import { utilities } from "../utils.js";
 import { anonymousHandler } from "./anonymous.js";
 import { duplicates } from "./duplicate.js";
 import { mergeImportsStatement } from "./mergeImports.js";
@@ -61,7 +61,7 @@ async function bundler(point: InitializePoint): Promise<BundlePoint> {
 	const _name =
 		point.exportPath === "."
 			? "Main"
-			: utilities.splitCamelCase(point.exportPath.slice(2));
+			: utils.str.splitCamelCase(point.exportPath.slice(2));
 	console.time(
 		`      > ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 	);
@@ -116,7 +116,6 @@ async function bundler(point: InitializePoint): Promise<BundlePoint> {
 
 	// Call pre-process plugins
 	content = await preProcessPluginParser(plugins, content);
-	await utilities.wait(1000);
 	// Returns
 	console.timeEnd(
 		`      > ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,

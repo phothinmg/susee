@@ -6,15 +6,15 @@ import type {
 	DependenciesFile,
 	NamesSets,
 } from "@suseejs/types";
+import utils from "@suseejs/utils";
 import ts from "typescript";
-import { uniqueName } from "./uniqueName.js";
 
 const exportDefaultExportNameMap: NamesSets = [];
 const exportDefaultImportNameMap: NamesSets = [];
 
 const prefixKey = "AnonymousName";
 
-const genName = uniqueName().setPrefix({
+const genName = utils.uniqueName().setPrefix({
 	key: prefixKey,
 	value: "__anonymous__",
 });

@@ -2,7 +2,7 @@ import assert from "node:assert";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
-import {generateDependencies} from "../../src/lib/initialization/dependencies.js";
+import { generateDependencies } from "../../src/lib/initialization/dependencies.js";
 import { setupTempDir } from "../lib/test_helpers.js";
 
 describe("generateDependencies", () => {

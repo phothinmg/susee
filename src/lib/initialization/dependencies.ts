@@ -6,9 +6,9 @@ import type {
 	DependenciesFiles,
 	JSExts,
 } from "@suseejs/types";
+import utils from "@suseejs/utils";
 import mhaehko from "mhaehko";
 import ts from "typescript";
-import { utilities } from "../utils.js";
 
 async function fileSizes(path: string) {
 	const s = await fs.promises.stat(path);
@@ -27,6 +27,40 @@ const checkExport = (str: string, file: string) => {
 		return false;
 	}
 };
+
+/**
+ * Checks if the given code string contains JSX syntax.
+ * @param code The content of the file as a string.
+ * @returns true if the file contains JSX, false otherwise.
+ */
+function isJsxContent(code: string): boolean {
+	const sourceFile = ts.createSourceFile(
+		"file.tsx",
+		code,
+		ts.ScriptTarget.Latest,
+		/*setParentNodes*/ true,
+		ts.ScriptKind.TSX,
+	);
+
+	let containsJsx = false;
+
+	function visitor(node: ts.Node) {
+		// Check for JSX Elements, Self Closing Elements, or JSX Fragments
+		if (
+			ts.isJsxElement(node) ||
+			ts.isJsxSelfClosingElement(node) ||
+			ts.isJsxFragment(node)
+		) {
+			containsJsx = true;
+			return;
+		}
+		ts.forEachChild(node, visitor);
+	}
+
+	visitor(sourceFile);
+
+	return containsJsx;
+}
 
 /**
  * Generates a list of dependency files for a given entry file.
@@ -59,7 +93,7 @@ async function generateDependencies(
 			ts.ScriptTarget.Latest,
 			true,
 		);
-		const _moduleTypes = utilities.checkModuleType(_sourceFile, file);
+		const _moduleTypes = utils.check.moduleType(_sourceFile, file);
 		const _types = _moduleTypes.isCommonJs ? "cjs" : "esm";
 		const _files = {
 			file,
@@ -74,7 +108,7 @@ async function generateDependencies(
 			},
 			moduleType: _types,
 			fileExt: _ext,
-			isJsx: utilities.isJsxContent(content),
+			isJsx: isJsxContent(content),
 		} as DependenciesFile;
 		_DependenciesFiles.push(_files);
 	}

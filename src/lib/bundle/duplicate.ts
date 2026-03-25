@@ -1,6 +1,6 @@
 import transformFunction from "@suseejs/transformer";
+import utils from "@suseejs/utils";
 import ts from "typescript";
-import { uniqueName } from "./uniqueName.js";
 
 // collect import bindings and detect duplicates inside this file only
 type ImportBinding = {
@@ -58,7 +58,7 @@ function duplicates(
 
 	// build rename map for duplicates (keep first occurrence unchanged)
 	const renameMap: Map<string, string> = new Map();
-	const gen = uniqueName();
+	const gen = utils.uniqueName();
 	gen.setPrefix({ key: "DuplicateImport", value: "__dup__" });
 
 	for (const [name, arr] of bindings.entries()) {

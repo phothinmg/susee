@@ -1,12 +1,55 @@
 import path from "node:path";
 import tcolor from "@suseejs/tcolor";
 import type { OutFiles } from "@suseejs/types";
+import utils from "@suseejs/utils";
 import ts from "typescript";
 import type { BundledResult, BundlePoint } from "../bundle/index.js";
-import { utilities } from "../utils.js";
 import { createHost } from "./host.js";
 import { writePackage } from "./package.js";
 
+const resolveSourceMappingURL = (
+	outName: string,
+	content: string,
+	format: "cjs" | "esm",
+) => {
+	const ext = path.extname(outName);
+	// create file name regexp
+	const file_name = path.basename(outName).split(".")[0] as string;
+	const fileNameRegexp = new RegExp(`${file_name}.js.map`, "gm");
+	const dtsFileNameRegexp = new RegExp(`${file_name}.d.ts.map`, "gm");
+	const replaceName =
+		format === "cjs" ? `${file_name}.cjs.map` : `${file_name}.mjs.map`;
+	const dtsReplaceName =
+		format === "cjs" ? `${file_name}.d.cts.map` : `${file_name}.d.mts.map`;
+	return ext === ".js"
+		? content.replace(fileNameRegexp, replaceName)
+		: content.replace(dtsFileNameRegexp, dtsReplaceName);
+};
+
+const postProcessPluginParser = async (
+	plugins: BundlePoint["plugins"],
+	content: string,
+	outName: string,
+) => {
+	const ext = path.extname(outName);
+	if (ext === ".js") {
+		if (plugins.length) {
+			for (let plugin of plugins) {
+				plugin = typeof plugin === "function" ? plugin() : plugin;
+				if (plugin.type === "post-process") {
+					if (plugin.async) {
+						content = await plugin.func(content, outName);
+					} else {
+						content = plugin.func(content, outName);
+					}
+				}
+			}
+		}
+	}
+	return content;
+};
+
+// Compiler Class
 class Compiler {
 	private files: OutFiles;
 	private object: BundledResult;
@@ -32,19 +75,14 @@ class Compiler {
 	 */
 	private async _commonjs(point: BundlePoint) {
 		const isMain = point.exportPath === ".";
-		const _name = isMain
-			? "Main"
-			: utilities.splitCamelCase(point.exportPath.slice(2));
 		console.time(
 			`        ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
 		const fileName = point.fileName;
 		const sourceCode = point.bundledContent;
-		const format = point.format;
-		const plugins = point.plugins;
+		const format = [...new Set(point.format)];
 		const compilerOptions = point.tsOptions.cjs;
-
 		// create host
 		const _host = createHost(sourceCode, fileName);
 		const createdFiles: Record<string, string> = _host.createdFiles;
@@ -52,22 +90,8 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
-			const ext = path.extname(outName);
-			// ------------------------------------
-			if (ext === ".js") {
-				if (plugins.length) {
-					for (let plugin of plugins) {
-						plugin = typeof plugin === "function" ? plugin() : plugin;
-						if (plugin.type === "post-process") {
-							if (plugin.async) {
-								content = await plugin.func(content, outName);
-							} else {
-								content = plugin.func(content, outName);
-							}
-						}
-					}
-				}
-			}
+			content = resolveSourceMappingURL(outName, content, "cjs");
+			content = await postProcessPluginParser(point.plugins, content, outName);
 
 			//----------------------------------------------------------------
 
@@ -79,7 +103,7 @@ class Compiler {
 					this.files.commonjsTypes = outName.replace(/.d.ts/g, ".d.cts");
 				}
 
-				if (isMain && (format === "both" || format === "commonjs")) {
+				if (isMain && format.includes("commonjs")) {
 					if (this.files.commonjs) this.files.main = this.files.commonjs;
 					if (this.files.commonjsTypes)
 						this.files.types = this.files.commonjsTypes;
@@ -89,11 +113,10 @@ class Compiler {
 			outName = outName.replace(/.js/g, ".cjs");
 			outName = outName.replace(/.map.js/g, ".map.cjs");
 			outName = outName.replace(/.d.ts/g, ".d.cts");
-			await utilities.wait(500);
-			if (format === "commonjs") {
-				await utilities.clearFolder(path.dirname(outName));
+			if (format.includes("commonjs") && !format.includes("esm")) {
+				await utils.file.clearFolder(path.dirname(outName));
 			}
-			await utilities.writeCompileFile(outName, content);
+			await utils.file.writeFile(outName, content);
 		});
 		console.timeEnd(
 			`        ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
@@ -106,19 +129,13 @@ class Compiler {
 	 */
 	private async _esm(point: BundlePoint) {
 		const isMain = point.exportPath === ".";
-		const _name = isMain
-			? "Main"
-			: utilities.splitCamelCase(point.exportPath.slice(2));
 		console.time(
 			`        ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
 		const fileName = point.fileName;
 		const sourceCode = point.bundledContent;
-		const format = point.format;
-		const plugins = point.plugins;
 		const compilerOptions = point.tsOptions.esm;
-
 		// create host
 		const _host = createHost(sourceCode, fileName);
 		const createdFiles: Record<string, string> = _host.createdFiles;
@@ -126,22 +143,8 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
-			const ext = path.extname(outName);
-			// ------------------------------------
-			if (ext === ".js") {
-				if (plugins.length) {
-					for (let plugin of plugins) {
-						plugin = typeof plugin === "function" ? plugin() : plugin;
-						if (plugin.type === "post-process") {
-							if (plugin.async) {
-								content = await plugin.func(content, outName);
-							} else {
-								content = plugin.func(content, outName);
-							}
-						}
-					}
-				}
-			}
+			content = resolveSourceMappingURL(outName, content, "esm");
+			content = await postProcessPluginParser(point.plugins, content, outName);
 			//----------------------------------------------------------------
 
 			if (this._isUpdate()) {
@@ -151,7 +154,7 @@ class Compiler {
 				if (outName.match(/.d.ts/g)) {
 					this.files.esmTypes = outName.replace(/.d.ts/g, ".d.mts");
 				}
-				if (isMain && format === "both" && this.files.esm) {
+				if (isMain && this.files.esm) {
 					this.files.module = this.files.esm;
 				}
 			}
@@ -159,50 +162,33 @@ class Compiler {
 			outName = outName.replace(/.js/g, ".mjs");
 			outName = outName.replace(/.map.js/g, ".map.mjs");
 			outName = outName.replace(/.d.ts/g, ".d.mts");
-			await utilities.wait(500);
-			if (format !== "commonjs") {
-				await utilities.clearFolder(path.dirname(outName));
-			}
-			await utilities.writeCompileFile(outName, content);
+			await utils.file.clearFolder(path.dirname(outName));
+			await utils.file.writeFile(outName, content);
 		});
 		console.timeEnd(
 			`        ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 	}
-	/**
-	 * Compile bundled code for each entry point.
-	 * This function will iterate through each entry point and compile code according to the format specified.
-	 * If the format is "commonjs", it will compile the code into commonjs format.
-	 * If the format is "esm", it will compile the code into esm format.
-	 * If the format is "both", it will compile the code into both commonjs and esm formats.
-	 * If the allowUpdatePackageJson flag is set to true, it will update the package.json according to the compiled file paths.
-	 */
+
 	async compile() {
 		for (const point of this.object.points) {
-			await utilities.wait(500);
-			switch (point.format) {
-				case "commonjs":
-					await this._commonjs(point);
-					if (this._isUpdate()) {
-						await writePackage(this.files, point.exportPath);
-					}
-					break;
-				case "esm":
-					await this._esm(point);
-					if (this._isUpdate()) {
-						await writePackage(this.files, point.exportPath);
-					}
-					break;
-				case "both":
-					await this._esm(point);
-					await utilities.wait(1000);
-					await this._commonjs(point);
-					if (this._isUpdate()) {
-						await writePackage(this.files, point.exportPath);
-					}
-					break;
+			const formats = [...new Set(point.format)];
+			for (const format of formats) {
+				switch (format) {
+					case "commonjs":
+						await this._commonjs(point);
+						if (this._isUpdate()) {
+							await writePackage(this.files, point.exportPath);
+						}
+						break;
+					case "esm":
+						await this._esm(point);
+						if (this._isUpdate()) {
+							await writePackage(this.files, point.exportPath);
+						}
+						break;
+				}
 			}
-			await utilities.wait(500);
 		}
 	}
 }

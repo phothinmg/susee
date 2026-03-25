@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		// File Layout
 		"rootDir": ".",
-		"outDir": "./dist",
+		"outDir": "./out",
 
 		// Environment Settings
 		// See also https://aka.ms/tsconfig/module
@@ -42,15 +42,8 @@
 		"isolatedModules": true,
 		"noUncheckedSideEffectImports": true,
 		"moduleDetection": "force",
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"allowJs": true
 	},
-	"include": [
-		"src/**/*",
-		"tests/**/*",
-		"b.ts",
-		"build.ts",
-		"ssr",
-		"a.ts",
-		"v2/**/*"
-	]
+	"include": ["src/**/*", "build.ts", "tests/**/*", "sr", "a.ts", "b.ts"]
 }

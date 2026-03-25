@@ -101,7 +101,7 @@ describe("finalSuseeConfig", async () => {
 
       assert.deepEqual(config.plugins, []);
 
-      assert.deepEqual(config.allowUpdatePackageJson, true);
+      assert.deepEqual(config.allowUpdatePackageJson, false);
     } finally {
       process.chdir(cwd);
     }
