@@ -167,6 +167,12 @@ susee --init
 
 Any other argument combination exits with an error.
 
+## Contributing
+
+Contributions are welcome for bug fixes, features, documentation, and code quality improvements.
+
+See detail in [CONTRIBUTING.md][file-contribute]
+
 ## License
 
 [Apache-2.0][license] © [Pho Thin Maung][ptm]
@@ -174,4 +180,5 @@ Any other argument combination exits with an error.
 <!-- markdownlint-disable MD053 -->
 
 [license]: LICENSE
+[file-contribute]: CONTRIBUTING.md
 [ptm]: https://github.com/phothinmg
