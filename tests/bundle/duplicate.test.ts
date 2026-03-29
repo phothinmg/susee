@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import ts from "typescript";
+import type ts from "typescript";
 import { duplicateHandlers } from "../../src/lib/bundle/duplicate.js";
 
 describe("Duplicate Handler Tests", () => {

@@ -2,8 +2,8 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import ts from "typescript";
 import {
-	type Point,
 	finalSuseeConfig,
+	type Point,
 } from "../../src/lib/initialization/suseeConfig.js";
 import { exitWithCodeOneAndMessage, sortObject } from "../lib/test_helpers.js";
 

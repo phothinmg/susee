@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import ts from "typescript";
+import type ts from "typescript";
 import { anonymousHandler } from "../../src/lib/bundle/anonymous.js";
 
 describe("Anonymous Handler Tests", () => {

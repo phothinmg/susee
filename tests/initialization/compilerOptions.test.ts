@@ -3,8 +3,8 @@ import { describe, it } from "node:test";
 import ts from "typescript";
 import { compilerOptions } from "../../src/lib/initialization/compilerOptions.js";
 import {
-	type Point,
 	finalSuseeConfig,
+	type Point,
 } from "../../src/lib/initialization/suseeConfig.js";
 
 describe("Tests for tsconfig and compiler options", () => {
