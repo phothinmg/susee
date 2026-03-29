@@ -11,7 +11,7 @@ import type {
 	InitializeResult,
 } from "../initialization/index.js";
 import { anonymousHandler } from "./anonymous.js";
-import { duplicates } from "./duplicate.js";
+import { duplicateHandlers } from "./duplicate.js";
 import { mergeImportsStatement } from "./mergeImports.js";
 import { removeHandlers } from "./removes.js";
 import { clearUnusedCode } from "./unusedCode.js";
@@ -73,6 +73,12 @@ async function bundler(point: InitializePoint): Promise<BundlePoint> {
 
 	// Handling anonymous imports and exports
 	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
+	// duplicates
+	if (reName) {
+		depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
+	} else {
+		depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
+	}
 	// Remove Imports
 	const removed = await removeHandlers(removedStatements, compilerOptions);
 	depsFiles = depsFiles.map(removed[0]);
@@ -109,9 +115,9 @@ async function bundler(point: InitializePoint): Promise<BundlePoint> {
 	// remove ;
 	content = content.replace(/^s*;\s*$/gm, "").trim();
 
-	if (reName) {
-		content = duplicates(content, point.fileName, compilerOptions);
-	}
+	// if (reName) {
+	// 	content = duplicates(content, point.fileName, compilerOptions);
+	// }
 	content = clearUnusedCode(content, point.fileName, compilerOptions);
 
 	// Call pre-process plugins

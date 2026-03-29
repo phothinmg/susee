@@ -7,7 +7,7 @@ async function suseeBuild() {
 	const args = process.argv.slice(2);
 	if (args.length === 0) {
 		await susee();
-	} else if (args.length === 1 && args[0] === "--init") {
+	} else if (args.length === 1 && args[0] === "init") {
 		await init();
 	} else {
 		console.error("Unknown CLI usage");

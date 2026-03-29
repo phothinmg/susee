@@ -90,8 +90,8 @@ class Compiler {
 		const program = ts.createProgram([fileName], compilerOptions, host);
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
-			content = resolveSourceMappingURL(outName, content, "cjs");
 			content = await postProcessPluginParser(point.plugins, content, outName);
+			content = resolveSourceMappingURL(outName, content, "cjs");
 
 			//----------------------------------------------------------------
 

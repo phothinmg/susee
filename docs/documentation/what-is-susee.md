@@ -1,5 +1,11 @@
 # What is Susee?
 
-Susee is a TypeScript bundler that primarily uses the TypeScript Compiler API and Node.js API to build itself and its ecosystem. It gathers local dependency trees and emits compiled artifacts.
+`susee` is a TypeScript bundler specialized for library authorship rather than application bundling. Unlike general-purpose bundlers that target browser environments or bundle `node_modules` dependencies, `susee` focuses on consolidating a package's local TypeScript dependency tree into compiled artifacts suitable for distribution via `npm`.
 
-Unlike general-purpose bundlers that target browser environments or bundle `node_modules`, `susee` focuses on library authorship: it collates local TypeScript files, merges them into cohesive bundles, compiles them through the TypeScript compiler, and generates properly formatted outputs for consumption as npm packages.
+The primary workflow involves:
+
+1. Resolving local TypeScript file dependencies from specified entry points
+2. Merging these files into cohesive bundles
+3. Compiling through the TypeScript compiler
+4. Generating dual-format outputs (ESM and CommonJS) with appropriate file extensions
+5. Optionally updating `package.json` with proper export configurations

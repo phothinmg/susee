@@ -1,16 +1,17 @@
 import { defineConfig } from "vitepress";
 import { createRequire } from "module";
 import { type DefaultTheme } from "vitepress";
+
 import {
-  groupIconMdPlugin,
   groupIconVitePlugin,
   localIconLoader,
+  groupIconMdPlugin,
 } from "vitepress-plugin-group-icons";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../../package.json");
 
-const siteUrl = "";
+const siteUrl = "https://suseejs.vercel.app/";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -23,9 +24,17 @@ export default defineConfig({
     },
   },
   head: [["link", { rel: "icon", href: "/susee.ico" }]],
-  // markdown: {
-  //   math: true,
-  // },
+  lastUpdated: true,
+  cleanUrls: true,
+  metaChunk: true,
+  markdown: {
+    config(md) {
+      md.use(groupIconMdPlugin as any); // Markdown-it plugin
+    },
+  },
+  vite: {
+    plugins: [groupIconVitePlugin()], // Vite plugin
+  },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: nav(),
@@ -38,8 +47,13 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/phothinmg/susee" },
     ],
+    logo: { src: "/susee.webp", width: 24, height: 24 },
     search: {
       provider: "local",
+    },
+    editLink: {
+      pattern: "https://github.com/phothinmg/susee/edit/main/docs/:path",
+      text: "Edit this page on GitHub",
     },
   },
 });
@@ -60,7 +74,7 @@ function nav(): DefaultTheme.NavItem[] {
         },
         {
           text: "Contributing",
-          link: "https://github.com/vuejs/vitepress/blob/main/.github/contributing.md",
+          link: "https://github.com/phothinmg/susee/blob/main/CONTRIBUTING.md",
         },
       ],
     },
@@ -74,6 +88,7 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
       collapsed: false,
       items: [
         { text: "What is Susee?", link: "what-is-susee" },
+        { text: "Core Concepts", link: "core-concepts" },
         { text: "Getting Started", link: "getting-started" },
       ],
     },

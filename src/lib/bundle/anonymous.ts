@@ -14,10 +14,19 @@ const exportDefaultImportNameMap: NamesSets = [];
 
 const prefixKey = "AnonymousName";
 
-const genName = utils.uniqueName().setPrefix({
-	key: prefixKey,
-	value: "__anonymous__",
-});
+const createAnonymousNameGenerator = () =>
+	utils.uniqueName().setPrefix({
+		key: prefixKey,
+		value: "__anonymous__",
+	});
+
+let genName = createAnonymousNameGenerator();
+
+const resetAnonymousState = () => {
+	exportDefaultExportNameMap.length = 0;
+	exportDefaultImportNameMap.length = 0;
+	genName = createAnonymousNameGenerator();
+};
 
 /**
  * A bundle handler that takes a list of source files and transforms them into renamed source files.
@@ -505,6 +514,7 @@ const anonymousHandler = async (
 	deps: DependenciesFile[],
 	compilerOptions: ts.CompilerOptions,
 ): Promise<DependenciesFile[]> => {
+	resetAnonymousState();
 	const anonymous = resolves([
 		[anonymousExportHandler, compilerOptions],
 		[anonymousImportHandler, compilerOptions],

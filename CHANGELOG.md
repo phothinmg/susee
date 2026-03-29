@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added final pre-bundling checks for unsupported dependency syntaxes (`CommonJS`, `JSX/TSX`). When detected, `susee` logs an actionable error and exits with code `1`.
-- Added CLI flag `--init` to generate a minimal `susee` config file at the project root.
+- Added CLI command `init` to generate a minimal `susee` config file at the project root.
 
 ### Changed
 
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed source map URL generation by adding `Compiler.resolveSourceMappingURL`, replacing incorrect `//# sourceMappingURL=<fileName>.js.map` with extension-aware values (`.cjs.map` / `.mjs.map`).
+- Fixed source map URL generation by adding `resolveSourceMappingURL`, replacing incorrect `//# sourceMappingURL=<fileName>.js.map` with extension-aware values (`.cjs.map` / `.mjs.map`).
 
 ### Notes
 
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `susee` remains focused on local TypeScript dependency bundling and does not bundle `node_modules`.
 
-<!-- 
+<!--
 https://keepachangelog.com/en/1.1.0/
 Added :  for new features.
 Changed : for changes in existing functionality.

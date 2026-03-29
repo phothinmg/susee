@@ -36,47 +36,11 @@ with declaration files.
 - JSX/TSX dependencies are currently rejected.
 - CLI supports only:
   - `susee`
-  - `susee --init`
+  - `susee init`
 
-## Installation
+## Getting Started
 
-```bash
-npm i -D susee typescript
-```
-
-## Quick Start
-
-1. Create config:
-
-```bash
-npx susee --init
-```
-
-1. Edit `susee.config.ts`:
-
-```ts
-import type { SuSeeConfig } from "susee";
-
-const config: SuSeeConfig = {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-    },
-  ],
-  outDir: "dist",
-  allowUpdatePackageJson: true,
-};
-
-export default config;
-```
-
-1. Run build:
-
-```bash
-npx susee
-```
+[See Detail](https://suseejs.vercel.app/documentation/getting-started.html)
 
 ## Config Reference
 
