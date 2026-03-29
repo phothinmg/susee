@@ -96,7 +96,6 @@ describe("finalSuseeConfig", async () => {
 					outDirPath: "dist",
 					renameDuplicates: true,
 					tsconfigFilePath: undefined,
-					binaryName: undefined,
 				}),
 			);
 

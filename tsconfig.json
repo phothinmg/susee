@@ -52,6 +52,8 @@
 		"sr",
 		"a.ts",
 		"b.ts",
-		"docs/.vitepress/theme/**/*"
+		"docs/.vitepress/theme/**/*",
+		"bin/index.mjs",
+		"bin/init.mjs"
 	]
 }

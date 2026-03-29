@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import process from "node:process";
-import init from "./init.mjs";
+import init from "../src/binary/init.mjs";
 import { susee } from "../dist/index.mjs";
 
 async function suseeBuild() {

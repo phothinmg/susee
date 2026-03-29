@@ -5,13 +5,70 @@ import ts from "typescript";
 
 export type OutputFormat = ("commonjs" | "esm")[];
 
-interface BasePoint {
+// interface BasePoint {
+// 	/**
+// 	 * Entry of file path of package
+// 	 *
+// 	 * required
+// 	 */
+// 	entry: string;
+// 	/**
+// 	 * Output module type of package , commonjs,esm or both esm and commonjs
+// 	 *
+// 	 * default - esm
+// 	 */
+// 	format?: OutputFormat;
+// 	/**
+// 	 * Custom tsconfig.json path for package typescript compiler options
+// 	 *
+// 	 * Priority -
+// 	 *  1. this custom tsconfig.json
+// 	 *  2. tsconfig.json at root directory
+// 	 *  3. default compiler options of susee
+// 	 *
+// 	 * default - undefined
+// 	 */
+// 	tsconfigFilePath?: string | undefined;
+// 	/**
+// 	 * When bundling , if there are duplicate declared names , susee will auto rename , if renameDuplicates = false exist with code 1.
+// 	 *
+// 	 * default - true
+// 	 */
+// 	renameDuplicates?: boolean;
+// }
+
+// interface NoneBinaryPoint extends BasePoint {
+// 	exportPath: "." | `./${string}`;
+// }
+
+// interface BinaryPoint extends BasePoint {
+// 	exportPath: "bin";
+// 	binaryName: string;
+// }
+
+// /**
+//  * Entry point for SuSee configuration
+//  */
+// export type EntryPoint = NoneBinaryPoint | BinaryPoint;
+
+export interface EntryPoint {
 	/**
 	 * Entry of file path of package
 	 *
 	 * required
 	 */
 	entry: string;
+	/**
+	 * Info for output
+	 *
+	 * required
+	 */
+	/**
+	 *  path for package
+	 *
+	 * required
+	 */
+	exportPath: "." | `./${string}`;
 	/**
 	 * Output module type of package , commonjs,esm or both esm and commonjs
 	 *
@@ -35,65 +92,8 @@ interface BasePoint {
 	 * default - true
 	 */
 	renameDuplicates?: boolean;
+	binary?: { name: string } | undefined;
 }
-
-interface NoneBinaryPoint extends BasePoint {
-	exportPath: "." | `./${string}`;
-}
-
-interface BinaryPoint extends BasePoint {
-	exportPath: "bin";
-	binaryName: string;
-}
-
-/**
- * Entry point for SuSee configuration
- */
-export type EntryPoint = NoneBinaryPoint | BinaryPoint;
-
-// export interface EntryPoint {
-//   /**
-//    * Entry of file path of package
-//    *
-//    * required
-//    */
-//   entry: string;
-//   /**
-//    * Info for output
-//    *
-//    * required
-//    */
-//   /**
-//    *  path for package
-//    *
-//    * required
-//    */
-//   exportPath: "." | `./${string}`;
-//   /**
-//    * Output module type of package , commonjs,esm or both esm and commonjs
-//    *
-//    * default - esm
-//    */
-//   format?: OutputFormat;
-//   /**
-//    * Custom tsconfig.json path for package typescript compiler options
-//    *
-//    * Priority -
-//    *  1. this custom tsconfig.json
-//    *  2. tsconfig.json at root directory
-//    *  3. default compiler options of susee
-//    *
-//    * default - undefined
-//    */
-//   tsconfigFilePath?: string | undefined;
-//   /**
-//    * When bundling , if there are duplicate declared names , susee will auto rename , if renameDuplicates = false exist with code 1.
-//    *
-//    * default - true
-//    */
-//   renameDuplicates?: boolean;
-//   binary?: { name: string } | undefined;
-// }
 /**
  * Configuration for Susee Bundler
  */
@@ -227,12 +227,9 @@ async function finalSuseeConfig(): Promise<FinalSuseeConfig> {
 			tsconfigFilePath: ent.tsconfigFilePath ?? undefined,
 			renameDuplicates: ent.renameDuplicates ?? true,
 			outDirPath:
-				ent.exportPath === "bin"
-					? "bin"
-					: ent.exportPath === "."
-						? out_dir
-						: `${out_dir}${ent.exportPath.slice(1)}`,
-			binaryName: (ent as BinaryPoint).binaryName ?? undefined,
+				ent.exportPath === "."
+					? out_dir
+					: `${out_dir}${ent.exportPath.slice(1)}`,
 		} as Point;
 		points.push(point);
 	}

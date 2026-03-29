@@ -6,13 +6,13 @@ import type {
 import ts from "typescript";
 import { compilerOptions } from "./compilerOptions.js";
 import { generateDependencies } from "./dependencies.js";
-import { finalSuseeConfig } from "./suseeConfig.js";
+import { finalSuseeConfig, type OutputFormat } from "./suseeConfig.js";
 import { typeCheck } from "./typeCheck.js";
 
 export interface InitializePoint {
 	fileName: string;
 	exportPath: "." | `./${string}`;
-	format: ("commonjs" | "esm" | "browser")[];
+	format: OutputFormat;
 	rename: boolean;
 	outDir: string;
 	tsOptions: {

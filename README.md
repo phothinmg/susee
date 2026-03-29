@@ -38,9 +38,35 @@ with declaration files.
   - `susee`
   - `susee init`
 
-## Getting Started
+## Installation and Quick Start
 
-[See Detail](https://suseejs.vercel.app/documentation/getting-started.html)
+### Install
+
+```sh
+npm i -D susee
+```
+
+### Create minimal susee config file
+
+```sh
+npx susee init
+```
+
+### Build your fist project
+
+via CLI :
+
+```sh
+npx susee
+```
+
+via `package.json` :
+
+```json
+{
+  "script": "susee"
+}
+```
 
 ## Config Reference
 
