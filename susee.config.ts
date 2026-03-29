@@ -13,15 +13,15 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 `.trim();
 
 const config: SuSeeConfig = {
-  entryPoints: [
-    {
-      entry: "sr/index.ts",
-      exportPath: ".",
-      //format: ["esm", "commonjs"],
-    },
-  ],
-  //plugins: [suseeBannerText(licenseText)],
-  outDir: "out",
+	entryPoints: [
+		{
+			entry: "sr/index.ts",
+			exportPath: ".",
+			//format: ["esm", "commonjs"],
+		},
+	],
+	//plugins: [suseeBannerText(licenseText)],
+	outDir: "out",
 };
 
 export default config;
