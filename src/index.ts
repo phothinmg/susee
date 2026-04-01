@@ -149,3 +149,38 @@ export interface NamesSet {
 export type NamesSets = NamesSet[];
 
 export type DuplicatesNameMap = Map<string, Set<{ file: string }>>;
+
+// Initialize
+
+export type OutputFormat = ("commonjs" | "esm" | "browser")[];
+export interface InitializePoint {
+  fileName: string;
+  exportPath: "." | `./${string}`;
+  format: OutputFormat;
+  rename: boolean;
+  outDir: string;
+  tsOptions: {
+    cjs: ts.CompilerOptions;
+    esm: ts.CompilerOptions;
+    default: ts.CompilerOptions;
+    browser: ts.CompilerOptions;
+  };
+  depFiles: DependenciesFiles;
+  plugins: (SuseePlugin | SuseePluginFunction)[];
+}
+
+export interface InitializeResult {
+  points: InitializePoint[];
+  allowUpdatePackageJson: boolean;
+}
+
+// bundle
+
+export interface BundlePoint extends InitializePoint {
+  bundledContent: string;
+}
+
+export interface BundledResult {
+  points: BundlePoint[];
+  allowUpdatePackageJson: boolean;
+}
