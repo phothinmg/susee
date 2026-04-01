@@ -40,9 +40,6 @@
     "url": "https://github.com/suseejs/types/issues"
   },
   "homepage": "https://github.com/suseejs/types#readme",
-  "dependencies": {
-    "typescript": "^5.9.3"
-  },
   "files": [
     "dist",
     "LICENSE",
@@ -51,5 +48,8 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "typescript": "^6.0.2"
   }
 }
