@@ -42,8 +42,8 @@
 	"homepage": "https://github.com/suseejs/utils#readme",
 	"dependencies": {
 		"@suseejs/tcolor": "^0.1.0",
-		"@suseejs/types": "^0.2.0",
-		"typescript": "^5.9.3"
+		"@suseejs/types": "^0.2.2",
+		"typescript": "^6.0.2"
 	},
 	"files": [
 		"dist",
