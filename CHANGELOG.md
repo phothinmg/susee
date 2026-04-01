@@ -9,22 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Migrated Git hooks from `husky`/`commitlint` to repository-tracked hooks in `.githooks`.
-- Added `npm run hooks:install` setup flow and enforced commit subject format: `<Type>: <message> (#<number>)` where `Type` is one of `Added`, `Changed`, `Deprecated`, `Fixed`, `Security`.
-
-## [1.5.1] - 2026-03-26
+## [1.5.1] - 2026-04-01
 
 ### Added
 
 - Added final pre-bundling checks for unsupported dependency syntaxes (`CommonJS`, `JSX/TSX`). When detected, `susee` logs an actionable error and exits with code `1`.
 - Added CLI command `init` to generate a minimal `susee` config file at the project root.
+- Added `npm run commit` workflow support in `scripts/susee-commit.ts` to run `git add .`, create a formatted commit message, and push to the active branch.
+- Added global commit number incrementation for commit subjects by scanning git history (`git log --all`) and appending `(#<number>)`.
 
 ### Changed
 
 - Updated output format options from `"esm" | "commonjs" | "both"` to `("commonjs" | "esm")[]`.
 - Improved unsupported-module diagnostics to suggest `@suseejs/plugin-commonjs` for most `CommonJS` projects.
+- Migrated Git hooks from `husky`/`commitlint` to repository-tracked hooks in `.githooks`.
+- Added `npm run hooks:install` setup flow and enforced commit subject format: `<Type>: <message> (#<number>)` where `Type` is one of `Added`, `Changed`, `Deprecated`, `Fixed`, `Security`, `Modified`.
+- Updated `README.md` and `CONTRIBUTING.md` to match the current scripts, hook behavior, and project documentation layout.
 
 ### Fixed
 

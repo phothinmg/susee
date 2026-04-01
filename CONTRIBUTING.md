@@ -18,6 +18,13 @@ npm run hooks:install
 
 This installs repository-tracked Git hooks from `.githooks`.
 
+## Branching and workflow
+
+1. Create a focused branch from `main`.
+2. Keep one logical change per PR (feature, fix, or refactor).
+3. Run checks locally before pushing.
+4. Open a PR with a clear summary and test evidence.
+
 ## Commit message format
 
 Commit subject lines must follow:
@@ -39,28 +46,63 @@ Allowed `Type` values:
 - Deprecated
 - Fixed
 - Security
+- Modified
 
-## Development workflow
+The `.githooks/commit-msg` hook enforces this format.
 
-1. Make your changes in a focused branch.
-2. Keep changes scoped to one purpose (fix, refactor, or feature).
-3. Run checks before opening a PR.
+The helper script `npm run commit` can be used to:
+
+- stage all changes (`git add .`)
+- create a formatted commit message with incremented number
+- push to the current branch
 
 ## Quality checks
 
-Run these commands before pushing:
+Run these before opening a PR:
 
 ```bash
-npm test
-npm run build
 npm run lint
-npm
+npm run test
+npm run build
 ```
 
-## Architecture
+Additional useful command:
 
-The architecture follows a three-phase pipeline: [initialization][int], **bundling**, and **compilation**. Each phase has clear boundaries and responsibilities.
+```bash
+npm run fmt
+```
 
-<!-- markdownlint-disable MD053 -->
+The `.githooks/pre-push` hook currently runs:
 
-[int]: project-docs/initialization.md
+```bash
+npm run lint
+npx tsx ./scripts/codecov/index.ts
+```
+
+## Tests
+
+`npm run test` uses an interactive runner in `scripts/susee-tests.ts`.
+
+Current test modes:
+
+- run all tests
+- initialization tests
+- bundle tests
+- code coverage generation
+
+## Project docs
+
+Primary internal documentation:
+
+- `project-docs/initialization.md`
+- `project-docs/architecture.md`
+
+## Architecture summary
+
+The project follows a three-phase pipeline: **initialization**, **bundling**, and **compilation**.
+
+- Initialization resolves config, validates entry points, collects dependencies, and runs type checks.
+- Bundling normalizes/rewrites source units and applies dependency + pre-process logic.
+- Compilation emits ESM/CommonJS outputs and optional package metadata updates.
+
+For deeper details, see `project-docs/architecture.md`.
