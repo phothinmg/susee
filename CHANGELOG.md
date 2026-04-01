@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Migrated Git hooks from `husky`/`commitlint` to repository-tracked hooks in `.githooks`.
+- Added `npm run hooks:install` setup flow and enforced commit subject format: `<Type>: <message> (#<number>)` where `Type` is one of `Added`, `Changed`, `Deprecated`, `Fixed`, `Security`.
+
 ## [1.5.1] - 2026-03-26
 
 ### Added

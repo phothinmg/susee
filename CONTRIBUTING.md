@@ -13,7 +13,32 @@ Thanks for contributing to **susee**.
 git clone https://github.com/phothinmg/susee.git
 cd susee
 npm install
+npm run hooks:install
 ```
+
+This installs repository-tracked Git hooks from `.githooks`.
+
+## Commit message format
+
+Commit subject lines must follow:
+
+```text
+<Type>: <message> (#<number>)
+```
+
+Example:
+
+```text
+Added: support plugin hook ordering (#42)
+```
+
+Allowed `Type` values:
+
+- Added
+- Changed
+- Deprecated
+- Fixed
+- Security
 
 ## Development workflow
 

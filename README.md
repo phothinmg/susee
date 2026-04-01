@@ -152,7 +152,7 @@ When `allowUpdatePackageJson` is `true`, Susee can update:
 
 ```bash
 susee
-susee --init
+susee init
 ```
 
 Any other argument combination exits with an error.

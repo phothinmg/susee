@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Validate commit subject against Keep a Changelog-style categories
+# and require a trailing issue reference: (#123)
+subject=$(grep -vE '^\s*#' "$1" | sed '/^\s*$/d' | head -n1)
+
+if [[ -z "$subject" ]]; then
+  echo "ERROR: Commit message subject is empty."
+  echo "Expected format: <Type>: <message> (#<number>)"
+  exit 1
+fi
+
+pattern='^(Added|Changed|Deprecated|Fixed|Security)[[:space:]]*:[[:space:]]+.+[[:space:]]+\(#[0-9]+\)$'
+
+if [[ ! "$subject" =~ $pattern ]]; then
+  echo "ERROR: Invalid commit message format."
+  echo "Allowed types: Added, Changed, Deprecated, Fixed, Security"
+  echo "Expected format: <Type>: <message> (#<number>)"
+  echo "Example: Added: support tsx test hook (#42)"
+  exit 1
+fi
