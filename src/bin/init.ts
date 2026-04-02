@@ -3,8 +3,9 @@ import path from "node:path";
 import process from "node:process";
 import readline from "node:readline/promises";
 import tcolor from "susee-tcolor";
+
 // --------------------------------------------------------------------------------------//
-const tsFileText = String.raw`
+const tsFileText = `
 import type { SuSeeConfig } from "susee";
 
 const config: SuSeeConfig = {
@@ -46,7 +47,7 @@ const config: SuSeeConfig = {
 export default config;
 `.trim();
 // --------------------------------------------------------------------------------------//
-const jsFileText = String.raw`
+const jsFileText = `
 /**
  * @type {import("susee").SuSeeConfig}
  */
@@ -90,44 +91,44 @@ export default config;
 `.trim();
 
 async function getPackageType() {
-  const pkgFile = "package.json";
-  const pkgPath = path.resolve(process.cwd(), pkgFile);
-  const _pkg = await fs.promises.readFile(pkgPath, "utf8");
-  const pkg = JSON.parse(_pkg);
-  let type = "commonjs";
-  if (pkg.type && pkg.type === "module") type = "esm";
-  return type;
+	const pkgFile = "package.json";
+	const pkgPath = path.resolve(process.cwd(), pkgFile);
+	const _pkg = await fs.promises.readFile(pkgPath, "utf8");
+	const pkg = JSON.parse(_pkg);
+	let type = "commonjs";
+	if (pkg.type && pkg.type === "module") type = "esm";
+	return type;
 }
 
 export default async function init() {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const is_ts = await rl.question(tcolor.cyan("Is TypeScript project(y/n) : "));
-  const isTs = is_ts === "y" || is_ts === "Y" || is_ts === "" ? true : false;
-  rl.close();
-  let configFile = "";
-  let str = "";
-  if (isTs) {
-    configFile = "susee.config.ts";
-    str = tsFileText;
-  } else {
-    str = jsFileText;
-    const pkgType = await getPackageType();
-    switch (pkgType) {
-      case "commonjs":
-        configFile = "susee.config.mjs";
-        break;
-      case "esm":
-        configFile = "susee.config.js";
-        break;
-    }
-  }
-  const configFilePath = path.resolve(process.cwd(), configFile);
-  if (fs.existsSync(configFilePath)) await fs.promises.unlink(configFilePath);
-  await fs.promises.writeFile(configFilePath, str);
-  console.info(
-    tcolor.cyan(`Susee config file ${configFile} is created at project root`),
-  );
+	const rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout,
+	});
+	const is_ts = await rl.question(tcolor.cyan("Is TypeScript project(y/n) : "));
+	const isTs = !!(is_ts === "y" || is_ts === "Y" || is_ts === "");
+	rl.close();
+	let configFile = "";
+	let str = "";
+	if (isTs) {
+		configFile = "susee.config.ts";
+		str = tsFileText;
+	} else {
+		str = jsFileText;
+		const pkgType = await getPackageType();
+		switch (pkgType) {
+			case "commonjs":
+				configFile = "susee.config.mjs";
+				break;
+			case "esm":
+				configFile = "susee.config.js";
+				break;
+		}
+	}
+	const configFilePath = path.resolve(process.cwd(), configFile);
+	if (fs.existsSync(configFilePath)) await fs.promises.unlink(configFilePath);
+	await fs.promises.writeFile(configFilePath, str);
+	console.info(
+		tcolor.cyan(`Susee config file ${configFile} is created at project root`),
+	);
 }

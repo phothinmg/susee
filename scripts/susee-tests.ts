@@ -1,7 +1,7 @@
 import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { executeCommand } from "./execute-command.js";
-import tcolor from "@suseejs/tcolor";
+import tcolor from "susee-tcolor";
 
 const suseeTestOptions = [
   {

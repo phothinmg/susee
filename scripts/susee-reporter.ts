@@ -1,5 +1,5 @@
 import { type TestEvent } from "node:test/reporters";
-import tcolor from "@suseejs/tcolor";
+import tcolor from "susee-tcolor";
 
 type SummaryCounts = {
   suites: number;
