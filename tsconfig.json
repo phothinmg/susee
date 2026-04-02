@@ -9,7 +9,7 @@
     // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
     // set to the *lowest* target you support
-    "target": "es2020",
+    "target": "esnext",
     "esModuleInterop": true,
     //"types": [],
     // For nodejs:
@@ -47,14 +47,13 @@
   },
   "include": [
     "src/**/*",
+    "src/bin/**/*",
     "build.ts",
     "tests/**/*",
     "sr",
     "a.ts",
     "b.ts",
-    "docs/.vitepress/theme/**/*",
-    "bin/index.mjs",
-    "bin/init.mjs",
+    "c.ts",
     "scripts/**/*"
   ]
 }

@@ -2,15 +2,15 @@ import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { exec } from "node:child_process";
 import { executeCommand } from "./execute-command.js";
-import tcolor from "@suseejs/tcolor";
+import tcolor from "susee-tcolor";
 
 const suseeCommitTypes = [
-  "Added",
-  "Changed",
-  "Deprecated",
-  "Fixed",
-  "Security",
-  "Modified",
+  "🚀 Added",
+  "🖊️ Changed",
+  "🗝️ Deprecated",
+  "🐞 Fixed",
+  "🚨 Security",
+  "✨ Modified",
 ];
 
 async function getCommandOutput(command: string): Promise<string> {
@@ -82,7 +82,9 @@ async function suseeCommit() {
     await executeCommand(`git commit -m "${commitMessage}"`);
     await executeCommand(`git push origin ${branch}`);
 
-    console.log(tcolor.green(`   Pushed ${branch} with commit #${newMessageNum}.`));
+    console.log(
+      tcolor.green(`   Pushed ${branch} with commit #${newMessageNum}.`),
+    );
   } catch (error) {
     const text = error instanceof Error ? error.message : String(error);
     console.log(tcolor.red(`   ${text}`));

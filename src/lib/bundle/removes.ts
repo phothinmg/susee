@@ -1,12 +1,12 @@
-import resolves from "@suseejs/resolves";
-import transformFunction from "@suseejs/transformer";
+import resolves from "@phothinmaung/resolves";
+import transformFunction from "susee-transform";
 import type {
 	BundleHandler,
 	DependenciesFile,
 	RequireImportObject,
 	TypeObj,
-} from "@suseejs/types";
-import utils from "@suseejs/utils";
+} from "susee-types";
+import utils from "susee-utils";
 import ts from "typescript";
 
 /**

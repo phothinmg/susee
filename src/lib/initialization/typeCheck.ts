@@ -1,6 +1,6 @@
-import resolves from "@suseejs/resolves";
-import tcolor from "@suseejs/tcolor";
-import type { DependenciesFiles } from "@suseejs/types";
+import resolves from "@phothinmaung/resolves";
+import tcolor from "susee-tcolor";
+import type { DependenciesFiles } from "susee-types";
 import ts from "typescript";
 
 function _typesCheck(

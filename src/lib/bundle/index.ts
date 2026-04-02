@@ -1,11 +1,11 @@
 import path from "node:path";
-import tcolor from "@suseejs/tcolor";
+import tcolor from "susee-tcolor";
 import type {
 	DependenciesFiles,
 	SuseePlugin,
 	SuseePluginFunction,
-} from "@suseejs/types";
-import utils from "@suseejs/utils";
+} from "susee-types";
+import utils from "susee-utils";
 import type {
 	InitializePoint,
 	InitializeResult,
