@@ -6,7 +6,9 @@
 </div>
 <!-- markdownlint-enable MD033 -->
 
-[![npm version](https://img.shields.io/npm/v/susee)](https://www.npmjs.com/package/susee) [![license](https://img.shields.io/npm/l/susee)](LICENSE) [![Socket Badge](https://badge.socket.dev/npm/package/susee/1.5.1)](https://badge.socket.dev/npm/package/susee/1.5.1) [![codecov](https://codecov.io/gh/phothinmg/susee/graph/badge.svg?token=6240Y3L0V1)](https://codecov.io/gh/phothinmg/susee)
+[![NPM][nodei_img]][nodei_url]
+
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![Socket Badge][sb_img]][sb_url] [![codecov][codecov_img]][codecov_url]
 
 ## Overview
 
@@ -189,3 +191,18 @@ See detail in [CONTRIBUTING.md][file-contribute]
 [license]: LICENSE
 [file-contribute]: CONTRIBUTING.md
 [ptm]: https://github.com/phothinmg
+
+<!-- Need to update version -->
+
+[sb_img]: https://badge.socket.dev/npm/package/susee/1.5.1
+[sb_url]: https://badge.socket.dev/npm/package/susee/1.5.1
+
+<!--  -->
+
+[codecov_img]: https://codecov.io/gh/phothinmg/susee/graph/badge.svg?token=6240Y3L0V1
+[codecov_url]: https://codecov.io/gh/phothinmg/susee
+[nodei_img]: https://nodei.co/npm/susee.svg?color=red
+[nodei_url]: https://nodei.co/npm/susee/
+[npm_v_img]: https://img.shields.io/npm/v/susee
+[npm_v_url]: https://www.npmjs.com/package/susee
+[license_img]: https://img.shields.io/npm/l/susee

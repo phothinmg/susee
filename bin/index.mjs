@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import process from "node:process";
-import { susee } from "../index.js";
-import init from "./init.js";
+import { susee } from "../dist/index.mjs";
+import init from "./init.mjs";
 
 async function suseeBuild() {
 	const args = process.argv.slice(2);
@@ -15,7 +15,7 @@ async function suseeBuild() {
 	}
 }
 
-void suseeBuild().catch((error: unknown) => {
+void suseeBuild().catch((error) => {
 	console.error(error);
 	process.exit(1);
 });

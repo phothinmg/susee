@@ -3,7 +3,7 @@
   "version": "1.5.1",
   "description": "Simple TypeScript Bundler",
   "type": "module",
-  "main": "dist/index.cjs",
+  "main": "dist/index.cjs.map",
   "types": "dist/index.d.cts",
   "module": "dist/index.mjs",
   "exports": {
@@ -14,18 +14,12 @@
       },
       "require": {
         "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
-    },
-    "./bin": {
-      "import": {
-        "types": "./dist/bin/index.d.mts",
-        "default": "./dist/bin/index.mjs"
+        "default": "./dist/index.cjs.map"
       }
     }
   },
   "bin": {
-    "susee": "dist/bin/index.mjs"
+    "susee": "bin/index.mjs"
   },
   "scripts": {
     "build": "tsx build.ts",
@@ -48,15 +42,15 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@phothinmaung/resolves": "^1.0.0",
     "mhaehko": "^0.1.0",
-    "susee-tcolor": "^0.0.6",
-    "susee-types": "^0.0.6",
-    "susee-utils": "^0.0.6",
-    "susee-transform": "^0.0.6",
-    "susee-tsconfig": "^0.0.6",
     "susee-plugin-banner-text": "^0.0.6",
     "susee-plugin-terser": "^0.0.6",
-    "@phothinmaung/resolves": "^1.0.0",
+    "susee-tcolor": "^0.0.6",
+    "susee-transform": "^0.0.6",
+    "susee-tsconfig": "^0.0.6",
+    "susee-types": "^0.0.6",
+    "susee-utils": "^0.0.6",
     "typescript": "^6.0.2"
   },
   "devDependencies": {

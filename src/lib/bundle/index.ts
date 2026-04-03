@@ -1,29 +1,21 @@
 import path from "node:path";
 import tcolor from "susee-tcolor";
 import type {
+	BundledResult,
+	BundlePoint,
 	DependenciesFiles,
+	InitializePoint,
+	InitializeResult,
 	SuseePlugin,
 	SuseePluginFunction,
 } from "susee-types";
 import utils from "susee-utils";
-import type {
-	InitializePoint,
-	InitializeResult,
-} from "../initialization/index.js";
+import { mergeImportsStatement } from "../visitors/mergeImports.js";
+import { clearUnusedCode } from "../visitors/unusedCode.js";
 import { anonymousHandler } from "./anonymous.js";
 import { duplicateHandlers } from "./duplicate.js";
-import { mergeImportsStatement } from "./mergeImports.js";
 import { removeHandlers } from "./removes.js";
-import { clearUnusedCode } from "./unusedCode.js";
 
-// ------------------------------------------------------------------------------------//
-export interface BundlePoint extends InitializePoint {
-	bundledContent: string;
-}
-export interface BundledResult {
-	points: BundlePoint[];
-	allowUpdatePackageJson: boolean;
-}
 // ------------------------------------------------------------------------------------//
 
 /**
@@ -114,10 +106,6 @@ async function bundler(point: InitializePoint): Promise<BundlePoint> {
 	let content = `${importStatements}\n${depFilesContent}\n${mainFileContent}`;
 	// remove ;
 	content = content.replace(/^s*;\s*$/gm, "").trim();
-
-	// if (reName) {
-	// 	content = duplicates(content, point.fileName, compilerOptions);
-	// }
 	content = clearUnusedCode(content, point.fileName, compilerOptions);
 
 	// Call pre-process plugins

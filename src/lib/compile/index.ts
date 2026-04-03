@@ -1,9 +1,8 @@
 import path from "node:path";
 import tcolor from "susee-tcolor";
-import type { OutFiles } from "susee-types";
+import type { BundledResult, BundlePoint, OutFiles } from "susee-types";
 import utils from "susee-utils";
 import ts from "typescript";
-import type { BundledResult, BundlePoint } from "../bundle/index.js";
 import { createHost } from "./host.js";
 import { writePackage } from "./package.js";
 
@@ -106,6 +105,14 @@ class Compiler {
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
 			content = await postProcessPluginParser(point.plugins, content, outName);
+			// const ext = path.extname(outName);
+			// if (ext === ".js") {
+			//   content = await esbuildBundlers.commonjs(
+			//     content,
+			//     fileName,
+			//     compilerOptions,
+			//   );
+			// }
 			content = resolveSourceMappingURL(outName, content, "cjs");
 
 			//----------------------------------------------------------------
@@ -156,6 +163,11 @@ class Compiler {
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
 			content = resolveSourceMappingURL(outName, content, "esm");
+			// const ext = path.extname(outName);
+			// if (ext === ".js") {
+			//   content = await esbuildBundlers.esm(content, fileName, compilerOptions);
+			// }
+
 			content = await postProcessPluginParser(point.plugins, content, outName);
 			//----------------------------------------------------------------
 

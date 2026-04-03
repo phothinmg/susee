@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type ts from "typescript";
-import { clearUnusedCode } from "../../src/lib/bundle/unusedCode.js";
+import { clearUnusedCode } from "../../src/lib/visitors/unusedCode.js";
 
 describe("Clear Unused Code Tests", () => {
 	it("removes unused import specifiers and drops fully unused import declarations", () => {

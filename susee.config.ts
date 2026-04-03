@@ -1,5 +1,6 @@
 import type { SuSeeConfig } from "./src/index.js";
 import suseeBannerText from "susee-plugin-banner-text";
+import suseeTerser from "susee-plugin-terser";
 
 const licenseText = `
 /*! *****************************************************************************
@@ -12,20 +13,15 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 `.trim();
 
 const config: SuSeeConfig = {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-    },
-    {
-      entry: "src/bin/index.ts",
-      exportPath: "./bin",
-      format: ["esm"],
-    },
-  ],
-  plugins: [suseeBannerText(licenseText)],
-  allowUpdatePackageJson: true,
+	entryPoints: [
+		{
+			entry: "src/index.ts",
+			exportPath: ".",
+			format: ["esm", "commonjs"],
+		},
+	],
+	plugins: [suseeBannerText(licenseText), suseeTerser()],
+	allowUpdatePackageJson: true,
 };
 
 export default config;
