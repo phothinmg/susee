@@ -20,8 +20,8 @@ const config: SuSeeConfig = {
 			format: ["esm", "commonjs"],
 		},
 	],
-	plugins: [suseeBannerText(licenseText), suseeTerser()],
-	allowUpdatePackageJson: true,
+	// plugins: [suseeBannerText(licenseText), suseeTerser()],
+	// allowUpdatePackageJson: true,
 };
 
 export default config;

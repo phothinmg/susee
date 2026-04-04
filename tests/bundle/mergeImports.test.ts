@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { mergeImportsStatement } from "../../src/lib/visitors/mergeImports.js";
+import { mergeImportsStatement } from "../../src/lib/bundle/mergeImports.js";
 
 describe("Merge Imports Statement Tests", () => {
 	it("merges named imports and keeps type-only names when no regular equivalent exists", () => {

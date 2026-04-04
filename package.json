@@ -23,12 +23,13 @@
   },
   "scripts": {
     "build": "tsx build.ts",
-    "test": "tsx scripts/susee-tests.ts",
+    "test": "tsx --test",
     "hooks:install": "bash scripts/install-hooks.sh",
     "fmt": "biome format --write",
     "lint": "biome check src --write",
     "lint:test": "biome check tests --write",
-    "commit": "tsx scripts/susee-commit.ts"
+    "commit": "tsx scripts/susee-commit.ts",
+    "update": "tsx scripts/susee-update.ts"
   },
   "keywords": [
     "bundler",
@@ -44,18 +45,18 @@
   "dependencies": {
     "@phothinmaung/resolves": "^1.0.0",
     "mhaehko": "^0.1.0",
-    "susee-plugin-banner-text": "^0.0.6",
-    "susee-plugin-terser": "^0.0.6",
-    "susee-tcolor": "^0.0.6",
-    "susee-transform": "^0.0.6",
-    "susee-tsconfig": "^0.0.6",
-    "susee-types": "^0.0.6",
-    "susee-utils": "^0.0.6",
+    "susee-plugin-banner-text": "^0.1.0",
+    "susee-plugin-terser": "^0.1.0",
+    "susee-tcolor": "^0.1.0",
+    "susee-transform": "^0.1.0",
+    "susee-tsconfig": "^0.1.0",
+    "susee-types": "^0.1.0",
+    "susee-utils": "^0.1.0",
     "typescript": "^6.0.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
-    "@types/node": "^25.1.0",
+    "@biomejs/biome": "^2.4.10",
+    "@types/node": "^25.5.2",
     "tsx": "^4.21.0"
   },
   "files": [

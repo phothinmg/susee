@@ -17,13 +17,14 @@ function collectBindingNames(name: ts.BindingName, out: string[]) {
 
 /**
  * Clear unused top-level declarations from a TypeScript source string.
- * - Removes entire import declarations when none of the imported names are used.
+ * - Removes only unused named import specifiers.
+ * - Removes entire import declarations when an unused default or namespace import is present.
  * - Removes function and class declarations when their name is unused.
  * - Removes entire variable statements when none of the declared identifiers are used.
  *
  * Limitations: this works on a single-file basis and does not analyze cross-file usages.
  */
-function clearUnusedCode(
+export default function (
 	content: string,
 	file: string,
 	compilerOptions: ts.CompilerOptions,
@@ -133,7 +134,9 @@ function clearUnusedCode(
 		context: ts.TransformationContext,
 	) => {
 		const visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
-			// ImportDeclaration: remove unused imported specifiers / names
+			// ImportDeclaration:
+			// - remove whole statement when default/namespace import is unused
+			// - otherwise remove only unused named specifiers
 			if (ts.isImportDeclaration(node) && node.importClause) {
 				const ic = node.importClause;
 
@@ -164,35 +167,26 @@ function clearUnusedCode(
 					(ele) => !unused.has(ele.name.text),
 				);
 
-				if (!defaultUsed && !namespaceUsed && keptNamed.length === 0) {
+				if (
+					(defaultName && !defaultUsed) ||
+					(namespaceName && !namespaceUsed)
+				) {
 					return ts.factory.createNotEmittedStatement(node);
 				}
 
-				const needChange =
-					(!defaultUsed && !!ic.name) ||
-					(namespaceName !== undefined && !namespaceUsed) ||
-					keptNamed.length !== namedElements.length;
-				if (needChange) {
-					// build new namedBindings if needed
-					let newNamedBindings: ts.NamedImportBindings | undefined;
-					if (keptNamed.length > 0) {
-						newNamedBindings = ts.factory.createNamedImports(keptNamed);
-					} else if (namespaceUsed && namespaceName) {
-						newNamedBindings = ts.factory.createNamespaceImport(
-							ts.factory.createIdentifier(namespaceName),
-						);
-					} else {
-						newNamedBindings = undefined;
-					}
+				if (
+					namedElements.length > 0 &&
+					keptNamed.length === 0 &&
+					!defaultName
+				) {
+					return ts.factory.createNotEmittedStatement(node);
+				}
 
-					const newDefault =
-						defaultUsed && defaultName
-							? ts.factory.createIdentifier(defaultName)
-							: undefined;
+				if (keptNamed.length !== namedElements.length) {
 					const newImportClause = ts.factory.createImportClause(
 						false,
-						newDefault,
-						newNamedBindings,
+						defaultName ? ts.factory.createIdentifier(defaultName) : undefined,
+						ts.factory.createNamedImports(keptNamed),
 					);
 					return ts.factory.updateImportDeclaration(
 						node,
@@ -239,5 +233,3 @@ function clearUnusedCode(
 	const output = transformFunction(transformer, sourceFile, compilerOptions);
 	return output;
 }
-
-export { clearUnusedCode };

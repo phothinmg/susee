@@ -4,17 +4,37 @@ import type {
 	BundledResult,
 	BundlePoint,
 	DependenciesFiles,
+	DepFileObject,
 	InitializePoint,
 	InitializeResult,
 	SuseePlugin,
 	SuseePluginFunction,
 } from "susee-types";
-import utils from "susee-utils";
-import { mergeImportsStatement } from "../visitors/mergeImports.js";
-import { clearUnusedCode } from "../visitors/unusedCode.js";
-import { anonymousHandler } from "./anonymous.js";
-import { duplicateHandlers } from "./duplicate.js";
-import { removeHandlers } from "./removes.js";
+import ts from "typescript";
+import duplicateHandler from "./handlers/duplicate.js";
+import edHandler from "./handlers/exportDefault.js";
+import removeHandler from "./handlers/remove.js";
+import { mergeImportsStatement } from "./mergeImports.js";
+import clearUnusedCode from "./unusedCode.js";
+
+// ------------------------------------------------------------------------------------//
+const convertFileObjectType = (
+	depsFiles: DependenciesFiles,
+): DepFileObject[] => {
+	return depsFiles.map((depFile) => {
+		const { file, content } = depFile;
+		return {
+			sourceCode: content,
+			fileName: file,
+			sourceFile: ts.createSourceFile(
+				file,
+				content,
+				ts.ScriptTarget.Latest,
+				true,
+			),
+		} as DepFileObject;
+	});
+};
 
 // ------------------------------------------------------------------------------------//
 
@@ -50,35 +70,29 @@ async function preProcessPluginParser(
 // ----------------------------------------------------------------------------------
 
 async function bundler(point: InitializePoint): Promise<BundlePoint> {
-	const _name =
-		point.exportPath === "."
-			? "Main"
-			: utils.str.splitCamelCase(point.exportPath.slice(2));
 	console.time(
 		`      > ${tcolor.cyan(`Bundled`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 	);
-	let depsFiles = point.depFiles;
+	let depsFiles = convertFileObjectType(point.depFiles);
 	const reName = point.rename;
 	const compilerOptions = point.tsOptions.default;
 	const plugins = point.plugins;
 	let removedStatements: string[] = [];
 
-	// Handling anonymous imports and exports
-	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
+	// Handling anonymous imports/exports and export default names
+	depsFiles = await edHandler(depsFiles, compilerOptions);
 	// duplicates
 	if (reName) {
-		depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
+		depsFiles = await duplicateHandler.renamed(depsFiles, compilerOptions);
 	} else {
-		depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
+		depsFiles = await duplicateHandler.notRenamed(depsFiles, compilerOptions);
 	}
 	// Remove Imports
-	const removed = await removeHandlers(removedStatements, compilerOptions);
+	const removed = await removeHandler(removedStatements, compilerOptions);
 	depsFiles = depsFiles.map(removed[0]);
 	// Remove Exports from dependencies only
 	// not remove exports from entry file
-	const deps_files = depsFiles
-		.slice(0, -1)
-		.map(removed[1]) as DependenciesFiles;
+	const deps_files = depsFiles.slice(0, -1).map(removed[1]);
 	const mainFile = depsFiles.slice(-1);
 	// Handle imported statements
 	// filter removed statements , that not from local like `./` or `../`
@@ -90,15 +104,15 @@ async function bundler(point: InitializePoint): Promise<BundlePoint> {
 	const importStatements = removedStatements.join("\n").trim();
 	const depFilesContent = deps_files
 		.map((i) => {
-			const file = `//${path.relative(process.cwd(), i.file)}`;
-			return `${file}\n${i.content}`;
+			const file = `//${path.relative(process.cwd(), i.fileName)}`;
+			return `${file}\n${i.sourceCode}`;
 		})
 		.join("\n")
 		.trim();
 	const mainFileContent = mainFile
 		.map((i) => {
-			const file = `//${path.relative(process.cwd(), i.file)}`;
-			return `${file}\n${i.content}`;
+			const file = `//${path.relative(process.cwd(), i.fileName)}`;
+			return `${file}\n${i.sourceCode}`;
 		})
 		.join("\n")
 		.trim();
