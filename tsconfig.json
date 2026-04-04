@@ -55,6 +55,6 @@
     "b.ts",
     "c.ts",
     "scripts/**/*"
-, "_opt/visitors", "_opt/removes.ts", "_opt/duplicate.ts", "_opt/anonymous.ts"  ],
+  ],
   "exclude": ["_opt/**/*"]
 }
