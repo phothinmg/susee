@@ -90,7 +90,7 @@ class Compiler {
 	private async _commonjs(point: BundlePoint) {
 		const isMain = point.exportPath === ".";
 		console.time(
-			`        ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`    ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
 		const fileName = point.fileName;
@@ -105,14 +105,6 @@ class Compiler {
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
 			content = await postProcessPluginParser(point.plugins, content, outName);
-			// const ext = path.extname(outName);
-			// if (ext === ".js") {
-			//   content = await esbuildBundlers.commonjs(
-			//     content,
-			//     fileName,
-			//     compilerOptions,
-			//   );
-			// }
 			content = resolveSourceMappingURL(outName, content, "cjs");
 
 			//----------------------------------------------------------------
@@ -138,7 +130,7 @@ class Compiler {
 			await utils.file.writeFile(outName, content);
 		});
 		console.timeEnd(
-			`        ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`    ${tcolor.cyan(`Compiled commonjs`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 	}
 	/**
@@ -149,7 +141,7 @@ class Compiler {
 	private async _esm(point: BundlePoint) {
 		const isMain = point.exportPath === ".";
 		console.time(
-			`        ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`    ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 		// init
 		const fileName = point.fileName;
@@ -163,12 +155,7 @@ class Compiler {
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
 			content = resolveSourceMappingURL(outName, content, "esm");
-			// const ext = path.extname(outName);
-			// if (ext === ".js") {
-			//   content = await esbuildBundlers.esm(content, fileName, compilerOptions);
-			// }
-
-			content = await postProcessPluginParser(point.plugins, content, outName);
+            content = await postProcessPluginParser(point.plugins, content, outName);
 			//----------------------------------------------------------------
 
 			if (this._isUpdate()) {
@@ -189,7 +176,7 @@ class Compiler {
 			await utils.file.writeFile(outName, content);
 		});
 		console.timeEnd(
-			`        ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
+			`    ${tcolor.cyan(`Compiled esm`)} -> ${tcolor.cyan(`export path(${tcolor.magenta(`"${point.exportPath}"`)})`)} `,
 		);
 	}
 

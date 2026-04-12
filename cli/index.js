@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import process from "node:process";
 import { susee } from "../dist/index.mjs";
-import init from "./init.mjs";
+import init from "./init.js";
 
 async function suseeBuild() {
 	const args = process.argv.slice(2);

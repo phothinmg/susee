@@ -20,7 +20,4 @@ def.json
 out
 sr
 rc
-
-## Vitepress
-docs/.vitepress/dist
-docs/.vitepress/cache
+bin

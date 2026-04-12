@@ -54,7 +54,8 @@
     "a.ts",
     "b.ts",
     "c.ts",
-    "scripts/**/*"
+    "scripts/**/*",
+    "cli/**/*"
   ],
   "exclude": ["_opt/**/*"]
 }
