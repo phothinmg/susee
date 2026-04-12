@@ -1,9 +1,9 @@
-import ts from "typescript";
-import tcolor from "susee-tcolor";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { type InitializeResult } from "./lib/initialization/index.js";
+import tcolor from "susee-tcolor";
+import ts from "typescript";
+import type { InitializeResult } from "./lib/initialization/index.js";
 
 /**
  * Final check for unsupported dependencies.
@@ -12,30 +12,30 @@ import { type InitializeResult } from "./lib/initialization/index.js";
  * @param initialized - The result of the initializer function.
  */
 const finalCheck = (initialized: InitializeResult) => {
-  const points = initialized.points;
-  for (const point of points) {
-    for (const file of point.depFiles) {
-      if (file.moduleType === "cjs" || file.fileExt === ".cjs") {
-        console.error(
-          `> ${tcolor.cyan(
-            `Unsupported CommonJS dependency: ${tcolor.magenta(file.file)}\n  To resolve that, recommend to use susee-plugin-commonjs`,
-          )}`,
-        );
-        ts.sys.exit(1);
-      } else if (
-        file.isJsx ||
-        file.fileExt === ".jsx" ||
-        file.fileExt === ".tsx"
-      ) {
-        console.error(
-          `> ${tcolor.cyan(
-            `Unsupported JSX/TSX dependency: ${tcolor.magenta(file.file)}\n  That will be fix in future versions`,
-          )}`,
-        );
-        ts.sys.exit(1);
-      }
-    } //
-  }
+	const points = initialized.points;
+	for (const point of points) {
+		for (const file of point.depFiles) {
+			if (file.moduleType === "cjs" || file.fileExt === ".cjs") {
+				console.error(
+					`> ${tcolor.cyan(
+						`Unsupported CommonJS dependency: ${tcolor.magenta(file.file)}\n  To resolve that, recommend to use susee-plugin-commonjs`,
+					)}`,
+				);
+				ts.sys.exit(1);
+			} else if (
+				file.isJsx ||
+				file.fileExt === ".jsx" ||
+				file.fileExt === ".tsx"
+			) {
+				console.error(
+					`> ${tcolor.cyan(
+						`Unsupported JSX/TSX dependency: ${tcolor.magenta(file.file)}\n  That will be fix in future versions`,
+					)}`,
+				);
+				ts.sys.exit(1);
+			}
+		} //
+	}
 };
 
 /**
@@ -45,24 +45,24 @@ const finalCheck = (initialized: InitializeResult) => {
  * If the project version is not found, it will not include the version in the returned string.
  */
 const getPackageInfo = () => {
-  const packageContent = fs.readFileSync(
-    path.resolve(process.cwd(), "package.json"),
-    "utf8",
-  );
-  const pkg = JSON.parse(packageContent);
-  const name = pkg.name ?? "";
-  const version = pkg.version ?? "";
-  let pkg_nv = "";
-  if (name !== "" && version !== "") {
-    pkg_nv = `${name}@${version}`;
-  } else if (name !== "" && version === "") {
-    pkg_nv = `${name}`;
-  } else if (name === "" && version !== "") {
-    pkg_nv = `the project@${version}`;
-  } else {
-    pkg_nv = "the project";
-  }
-  return pkg_nv;
+	const packageContent = fs.readFileSync(
+		path.resolve(process.cwd(), "package.json"),
+		"utf8",
+	);
+	const pkg = JSON.parse(packageContent);
+	const name = pkg.name ?? "";
+	const version = pkg.version ?? "";
+	let pkg_nv = "";
+	if (name !== "" && version !== "") {
+		pkg_nv = `${name}@${version}`;
+	} else if (name !== "" && version === "") {
+		pkg_nv = `${name}`;
+	} else if (name === "" && version !== "") {
+		pkg_nv = `the project@${version}`;
+	} else {
+		pkg_nv = "the project";
+	}
+	return pkg_nv;
 };
 
 export { finalCheck, getPackageInfo };

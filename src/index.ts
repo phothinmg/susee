@@ -1,9 +1,9 @@
 import tcolor from "susee-tcolor";
+import { finalCheck, getPackageInfo } from "./helpers.js";
 import { bundle } from "./lib/bundle/index.js";
 import { Compiler } from "./lib/compile/index.js";
-import { initializer} from "./lib/initialization/index.js";
+import { initializer } from "./lib/initialization/index.js";
 import type { SuSeeConfig } from "./lib/initialization/suseeConfig.js";
-import { finalCheck, getPackageInfo } from "./helpers.js";
 
 /**
  * Main entry point for SuSee
@@ -17,16 +17,16 @@ import { finalCheck, getPackageInfo } from "./helpers.js";
  * process is complete.
  */
 export const susee = async (): Promise<void> => {
-  console.time(`  ${tcolor.cyan(`Done`)} `);
-  const pkg_nv = getPackageInfo();
-  console.time(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
-  const initialized = await initializer();
-  finalCheck(initialized);
-  console.timeEnd(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
-  const bundled = await bundle(initialized);
-  const compiler = new Compiler(bundled);
-  await compiler.compile();
-  console.timeEnd(`  ${tcolor.cyan(`Done`)} `);
+	console.time(`  ${tcolor.cyan(`Done`)} `);
+	const pkg_nv = getPackageInfo();
+	console.time(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
+	const initialized = await initializer();
+	finalCheck(initialized);
+	console.timeEnd(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
+	const bundled = await bundle(initialized);
+	const compiler = new Compiler(bundled);
+	await compiler.compile();
+	console.timeEnd(`  ${tcolor.cyan(`Done`)} `);
 };
 
 export type { SuSeeConfig };
