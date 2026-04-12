@@ -43,7 +43,6 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@phothinmaung/resolves": "^1.0.0",
     "mhaehko": "^0.1.0",
     "susee-plugin-banner-text": "^0.1.0",
     "susee-plugin-terser": "^0.1.0",

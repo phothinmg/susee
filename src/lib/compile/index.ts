@@ -155,7 +155,7 @@ class Compiler {
 		program.emit();
 		Object.entries(createdFiles).map(async ([outName, content]) => {
 			content = resolveSourceMappingURL(outName, content, "esm");
-            content = await postProcessPluginParser(point.plugins, content, outName);
+			content = await postProcessPluginParser(point.plugins, content, outName);
 			//----------------------------------------------------------------
 
 			if (this._isUpdate()) {

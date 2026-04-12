@@ -1,8 +1,8 @@
 import transformFunction from "susee-transform";
 import type { BundleHandler, DependenciesFile } from "susee-types";
 import ts from "typescript";
-import { removeVisitors } from "./visitors/removeVisitor.js";
 import { promiseResolve } from "./promiseResolve.js";
+import { removeVisitors } from "./visitors/removeVisitor.js";
 
 /**
  * A bundle handler that takes a list of source files and transforms them into renamed source files.
@@ -15,28 +15,28 @@ import { promiseResolve } from "./promiseResolve.js";
  * @returns A list of transformed source files.
  */
 function esmExportRemoveHandler(
-  compilerOptions: ts.CompilerOptions,
+	compilerOptions: ts.CompilerOptions,
 ): BundleHandler {
-  return ({ file, content, ...rest }: DependenciesFile): DependenciesFile => {
-    const sourceFile = ts.createSourceFile(
-      file,
-      content,
-      ts.ScriptTarget.Latest,
-      true,
-    );
-    const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
-      const visitor = removeVisitors.esmExport(context);
-      /* --------------------Returns for transformer function--------------------------------- */
-      return (rootNode) => ts.visitNode(rootNode, visitor) as ts.SourceFile;
-    };
-    /* --------------------Returns for main handler function--------------------------------- */
-    const _content = transformFunction(
-      transformer,
-      sourceFile,
-      compilerOptions,
-    );
-    return { file, content: _content, ...rest };
-  };
+	return ({ file, content, ...rest }: DependenciesFile): DependenciesFile => {
+		const sourceFile = ts.createSourceFile(
+			file,
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+		);
+		const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
+			const visitor = removeVisitors.esmExport(context);
+			/* --------------------Returns for transformer function--------------------------------- */
+			return (rootNode) => ts.visitNode(rootNode, visitor) as ts.SourceFile;
+		};
+		/* --------------------Returns for main handler function--------------------------------- */
+		const _content = transformFunction(
+			transformer,
+			sourceFile,
+			compilerOptions,
+		);
+		return { file, content: _content, ...rest };
+	};
 }
 
 /**
@@ -46,35 +46,35 @@ function esmExportRemoveHandler(
  * @returns {DepFile} - The transformed source file.
  */
 function importAllRemoveHandler(
-  removedStatements: string[],
-  compilerOptions: ts.CompilerOptions,
+	removedStatements: string[],
+	compilerOptions: ts.CompilerOptions,
 ): BundleHandler {
-  return ({ file, content, ...rest }: DependenciesFile): DependenciesFile => {
-    const sourceFile = ts.createSourceFile(
-      file,
-      content,
-      ts.ScriptTarget.Latest,
-      true,
-    );
+	return ({ file, content, ...rest }: DependenciesFile): DependenciesFile => {
+		const sourceFile = ts.createSourceFile(
+			file,
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+		);
 
-    const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
-      const visitor = removeVisitors.allImports(
-        context,
-        file,
-        removedStatements,
-        sourceFile,
-      );
-      /* --------------------Returns for transformer function--------------------------------- */
-      return (rootNode) => ts.visitNode(rootNode, visitor) as ts.SourceFile;
-    };
-    /* --------------------Returns for main handler function--------------------------------- */
-    const _content = transformFunction(
-      transformer,
-      sourceFile,
-      compilerOptions,
-    );
-    return { file, content: _content, ...rest };
-  };
+		const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
+			const visitor = removeVisitors.allImports(
+				context,
+				file,
+				removedStatements,
+				sourceFile,
+			);
+			/* --------------------Returns for transformer function--------------------------------- */
+			return (rootNode) => ts.visitNode(rootNode, visitor) as ts.SourceFile;
+		};
+		/* --------------------Returns for main handler function--------------------------------- */
+		const _content = transformFunction(
+			transformer,
+			sourceFile,
+			compilerOptions,
+		);
+		return { file, content: _content, ...rest };
+	};
 }
 
 /**
@@ -86,15 +86,15 @@ function importAllRemoveHandler(
  * @returns A list of transformed source files.
  */
 const removeHandlers = async (
-  removedStatements: string[],
-  compilerOptions: ts.CompilerOptions,
+	removedStatements: string[],
+	compilerOptions: ts.CompilerOptions,
 ): Promise<[BundleHandler, BundleHandler]> => {
-  const resolved = promiseResolve([
-    [importAllRemoveHandler, removedStatements, compilerOptions],
-    [esmExportRemoveHandler, compilerOptions],
-  ]);
+	const resolved = promiseResolve([
+		[importAllRemoveHandler, removedStatements, compilerOptions],
+		[esmExportRemoveHandler, compilerOptions],
+	]);
 
-  return await resolved.series();
+	return await resolved.series();
 };
 
 export { removeHandlers };
