@@ -1,26 +1,30 @@
 import tcolor from "susee-tcolor";
 import { bundle } from "./lib/bundle/index.js";
 import { Compiler } from "./lib/compile/index.js";
-import { initializer} from "./lib/initialization/index.js";
-import type { SuSeeConfig } from "./lib/initialization/suseeConfig.js";
+import { cliInit } from "./lib/initialization/index.js";
 import { finalCheck, getPackageInfo } from "./helpers.js";
 
-/**
- * Main entry point for SuSee
- *
- * This function is the main entry point for the SuSee bundler.
- * It initializes the bundling process, resolves the dependency tree,
- * compiles the resolved dependencies, and writes the compiled output
- * to disk.
- *
- * @returns {Promise<void>} A promise that resolves when the bundling
- * process is complete.
- */
-export const susee = async (): Promise<void> => {
+export const suseeCli = async (
+  _entry: string,
+  _format?: "cjs" | "esm",
+  outDir?: string,
+  tsconfig?: string,
+  rename?: boolean,
+  allowUpdate?: boolean,
+  minify?: boolean,
+) => {
   console.time(`  ${tcolor.cyan(`Done`)} `);
   const pkg_nv = getPackageInfo();
   console.time(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
-  const initialized = await initializer();
+  const initialized = await cliInit(
+    _entry,
+    _format,
+    outDir,
+    tsconfig,
+    rename,
+    allowUpdate,
+    minify,
+  );
   finalCheck(initialized);
   console.timeEnd(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
   const bundled = await bundle(initialized);
@@ -28,5 +32,3 @@ export const susee = async (): Promise<void> => {
   await compiler.compile();
   console.timeEnd(`  ${tcolor.cyan(`Done`)} `);
 };
-
-export type { SuSeeConfig };

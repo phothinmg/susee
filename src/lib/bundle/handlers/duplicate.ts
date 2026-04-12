@@ -7,7 +7,7 @@ import type {
 } from "susee-types";
 import utils from "susee-utils";
 import ts from "typescript";
-import { promiseResolve } from "./promiseResolve.js";
+import { promiseResolve } from "../../promiseResolve.js";
 import { duplicateVisitors } from "./visitors/duplicateVisitor.js";
 
 const duplicateNameMap: DuplicatesNameMap = new Map();

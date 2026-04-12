@@ -1,7 +1,7 @@
 import transformFunction from "susee-transform";
 import type { BundleHandler, DependenciesFile } from "susee-types";
 import ts from "typescript";
-import { promiseResolve } from "./promiseResolve.js";
+import { promiseResolve } from "../../promiseResolve.js";
 import { anonymousVisitors } from "./visitors/anonymousVisitors.js";
 
 /**

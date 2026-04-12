@@ -1,32 +1,36 @@
 import { exec } from "node:child_process";
-import resolves from "@phothinmaung/resolves";
-import { build } from "esbuild";
+import fs from "node:fs";
+import path from "node:path";
 import { susee } from "./src/index.js";
 
-async function esBuild() {
-  await build({
-    entryPoints: ["./cli/index.js"],
-    outdir: "bin",
-    platform: "node",
-    bundle: true,
-    external: ["esbuild", "typescript"],
-    format: "esm",
-    legalComments: "eof",
-    minify: true,
-    loader: {
-      ".js": "js",
-      ".mjs": "js",
-    },
-  });
-}
-const chmod = "chmod +x bin/index.js";
-
-async function suseeBuild() {
-  const jobs = [susee, esBuild];
-  for (const job of jobs) {
-    await job();
+async function grantCli() {
+  const file = path.resolve(process.cwd(), "bin/index.mjs");
+  const shebang = "#!/usr/bin/env node";
+  if (fs.existsSync(file)) {
+    let content = await fs.promises.readFile(file, "utf8");
+    if (!content.startsWith(shebang)) {
+      content = `${shebang}\n${content}`;
+      await fs.promises.writeFile(file, content);
+    }
   }
 }
 
-await suseeBuild();
-exec(chmod);
+await susee();
+const cliCommand = "npx tsx cli/index.ts build cli/index.ts --outdir bin";
+
+await new Promise<void>((resolve, reject) => {
+  exec(cliCommand, async (error) => {
+    if (error) {
+      reject(error);
+      return;
+    }
+
+    try {
+      await grantCli();
+      await fs.promises.chmod(path.resolve(process.cwd(), "bin/index.mjs"), 0o755);
+      resolve();
+    } catch (chmodOrGrantError) {
+      reject(chmodOrGrantError);
+    }
+  });
+});

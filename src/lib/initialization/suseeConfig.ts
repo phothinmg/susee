@@ -83,9 +83,8 @@ export interface Point {
 	tsconfigFilePath: string | undefined;
 	renameDuplicates: boolean;
 	outDirPath: string;
-	binaryName: string | undefined;
 }
-interface FinalSuseeConfig {
+export interface FinalSuseeConfig {
 	points: Point[];
 	plugins: (SuseePlugin | SuseePluginFunction)[];
 	allowUpdatePackageJson: boolean;
