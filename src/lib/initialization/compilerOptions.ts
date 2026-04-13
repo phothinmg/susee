@@ -1,6 +1,6 @@
 import ts from "typescript";
-import type { Point } from "./suseeConfig.js";
 import TsConfig from "../utils/tsconfig.js";
+import type { Point } from "./suseeConfig.js";
 
 class CompilerOptions {
 	private _point: Point;
