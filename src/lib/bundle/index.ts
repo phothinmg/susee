@@ -8,11 +8,11 @@ import type {
 	SuseePlugin,
 	SuseePluginFunction,
 } from "susee-types";
+import { mergeImportsStatement } from "../utils/mergeImports.js";
 import { anonymousHandler } from "./handlers/anonymous.js";
 import { duplicateHandlers } from "./handlers/duplicate.js";
 import { exportDefaultHandler } from "./handlers/exportDefault.js";
 import { removeHandlers } from "./handlers/removes.js";
-import { mergeImportsStatement } from "../utils/mergeImports.js";
 import clearUnusedCode from "./handlers/unusedCode.js";
 
 // ------------------------------------------------------------------------------------//

@@ -1,8 +1,8 @@
 import path from "node:path";
-import transformFunction from "./transformer.js";
 import type { BundleHandler, DependenciesFile, NamesSets } from "susee-types";
 import ts from "typescript";
 import { promiseResolve } from "../../utils/promiseResolve.js";
+import transformFunction from "./transformer.js";
 
 import { uniqueName } from "./visitors/uniqueName.js";
 

@@ -1,5 +1,5 @@
 // cSpell:disable
-import transformFunction from "./transformer.js";
+
 import type {
 	BundleHandler,
 	DependenciesFile,
@@ -8,6 +8,7 @@ import type {
 import utils from "susee-utils";
 import ts from "typescript";
 import { promiseResolve } from "../../utils/promiseResolve.js";
+import transformFunction from "./transformer.js";
 import { duplicateVisitors } from "./visitors/duplicateVisitor.js";
 
 const duplicateNameMap: DuplicatesNameMap = new Map();
