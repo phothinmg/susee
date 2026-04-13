@@ -43,12 +43,10 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "mhaehko": "^0.1.0",
     "susee-plugin-banner-text": "^0.1.0",
     "susee-plugin-terser": "^0.1.0",
     "susee-tcolor": "^0.1.0",
     "susee-transform": "^0.1.0",
-    "susee-tsconfig": "^0.1.0",
     "susee-types": "^0.1.0",
     "susee-utils": "^0.1.0",
     "typescript": "^6.0.2"

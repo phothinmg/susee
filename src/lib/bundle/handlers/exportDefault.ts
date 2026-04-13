@@ -2,7 +2,7 @@ import path from "node:path";
 import transformFunction from "susee-transform";
 import type { BundleHandler, DependenciesFile, NamesSets } from "susee-types";
 import ts from "typescript";
-import { promiseResolve } from "../../promiseResolve.js";
+import { promiseResolve } from "../../utils/promiseResolve.js";
 
 import { uniqueName } from "./visitors/uniqueName.js";
 

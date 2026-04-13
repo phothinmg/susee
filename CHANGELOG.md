@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- CLI API: Updated `build` command handling to support explicit help usage (`susee build`, `susee build --help`, `susee build -h`) with clearer behavior for invalid usage.
+- CLI API: Updated argument parsing to validate required build option values and reject unsupported/unknown options instead of silently ignoring them.
+
+### Fixed
+
+- Build tooling: Fixed generated CLI binary preparation in `build.ts` so `grantCli` adds the `#!/usr/bin/env node` shebang to `bin/index.mjs` only when missing.
+
 
 ## [1.5.1] - 2026-04-01
 

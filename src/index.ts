@@ -1,9 +1,10 @@
 import tcolor from "susee-tcolor";
-import { finalCheck, getPackageInfo } from "./helpers.js";
 import { bundle } from "./lib/bundle/index.js";
 import { Compiler } from "./lib/compile/index.js";
 import { initializer } from "./lib/initialization/index.js";
 import type { SuSeeConfig } from "./lib/initialization/suseeConfig.js";
+import { finalCheck } from "./lib/utils/finalCheck.js";
+import { packageJson } from "./lib/utils/package-json.js";
 
 /**
  * Main entry point for SuSee
@@ -18,7 +19,7 @@ import type { SuSeeConfig } from "./lib/initialization/suseeConfig.js";
  */
 export const susee = async (): Promise<void> => {
 	console.time(`  ${tcolor.cyan(`Done`)} `);
-	const pkg_nv = getPackageInfo();
+	const pkg_nv = packageJson().pkgNameVersion();
 	console.time(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
 	const initialized = await initializer();
 	finalCheck(initialized);

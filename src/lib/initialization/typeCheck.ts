@@ -1,7 +1,7 @@
 import tcolor from "susee-tcolor";
 import type { DependenciesFiles } from "susee-types";
 import ts from "typescript";
-import { promiseResolve } from "../promiseResolve.js";
+import { promiseResolve } from "../utils/promiseResolve.js";
 
 function _typesCheck(
 	dep: DependenciesFiles,

@@ -20,7 +20,9 @@ function walkPromise<T>(param: Param<T>) {
 }
 
 function promiseResolve<R extends any[]>(
-	params: { [K in keyof R]: Param<R[K]> },
+	params: {
+		[K in keyof R]: Param<R[K]>;
+	},
 ) {
 	const funs = params.map((w) => walkPromise(w));
 
@@ -73,5 +75,22 @@ function promiseResolve<R extends any[]>(
 	};
 }
 
-export { promiseResolve };
+async function runPromise<T = any>(
+	fun: (...args: any[]) => T,
+	time: number | undefined,
+
+	...args: any[]
+): Promise<T> {
+	return new Promise<T>((resolve, reject) => {
+		try {
+			const t = time ? 0 : time;
+			const result: T = fun(...args);
+			setTimeout(() => resolve(result), t);
+		} catch (error) {
+			reject(error);
+		}
+	});
+}
+
+export { promiseResolve, runPromise };
 // biome-ignore-end lint/suspicious/noExplicitAny: unknown

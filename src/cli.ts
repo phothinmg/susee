@@ -1,8 +1,9 @@
 import tcolor from "susee-tcolor";
-import { finalCheck, getPackageInfo } from "./helpers.js";
 import { bundle } from "./lib/bundle/index.js";
 import { Compiler } from "./lib/compile/index.js";
 import { cliInit } from "./lib/initialization/index.js";
+import { finalCheck } from "./lib/utils/finalCheck.js";
+import { packageJson } from "./lib/utils/package-json.js";
 
 export const suseeCli = async (
 	_entry: string,
@@ -14,7 +15,7 @@ export const suseeCli = async (
 	minify?: boolean,
 ) => {
 	console.time(`  ${tcolor.cyan(`Done`)} `);
-	const pkg_nv = getPackageInfo();
+	const pkg_nv = packageJson().pkgNameVersion();
 	console.time(`> ${tcolor.cyan(`Initialized ${tcolor.magenta(pkg_nv)}`)} `);
 	const initialized = await cliInit(
 		_entry,

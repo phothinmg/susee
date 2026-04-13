@@ -1,10 +1,11 @@
 import { Buffer } from "node:buffer";
 import fs from "node:fs";
 import path from "node:path";
-import mhaehko from "mhaehko";
 import type { DependenciesFile, DependenciesFiles, JSExts } from "susee-types";
 import utils from "susee-utils";
 import ts from "typescript";
+
+import dependencies from "../dependencies/index.js";
 
 async function fileSizes(path: string) {
 	const s = await fs.promises.stat(path);
@@ -72,7 +73,7 @@ function isJsxContent(code: string): boolean {
 async function generateDependencies(
 	entryFile: string,
 ): Promise<DependenciesFiles> {
-	const deps = await mhaehko(entryFile);
+	const deps = await dependencies(entryFile);
 	const sorted = deps.sort(); // get mhaehko graph
 	const _DependenciesFiles: DependenciesFiles = [];
 

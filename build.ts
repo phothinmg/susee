@@ -16,7 +16,8 @@ async function grantCli() {
 }
 
 await susee();
-const cliCommand = "npx tsx cli/index.ts build cli/index.ts --outdir bin";
+const cliCommand =
+  "npx tsx susee-cli/index.ts build susee-cli/index.ts --outdir bin";
 
 await new Promise<void>((resolve, reject) => {
   exec(cliCommand, async (error) => {
@@ -27,7 +28,10 @@ await new Promise<void>((resolve, reject) => {
 
     try {
       await grantCli();
-      await fs.promises.chmod(path.resolve(process.cwd(), "bin/index.mjs"), 0o755);
+      await fs.promises.chmod(
+        path.resolve(process.cwd(), "bin/index.mjs"),
+        0o755,
+      );
       resolve();
     } catch (chmodOrGrantError) {
       reject(chmodOrGrantError);

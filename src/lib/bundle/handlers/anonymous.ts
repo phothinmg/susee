@@ -1,7 +1,7 @@
 import transformFunction from "susee-transform";
 import type { BundleHandler, DependenciesFile } from "susee-types";
 import ts from "typescript";
-import { promiseResolve } from "../../promiseResolve.js";
+import { promiseResolve } from "../../utils/promiseResolve.js";
 import { anonymousVisitors } from "./visitors/anonymousVisitors.js";
 
 /**
@@ -38,8 +38,6 @@ function anonymousCallExpressionHandler(
 /**
  * A transformer that handles anonymous default exports by assigning them a name
  *
- * @param {ts.TransformationContext} context - transformation context
- * @returns {ts.Transformer<ts.SourceFile>} - transformer
  */
 function anonymousExportHandler(
 	compilerOptions: ts.CompilerOptions,

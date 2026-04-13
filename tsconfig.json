@@ -47,7 +47,6 @@
   },
   "include": [
     "src/**/*",
-    "src/bin/**/*",
     "build.ts",
     "tests/**/*",
     "sr",
@@ -55,7 +54,8 @@
     "b.ts",
     "c.ts",
     "scripts/**/*",
-    "cli/**/*"
+    "susee-cli/**/*",
+    "in/**/*"
   ],
   "exclude": ["_opt/**/*"]
 }
