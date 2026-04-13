@@ -1,5 +1,5 @@
 // cSpell:disable
-import transformFunction from "susee-transform";
+import transformFunction from "./transformer.js";
 import type {
 	BundleHandler,
 	DependenciesFile,
