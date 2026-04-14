@@ -1,6 +1,6 @@
-import tcolor from "../utils/tcolor.js";
 import type { SuseePlugin, SuseePluginFunction } from "susee-types";
 import ts from "typescript";
+import tcolor from "../utils/tcolor.js";
 
 export type OutputFormat = ("commonjs" | "esm")[];
 

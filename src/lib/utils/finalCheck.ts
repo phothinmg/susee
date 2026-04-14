@@ -1,6 +1,6 @@
-import tcolor from "./tcolor.js";
 import ts from "typescript";
 import type { InitializeResult } from "../initialization/index.js";
+import tcolor from "./tcolor.js";
 
 /**
  * Final check for unsupported dependencies.

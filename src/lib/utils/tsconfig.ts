@@ -1,6 +1,6 @@
 import path from "node:path";
-import tcolor from "./tcolor.js";
 import ts from "typescript";
+import tcolor from "./tcolor.js";
 
 const undefinedOptions = {
 	allowArbitraryExtensions: undefined,

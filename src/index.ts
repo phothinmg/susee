@@ -1,10 +1,10 @@
-import tcolor from "./lib/utils/tcolor.js";
 import { bundle } from "./lib/bundle/index.js";
 import { Compiler } from "./lib/compile/index.js";
 import { initializer } from "./lib/initialization/index.js";
 import type { SuSeeConfig } from "./lib/initialization/suseeConfig.js";
 import { finalCheck } from "./lib/utils/finalCheck.js";
 import { packageJson } from "./lib/utils/package-json.js";
+import tcolor from "./lib/utils/tcolor.js";
 
 /**
  * Main entry point for SuSee

@@ -1,5 +1,5 @@
 export function printHelp() {
-  console.log(`Susee CLI.
+	console.log(`Susee CLI.
 
 Usage:
   susee                                 Build using susee.config.{ts,js,mjs}
