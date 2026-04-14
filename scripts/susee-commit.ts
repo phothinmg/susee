@@ -78,6 +78,8 @@ async function suseeCommit() {
     const branch = await getCurrentBranch();
     const commitMessage = `${type}: ${trimmedMessage} (#${newMessageNum})`;
 
+    await executeCommand("npm run lint");
+
     await executeCommand("npx tsx scripts/codecov/index.ts");
 
     await executeCommand("git add .");

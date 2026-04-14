@@ -126,7 +126,7 @@ describe("Bundle Index Tests", () => {
 			depFiles: [
 				makeDepFile(
 					"/virtual/require.ts",
-					'export default function handleRequire(n: number): number {\n\tif (n <= 0) return 0;\n\treturn handleRequire(n - 1) + 1;\n}\n',
+					"export default function handleRequire(n: number): number {\n\tif (n <= 0) return 0;\n\treturn handleRequire(n - 1) + 1;\n}\n",
 				),
 				makeDepFile(
 					"/virtual/index.ts",
@@ -142,8 +142,14 @@ describe("Bundle Index Tests", () => {
 		});
 
 		const output = result.points[0]?.bundledContent ?? "";
-		assert.match(output, /function __exportDefault__handleRequire(?:_\d+)?\(n: number\)/);
-		assert.match(output, /return __exportDefault__handleRequire(?:_\d+)?\(n - 1\) \+ 1;/);
+		assert.match(
+			output,
+			/function __exportDefault__handleRequire(?:_\d+)?\(n: number\)/,
+		);
+		assert.match(
+			output,
+			/return __exportDefault__handleRequire(?:_\d+)?\(n - 1\) \+ 1;/,
+		);
 		assert.doesNotMatch(output, /return handleRequire\(n - 1\) \+ 1;/);
 		assert.match(
 			output,

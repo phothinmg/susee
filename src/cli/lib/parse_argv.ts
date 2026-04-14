@@ -5,7 +5,7 @@ export function isFile(entry: string) {
 	const exts = [".js", ".ts", ".mts", ".mjs"];
 	return exts.includes(path.extname(entry));
 }
-
+// biome-ignore lint/suspicious/noExplicitAny: unknown
 export function isEmptyObject(entry: any) {
 	return (
 		typeof entry === "object" &&
@@ -19,7 +19,7 @@ export function parseBooleanFlag(flag: string, value: string) {
 	if (value === "false") return false;
 	fail(`Type of ${flag} must be boolean.`);
 }
-
+// biome-ignore lint/suspicious/noExplicitAny: unknown
 export function parseArgs(argv: any[]) {
 	const opts: {
 		entry: string;
@@ -35,7 +35,7 @@ export function parseArgs(argv: any[]) {
 	for (let index = 0; index < argv.length; index += 1) {
 		const argument = argv[index] as string;
 		if (index === 0 && !argument.startsWith("--") && isFile(argument)) {
-			opts["entry"] = argument;
+			opts.entry = argument;
 			continue;
 		}
 		const [flag, inlineValue] = argument.split("=", 2);
@@ -46,7 +46,7 @@ export function parseArgs(argv: any[]) {
 				if (!value || value.startsWith("--")) fail("Entry point required.");
 				if (opts.entry !== "" && isFile(opts.entry))
 					fail("Entry point already exists.");
-				opts["entry"] = value as string;
+				opts.entry = value as string;
 				if (inlineValue === undefined) {
 					index += 1;
 				}
@@ -54,7 +54,7 @@ export function parseArgs(argv: any[]) {
 			case "--outdir":
 				if (!value || value.startsWith("--"))
 					fail("Output directory required.");
-				opts["outDir"] = value;
+				opts.outDir = value;
 				if (inlineValue === undefined) {
 					index += 1;
 				}
@@ -63,7 +63,7 @@ export function parseArgs(argv: any[]) {
 				if (value !== "cjs" && value !== "commonjs" && value !== "esm") {
 					fail("Format must be cjs, commonjs, or esm.");
 				}
-				opts["format"] =
+				opts.format =
 					value === "cjs"
 						? "commonjs"
 						: (value as "commonjs" | "esm" | undefined);
@@ -73,39 +73,39 @@ export function parseArgs(argv: any[]) {
 				break;
 			case "--tsconfig":
 				if (!value || value.startsWith("--")) fail("Tsconfig path required.");
-				opts["tsconfig"] = value;
+				opts.tsconfig = value;
 				if (inlineValue === undefined) {
 					index += 1;
 				}
 				break;
 			case "--rename":
 				if (inlineValue !== undefined) {
-					opts["rename"] = parseBooleanFlag("rename", inlineValue);
+					opts.rename = parseBooleanFlag("rename", inlineValue);
 				} else if (nextValue === "true" || nextValue === "false") {
-					opts["rename"] = parseBooleanFlag("rename", nextValue);
+					opts.rename = parseBooleanFlag("rename", nextValue);
 					index += 1;
 				} else {
-					opts["rename"] = true;
+					opts.rename = true;
 				}
 				break;
 			case "--allow-update":
 				if (inlineValue !== undefined) {
-					opts["allowUpdate"] = parseBooleanFlag("allow update", inlineValue);
+					opts.allowUpdate = parseBooleanFlag("allow update", inlineValue);
 				} else if (nextValue === "true" || nextValue === "false") {
-					opts["allowUpdate"] = parseBooleanFlag("allow update", nextValue);
+					opts.allowUpdate = parseBooleanFlag("allow update", nextValue);
 					index += 1;
 				} else {
-					opts["allowUpdate"] = true;
+					opts.allowUpdate = true;
 				}
 				break;
 			case "--minify":
 				if (inlineValue !== undefined) {
-					opts["minify"] = parseBooleanFlag("minify", inlineValue);
+					opts.minify = parseBooleanFlag("minify", inlineValue);
 				} else if (nextValue === "true" || nextValue === "false") {
-					opts["minify"] = parseBooleanFlag("minify", nextValue);
+					opts.minify = parseBooleanFlag("minify", nextValue);
 					index += 1;
 				} else {
-					opts["minify"] = true;
+					opts.minify = true;
 				}
 				break;
 		}

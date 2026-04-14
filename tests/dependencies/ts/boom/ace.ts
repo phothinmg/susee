@@ -1,9 +1,9 @@
 import { bar } from "../foo.js";
 export class Ace {
-  aceFoo() {
-    return bar;
-  }
-  aceBar(s: string) {
-    return s;
-  }
+	aceFoo() {
+		return bar;
+	}
+	aceBar(s: string) {
+		return s;
+	}
 }
