@@ -47,7 +47,7 @@ function collectDependencies(
 				index,
 				importFiles: [],
 			});
-			// collectedWarning.push([`File not found: ${checkedAbsPath}`]);
+			collectedWarning.push([`File not found: ${checkedAbsPath}`]);
 			// return;
 		}
 		const content = fs.readFileSync(checkedAbsPath, "utf8");

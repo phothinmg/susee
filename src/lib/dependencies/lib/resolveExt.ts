@@ -11,6 +11,7 @@ const allowedExtensions = new Set([
 	"cts",
 	"jsx",
 	"tsx",
+	"json",
 ]);
 
 function isDir(filePath: string) {
