@@ -152,7 +152,7 @@ export type DuplicatesNameMap = Map<string, Set<{ file: string }>>;
 
 // Initialize
 
-export type OutputFormat = ("commonjs" | "esm" | "browser")[];
+export type OutputFormat = ("commonjs" | "esm")[];
 export interface InitializePoint {
   fileName: string;
   exportPath: "." | `./${string}`;

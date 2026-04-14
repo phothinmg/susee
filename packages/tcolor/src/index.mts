@@ -153,4 +153,4 @@ class Tcolor {
 
 const tcolor = new Tcolor();
 
-export = tcolor;
+export default tcolor;

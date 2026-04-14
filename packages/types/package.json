@@ -3,18 +3,18 @@
   "version": "0.2.2",
   "description": "Type definitions for suseejs",
   "type": "module",
-  "main": "dist/commonjs/index.js",
-  "module": "dist/index.js",
-  "types": "dist/commonjs/index.d.ts",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.cts",
   "exports": {
     ".": {
       "require": {
-        "types": "./dist/commonjs/index.js",
-        "default": "./dist/commonjs/index.d.ts"
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
       },
       "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
       }
     }
   },
@@ -23,12 +23,8 @@
     "esm": "tsc -p tsconfig.esm.json",
     "build": "npm run esm && npm run commonjs"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/suseejs/types.git"
-  },
   "keywords": [
-    "TypeScript"
+    "suseejs"
   ],
   "author": {
     "name": "Pho Thin Mg",
@@ -36,10 +32,14 @@
     "url": "https://phothinmg.github.io/"
   },
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/suseejs/types/issues"
+  "repository": {
+    "url": "git+https://github.com/phothinmg/susee.git",
+    "type": "git"
   },
-  "homepage": "https://github.com/suseejs/types#readme",
+  "bugs": {
+    "url": "https://github.com/phothinmg/susee/issues"
+  },
+  "homepage": "https://github.com/phothinmg/susee/blob/main/packages/types/README.md",
   "files": [
     "dist",
     "LICENSE",
@@ -49,7 +49,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
+  "devDependencies": {
     "typescript": "^6.0.2"
   }
 }
