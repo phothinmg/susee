@@ -1,0 +1,60 @@
+{
+  "name": "@suseejs/tsconfig",
+  "version": "0.1.3",
+  "description": "Get TypeScript compiler options and tsconfig file",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.cts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suseejs/tsconfig.git"
+  },
+  "keywords": [
+    "TypeScript",
+    "Susee",
+    "susee",
+    "suseejs"
+  ],
+  "author": {
+    "name": "Pho Thin Mg",
+    "email": "phothinmg@disroot.org",
+    "url": "https://phothinmg.github.io/"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/suseejs/tsconfig/issues"
+  },
+  "homepage": "https://github.com/suseejs/tsconfig#readme",
+  "dependencies": {
+    "@suseejs/tcolor": "^0.1.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist/**/*",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0"
+  }
+}
