@@ -1,4 +1,4 @@
-import { isNodeBuiltinModule } from "../../utils/bools.js";
+import { checks } from "../../utils/checks.js";
 
 /**
  * Find leaf files (files that don't import any other local files)
@@ -10,7 +10,7 @@ function findLeafFiles(depObj: Record<string, string[]>): string[] {
 			const localDeps = deps.filter(
 				(dep) =>
 					dep.startsWith(".") ||
-					(!dep.includes("node_modules") && !isNodeBuiltinModule(dep)),
+					(!dep.includes("node_modules") && !checks.isNodeBuiltinModule(dep)),
 			);
 			return localDeps.length === 0;
 		})

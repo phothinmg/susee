@@ -1,4 +1,4 @@
-import tcolor from "susee-tcolor";
+import tcolor from "./lib/utils/tcolor.js";
 import { bundle } from "./lib/bundle/index.js";
 import { Compiler } from "./lib/compile/index.js";
 import { initializer } from "./lib/initialization/index.js";

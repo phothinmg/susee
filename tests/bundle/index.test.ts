@@ -110,4 +110,44 @@ describe("Bundle Index Tests", () => {
 		assert.match(output, /\/\/pre-two/);
 		assert.ok(output.indexOf("//pre-one") < output.indexOf("//pre-two"));
 	});
+
+	it("renames recursive calls for default-exported declarations", async () => {
+		const point = {
+			fileName: "/virtual/index.ts",
+			exportPath: ".",
+			format: "esm",
+			rename: true,
+			outDir: "dist",
+			tsOptions: {
+				cjs: {} as ts.CompilerOptions,
+				esm: {} as ts.CompilerOptions,
+				default: {} as ts.CompilerOptions,
+			},
+			depFiles: [
+				makeDepFile(
+					"/virtual/require.ts",
+					'export default function handleRequire(n: number): number {\n\tif (n <= 0) return 0;\n\treturn handleRequire(n - 1) + 1;\n}\n',
+				),
+				makeDepFile(
+					"/virtual/index.ts",
+					'import handleRequire from "./require.js";\nexport const value = handleRequire(2);\n',
+				),
+			],
+			plugins: [],
+		};
+
+		const result = await bundle({
+			points: [point] as never[],
+			allowUpdatePackageJson: false,
+		});
+
+		const output = result.points[0]?.bundledContent ?? "";
+		assert.match(output, /function __exportDefault__handleRequire(?:_\d+)?\(n: number\)/);
+		assert.match(output, /return __exportDefault__handleRequire(?:_\d+)?\(n - 1\) \+ 1;/);
+		assert.doesNotMatch(output, /return handleRequire\(n - 1\) \+ 1;/);
+		assert.match(
+			output,
+			/export const value = __exportDefault__handleRequire(?:_\d+)?\(2\);/,
+		);
+	});
 });

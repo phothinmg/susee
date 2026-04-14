@@ -62,7 +62,7 @@ async function depPluginParser(
 
 async function cliInit(
 	_entry: string,
-	_format?: "cjs" | "esm",
+	_format?: "commonjs" | "esm",
 	outDir?: string,
 	tsconfig?: string,
 	rename?: boolean,

@@ -1,4 +1,4 @@
-import tcolor from "susee-tcolor";
+import tcolor from "./tcolor.js";
 import ts from "typescript";
 import type { InitializeResult } from "../initialization/index.js";
 

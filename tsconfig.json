@@ -54,7 +54,7 @@
     "b.ts",
     "c.ts",
     "scripts/**/*",
-    "susee-cli/**/*",
+    "src/cli/**/*",
     "in/**/*"
   ],
   "exclude": ["_opt/**/*"]

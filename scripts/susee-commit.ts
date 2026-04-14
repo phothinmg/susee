@@ -2,7 +2,7 @@ import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { exec } from "node:child_process";
 import { executeCommand } from "./execute-command.js";
-import tcolor from "susee-tcolor";
+import tcolor from "../src/lib/utils/tcolor.js";
 
 const suseeCommitTypes = [
   "🚀 Added",

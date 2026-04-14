@@ -1,11 +1,9 @@
 // cSpell:disable
-
 import type {
 	BundleHandler,
 	DependenciesFile,
 	DuplicatesNameMap,
 } from "susee-types";
-import utils from "susee-utils";
 import ts from "typescript";
 import { promiseResolve } from "../../utils/promiseResolve.js";
 import transformFunction from "./transformer.js";
@@ -205,7 +203,6 @@ const duplicateHandlers = {
 		]);
 		const duplicate = await duplicates.concurrent();
 		deps.map(duplicate[0]);
-		await utils.wait(1000);
 		duplicateNameMap.forEach((files, name) => {
 			if (files.size > 1) {
 				_err = true;
@@ -214,7 +211,6 @@ const duplicateHandlers = {
 				files.forEach((f) => console.warn(`  - ${f.file}`));
 			}
 		});
-		await utils.wait(500);
 		if (_err) {
 			process.exit(1);
 		}

@@ -367,6 +367,39 @@ function exportDefaultUpdateHandler(
 		);
 		const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
 			const { factory } = context;
+
+			const isDeclarationName = (node: ts.Identifier): boolean => {
+				const parent = node.parent;
+
+				if (
+					(ts.isVariableDeclaration(parent) ||
+						ts.isFunctionDeclaration(parent) ||
+						ts.isClassDeclaration(parent) ||
+						ts.isParameter(parent) ||
+						ts.isTypeAliasDeclaration(parent) ||
+						ts.isInterfaceDeclaration(parent) ||
+						ts.isEnumDeclaration(parent) ||
+						ts.isImportClause(parent) ||
+						ts.isNamespaceImport(parent) ||
+						ts.isImportSpecifier(parent) ||
+						ts.isExportSpecifier(parent) ||
+						ts.isTypeParameterDeclaration(parent)) &&
+					parent.name === node
+				) {
+					return true;
+				}
+
+				if (
+					(ts.isPropertyDeclaration(parent) ||
+						ts.isMethodDeclaration(parent)) &&
+					parent.name === node
+				) {
+					return true;
+				}
+
+				return false;
+			};
+
 			function visitor(node: ts.Node): ts.Node {
 				const _name = getFileKey(file);
 				if (exportDefaultExportNameMap.length > 0) {
@@ -374,6 +407,73 @@ function exportDefaultUpdateHandler(
 						(n) => n.file === _name,
 					);
 					if (fileMapping) {
+						if (ts.isCallExpression(node)) {
+							if (
+								ts.isIdentifier(node.expression) &&
+								node.expression.text === fileMapping.base
+							) {
+								return factory.updateCallExpression(
+									node,
+									factory.createIdentifier(fileMapping.newName),
+									node.typeArguments,
+									node.arguments,
+								);
+							}
+						} else if (ts.isPropertyAccessExpression(node)) {
+							if (
+								ts.isIdentifier(node.expression) &&
+								node.expression.text === fileMapping.base
+							) {
+								return factory.updatePropertyAccessExpression(
+									node,
+									factory.createIdentifier(fileMapping.newName),
+									node.name,
+								);
+							}
+						} else if (ts.isNewExpression(node)) {
+							if (
+								ts.isIdentifier(node.expression) &&
+								node.expression.text === fileMapping.base
+							) {
+								return factory.updateNewExpression(
+									node,
+									factory.createIdentifier(fileMapping.newName),
+									node.typeArguments,
+									node.arguments,
+								);
+							}
+						} else if (
+							ts.isIdentifier(node) &&
+							node.text === fileMapping.base &&
+							!isDeclarationName(node)
+						) {
+							if (
+								ts.isPropertyAccessExpression(node.parent) &&
+								node.parent.name === node
+							) {
+								return node;
+							}
+
+							if (
+								ts.isPropertyAssignment(node.parent) &&
+								node.parent.name === node
+							) {
+								return node;
+							}
+
+							if (
+								ts.isShorthandPropertyAssignment(node.parent) &&
+								node.parent.name === node
+							) {
+								return factory.createPropertyAssignment(
+									factory.createIdentifier(node.text),
+									factory.createIdentifier(fileMapping.newName),
+								);
+							}
+
+							return factory.createIdentifier(fileMapping.newName);
+						}
+
 						if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) {
 							if (
 								node.name &&
@@ -381,24 +481,34 @@ function exportDefaultUpdateHandler(
 								node.name.text === fileMapping.base
 							) {
 								if (ts.isFunctionDeclaration(node)) {
-									return factory.updateFunctionDeclaration(
+									const visitedNode = ts.visitEachChild(
 										node,
-										node.modifiers,
-										node.asteriskToken,
+										visitor,
+										context,
+									) as ts.FunctionDeclaration;
+									return factory.updateFunctionDeclaration(
+										visitedNode,
+										visitedNode.modifiers,
+										visitedNode.asteriskToken,
 										factory.createIdentifier(fileMapping.newName),
-										node.typeParameters,
-										node.parameters,
-										node.type,
-										node.body,
+										visitedNode.typeParameters,
+										visitedNode.parameters,
+										visitedNode.type,
+										visitedNode.body,
 									);
 								} else if (ts.isClassDeclaration(node)) {
-									return factory.updateClassDeclaration(
+									const visitedNode = ts.visitEachChild(
 										node,
-										node.modifiers,
+										visitor,
+										context,
+									) as ts.ClassDeclaration;
+									return factory.updateClassDeclaration(
+										visitedNode,
+										visitedNode.modifiers,
 										factory.createIdentifier(fileMapping.newName),
-										node.typeParameters,
-										node.heritageClauses,
-										node.members,
+										visitedNode.typeParameters,
+										visitedNode.heritageClauses,
+										visitedNode.members,
 									);
 								}
 							}

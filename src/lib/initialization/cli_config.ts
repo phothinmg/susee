@@ -3,7 +3,7 @@ import type { FinalSuseeConfig, OutputFormat, Point } from "./suseeConfig.js";
 
 function finalCliConfig(
 	_entry: string,
-	_format?: "cjs" | "esm",
+	_format?: "commonjs" | "esm",
 	outDir?: string,
 	tsconfig?: string,
 	rename?: boolean,

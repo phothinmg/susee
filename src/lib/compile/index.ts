@@ -1,5 +1,5 @@
 import path from "node:path";
-import tcolor from "susee-tcolor";
+import tcolor from "../utils/tcolor.js";
 import type { BundledResult, BundlePoint, OutFiles } from "susee-types";
 import ts from "typescript";
 import { files } from "../utils/files.js";

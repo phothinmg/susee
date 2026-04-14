@@ -1,4 +1,4 @@
-import tcolor from "susee-tcolor";
+import tcolor from "../utils/tcolor.js";
 import type { SuseePlugin, SuseePluginFunction } from "susee-types";
 import ts from "typescript";
 

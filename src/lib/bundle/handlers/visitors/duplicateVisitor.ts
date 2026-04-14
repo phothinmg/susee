@@ -1,5 +1,4 @@
 // cSpell:disable
-
 import path from "node:path";
 import type { DuplicatesNameMap, NamesSets } from "susee-types";
 import ts from "typescript";

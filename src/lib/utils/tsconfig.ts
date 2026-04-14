@@ -1,5 +1,5 @@
 import path from "node:path";
-import tcolor from "susee-tcolor";
+import tcolor from "./tcolor.js";
 import ts from "typescript";
 
 const undefinedOptions = {
