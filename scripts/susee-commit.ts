@@ -80,7 +80,7 @@ async function suseeCommit() {
 
     await executeCommand("npm run lint");
 
-    await executeCommand("npx tsx scripts/codecov/index.ts");
+    await executeCommand("npx tsx __tests__/lcov/index.ts");
 
     await executeCommand("git add .");
     await executeCommand(`git commit -m "${commitMessage}"`);

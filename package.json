@@ -1,7 +1,7 @@
 {
 	"name": "susee",
 	"version": "1.5.1",
-	"description": "Simple TypeScript Bundler",
+	"description": "TypeScript-first bundler for library packages",
 	"type": "module",
 	"main": "dist/index.cjs.map",
 	"types": "dist/index.d.cts",
@@ -24,6 +24,7 @@
 	"scripts": {
 		"build": "tsx build.ts",
 		"test": "tsx --test",
+		"test:module":"",
 		"hooks:install": "bash scripts/install-hooks.sh",
 		"fmt": "biome format --write",
 		"lint": "biome check src --write",

@@ -81,7 +81,7 @@ npx tsx ./scripts/codecov/index.ts
 
 ## Tests
 
-`npm run test` uses an interactive runner in `scripts/susee-tests.ts`.
+`npm run test:module` uses an interactive runner in `scripts/susee-tests.ts`.
 
 Current test modes:
 

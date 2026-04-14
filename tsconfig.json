@@ -48,7 +48,7 @@
 	"include": [
 		"src/**/*",
 		"build.ts",
-		"tests/**/*",
+		"__tests__/**/*",
 		"sr",
 		"a.ts",
 		"b.ts",
