@@ -19,9 +19,7 @@
     }
   },
   "scripts": {
-    "commonjs": "tsc -p tsconfig.commonjs.json",
-    "esm": "tsc -p tsconfig.esm.json",
-    "build": "npm run esm && npm run commonjs"
+    "build": "tsc"
   },
   "keywords": [
     "suseejs"

@@ -1,57 +1,61 @@
 {
-	"name": "@suseejs/utils",
-	"version": "0.1.6",
-	"description": "Utilities for suseejs",
-	"type": "module",
-	"main": "dist/index.cjs",
-	"module": "dist/index.mjs",
-	"types": "dist/index.d.cts",
-	"exports": {
-		".": {
-			"require": {
-				"types": "./dist/index.d.cts",
-				"default": "./dist/index.cjs"
-			},
-			"import": {
-				"types": "./dist/index.d.mts",
-				"default": "./dist/index.mjs"
-			}
-		}
-	},
-	"scripts": {
-		"build": "tsc",
-		"fmt": "biome format --write",
-		"lint": "biome check src --write"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/suseejs/utils.git"
-	},
-	"keywords": [
-		"Susee"
-	],
-	"author": {
-		"name": "Pho Thin Mg",
-		"email": "phothinmg@disroot.org",
-		"url": "https://phothinmg.github.io/"
-	},
-	"license": "Apache-2.0",
-	"bugs": {
-		"url": "https://github.com/suseejs/utils/issues"
-	},
-	"homepage": "https://github.com/suseejs/utils#readme",
-	"dependencies": {
-		"@suseejs/tcolor": "^0.1.0",
-		"@suseejs/types": "^0.2.2",
-		"typescript": "^6.0.2"
-	},
-	"files": [
-		"dist",
-		"LICENSE",
-		"README.md",
-		"package.json"
-	],
-	"publishConfig": {
-		"access": "public"
-	}
+  "name": "@suseejs/utils",
+  "version": "0.1.6",
+  "description": "Utilities for suseejs",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.cts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "fmt": "biome format --write",
+    "lint": "biome check src --write"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suseejs/utils.git"
+  },
+  "keywords": [
+    "Susee"
+  ],
+  "author": {
+    "name": "Pho Thin Mg",
+    "email": "phothinmg@disroot.org",
+    "url": "https://phothinmg.github.io/"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/suseejs/utils/issues"
+  },
+  "homepage": "https://github.com/suseejs/utils#readme",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
+    "@types/node": "^25.6.0"
+  },
+  "dependencies": {
+    "@suseejs/tcolor": "file:../tcolor",
+    "@suseejs/types": "file:../types",
+    "typescript": "^6.0.2"
+  }
 }

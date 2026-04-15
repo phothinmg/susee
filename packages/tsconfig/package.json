@@ -19,16 +19,11 @@
     }
   },
   "scripts": {
-    "build": "tsc"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/suseejs/tsconfig.git"
+    "build": "tsc",
+    "lint": "biome check src --write",
+    "fmt": "biome format --write"
   },
   "keywords": [
-    "TypeScript",
-    "Susee",
-    "susee",
     "suseejs"
   ],
   "author": {
@@ -37,14 +32,14 @@
     "url": "https://phothinmg.github.io/"
   },
   "license": "Apache-2.0",
+  "repository": {
+    "url": "git+https://github.com/phothinmg/susee.git",
+    "type": "git"
+  },
   "bugs": {
-    "url": "https://github.com/suseejs/tsconfig/issues"
+    "url": "https://github.com/phothinmg/susee/issues"
   },
-  "homepage": "https://github.com/suseejs/tsconfig#readme",
-  "dependencies": {
-    "@suseejs/tcolor": "^0.1.0",
-    "typescript": "^5.9.3"
-  },
+  "homepage": "https://github.com/phothinmg/susee/blob/main/packages/tsconfig/README.md",
   "files": [
     "dist/**/*",
     "LICENSE",
@@ -55,6 +50,11 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "^25.1.0"
+    "@biomejs/biome": "^2.4.12",
+    "@types/node": "^25.6.0"
+  },
+  "dependencies": {
+    "@suseejs/tcolor": "file:../tcolor",
+    "typescript": "^6.0.2"
   }
 }

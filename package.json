@@ -36,8 +36,8 @@
     "test": "tsx --test",
     "test:module": "",
     "hooks:install": "bash scripts/install-hooks.sh",
-    "fmt": "biome format --write",
-    "lint": "biome check src --write",
+    "fmt": "bash scripts/fmt.sh",
+    "lint": "bash scripts/lint.sh",
     "lint:test": "biome check tests --write",
     "commit": "tsx scripts/susee-commit.ts",
     "update": "tsx scripts/susee-update.ts"
