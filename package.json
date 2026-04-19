@@ -64,6 +64,8 @@
   },
   "dependencies": {
     "@suseejs/color": "^0.0.2",
+    "@suseejs/type": "^0.0.2",
+    "@suseejs/utilities": "^0.0.2",
     "typescript": "^6.0.2"
   },
   "devDependencies": {
