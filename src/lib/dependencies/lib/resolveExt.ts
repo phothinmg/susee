@@ -64,7 +64,7 @@ function resolveExtension(filePath: string) {
 		} else {
 			console.error(
 				`${filePath} is a directory and no index file with JS/TS extension found.`,
-			);
+			); // ----------------------------------------------------------------------------------------------------------//
 			process.exit(1);
 		}
 	} else {

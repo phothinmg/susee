@@ -3,16 +3,6 @@
   "version": "1.5.1",
   "description": "TypeScript-first bundler for library packages",
   "type": "module",
-  "workspaces": [
-    "packages/tcolor",
-    "packages/utils",
-    "packages/types",
-    "packages/transformer",
-    "packages/tsconfig",
-    "packages/plugin-commonjs",
-    "packages/plugin-banner-text",
-    "packages/plugin-terser"
-  ],
   "main": "dist/index.cjs.map",
   "types": "dist/index.d.cts",
   "module": "dist/index.mjs",
@@ -73,6 +63,7 @@
     "url": "https://github.com/phothinmg/susee/issues"
   },
   "dependencies": {
+    "@suseejs/color": "^0.0.2",
     "typescript": "^6.0.2"
   },
   "devDependencies": {

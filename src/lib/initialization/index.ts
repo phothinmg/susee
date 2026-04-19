@@ -1,35 +1,16 @@
 import type {
 	DependenciesFiles,
+	InitializePoint,
+	InitializeResult,
 	SuseePlugin,
 	SuseePluginFunction,
-} from "susee-types";
+} from "@suseejs/types";
 import ts from "typescript";
 import { finalCliConfig } from "./cli_config.js";
 import { compilerOptions } from "./compilerOptions.js";
 import { generateDependencies } from "./dependencies.js";
-import { finalSuseeConfig, type OutputFormat } from "./suseeConfig.js";
+import { finalSuseeConfig } from "./suseeConfig.js";
 import { typeCheck } from "./typeCheck.js";
-
-export interface InitializePoint {
-	fileName: string;
-	exportPath: "." | `./${string}`;
-	format: OutputFormat;
-	rename: boolean;
-	outDir: string;
-	tsOptions: {
-		cjs: ts.CompilerOptions;
-		esm: ts.CompilerOptions;
-		default: ts.CompilerOptions;
-		browser: ts.CompilerOptions;
-	};
-	depFiles: DependenciesFiles;
-	plugins: (SuseePlugin | SuseePluginFunction)[];
-}
-
-export interface InitializeResult {
-	points: InitializePoint[];
-	allowUpdatePackageJson: boolean;
-}
 
 /**
  * Applies an array of dependency plugins to the given DependenciesFiles.

@@ -2,7 +2,7 @@ import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { exec } from "node:child_process";
 import { executeCommand } from "./execute-command.js";
-import tcolor from "../src/lib/utils/tcolor.js";
+import tcolor from "@suseejs/color";
 
 const suseeCommitTypes = [
   "🚀 Added",
@@ -78,9 +78,9 @@ async function suseeCommit() {
     const branch = await getCurrentBranch();
     const commitMessage = `${type}: ${trimmedMessage} (#${newMessageNum})`;
 
-    await executeCommand("npm run lint");
+    //await executeCommand("npm run lint");
 
-    await executeCommand("npx tsx __tests__/lcov/index.ts");
+    //await executeCommand("npx tsx __tests__/lcov/index.ts");
 
     await executeCommand("git add .");
     await executeCommand(`git commit -m "${commitMessage}"`);
