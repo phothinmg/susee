@@ -23,7 +23,10 @@
 	},
 	"scripts": {
 		"build": "tsx build.ts",
+		"lint": "biome check src  --write",
+		"fmt": "biome format --write",
 		"test": "tsx --test __tests__/test-suites/**/*.test.ts",
+		"coverage": "tsx __tests__/lcov/index.ts",
 		"hooks:install": "bash scripts/install-hooks.sh",
 		"lint:test": "biome check tests --write",
 		"commit": "bash scripts/commit.sh",

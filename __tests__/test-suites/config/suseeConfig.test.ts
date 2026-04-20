@@ -44,19 +44,15 @@ describe("finalSuseeConfig", async () => {
 		}
 	});
 	// ===
-	it("If no susee.config file found, return exit with 0 and warn message if it is provide ", (_t, done) => {
+	it("If no susee.config file found, return undefined ", async () => {
 		const temp = ts.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/not_found",
 		);
-		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
 		process.chdir(temp);
 		try {
-			exitWithCodeOneAndMessage(
-				filePath,
-				done,
-				'\x1B[35mNo susee.config file ("susee.config.ts", "susee.config.js", "susee.config.mjs") found\x1B[39m',
-			);
+			const config = await finalSuseeConfig();
+			assert.strictEqual(config, undefined);
 		} finally {
 			process.chdir(cwd);
 		}
@@ -89,7 +85,7 @@ describe("finalSuseeConfig", async () => {
 		try {
 			const config = await finalSuseeConfig();
 			const actual = sortObject(
-				config.buildEntryPoints[0] as unknown as BuildEntryPoint,
+				config?.buildEntryPoints[0] as unknown as BuildEntryPoint,
 			);
 			assert.deepEqual(
 				actual,
@@ -105,7 +101,7 @@ describe("finalSuseeConfig", async () => {
 				}),
 			);
 
-			assert.deepEqual(config.updatePackage, false);
+			assert.deepEqual(config?.updatePackage, false);
 		} finally {
 			process.chdir(cwd);
 		}

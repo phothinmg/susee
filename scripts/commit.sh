@@ -25,11 +25,11 @@ done
 # Get commit message
 read -p "Enter commit message: " message
 # Run linter
-npx biome check src  --write
+npm run lint
 # Run formatter
-npx biome format --write
+npm run fmt
 # Generate coverage report
-#npm run coverage
+npm run coverage
 # Get full commit message pattern
 # <Type>: <message>
 commit_message="$TYPE : $message"
