@@ -29,8 +29,7 @@
 		"coverage": "tsx __tests__/lcov/index.ts",
 		"hooks:install": "bash scripts/install-hooks.sh",
 		"lint:test": "biome check tests --write",
-		"commit": "bash scripts/commit.sh",
-		"update": "tsx scripts/susee-update.ts"
+		"commit": "bash scripts/commit.sh"
 	},
 	"keywords": [
 		"bundler",
@@ -75,6 +74,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
+		"@suseejs/banner-text-plugin": "^0.0.3",
 		"@types/node": "^25.6.0"
 	}
 }

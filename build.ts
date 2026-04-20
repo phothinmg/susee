@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { build } from "./src/index.js";
 import { files } from "@suseejs/files";
+import { suseeTerser } from "@suseejs/terser-plugin";
+import { suseeBannerText } from "@suseejs/banner-text-plugin";
 
 const ef = "dist/bin/index.mjs";
 const bf = "bin/susee";
@@ -24,15 +26,25 @@ async function writeBinary() {
 	await files.writeFile(bf, content);
 }
 
+const bannerText = `/*! *****************************************************************************
+Copyright (c) Pho Thin Mg <phothinmg@disroot.org>
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+***************************************************************************** */`;
+
 await build({
 	entryPoints: [
 		{
 			entry: "src/index.ts",
 			exportPath: ".",
 			format: ["esm", "commonjs"],
+			plugins: [suseeBannerText(bannerText), suseeTerser],
 		},
 	],
 	allowUpdatePackageJson: true,
+	outDir: "dist",
 });
 const cliCommand =
 	"npx tsx src/cli/index.ts build src/cli/index.ts --format esm --outdir dist/bin --minify";

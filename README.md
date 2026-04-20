@@ -33,6 +33,8 @@ npm i -D susee
 npx susee init
 ```
 
+<!-- markdownlint-disable MD029 -->
+
 2. Build using config:
 
 ```bash
@@ -41,18 +43,18 @@ npx susee
 
 ## API Quick Reference
 
-| Surface | Command / API | Purpose | Defaults |
-| --- | --- | --- | --- |
-| Programmatic | `build(options?)` | Build from provided options or discovered config file | Exits with code 1 when options and config are both missing |
-| CLI | `susee` | Build using `susee.config.ts/js/mjs` in project root | Uses resolved config |
-| CLI | `susee init` | Create config template in project root | Prompts for TypeScript project |
-| CLI | `susee build <entry> [options]` | Build a single entry directly from CLI args | `--outdir dist`, `--format esm`, `--rename true`, `--allow-update false`, `--minify false`, `--warning false` |
-| Config | `entryPoints[].format` | Output module format(s) | `["esm"]` |
-| Config | `entryPoints[].renameDuplicates` | Rename duplicate declarations | `true` |
-| Config | `entryPoints[].tsconfigFilePath` | Custom tsconfig path | `undefined` |
-| Config | `entryPoints[].plugins` | Post-process plugin list | `[]` |
-| Config | `outDir` | Root output directory | `"dist"` |
-| Config | `allowUpdatePackageJson` | Update package fields based on output | `false` |
+| Surface      | Command / API                    | Purpose                                               | Defaults                                                                                                      |
+| ------------ | -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Programmatic | `build(options?)`                | Build from provided options or discovered config file | Exits with code 1 when options and config are both missing                                                    |
+| CLI          | `susee`                          | Build using `susee.config.ts/js/mjs` in project root  | Uses resolved config                                                                                          |
+| CLI          | `susee init`                     | Create config template in project root                | Prompts for TypeScript project                                                                                |
+| CLI          | `susee build <entry> [options]`  | Build a single entry directly from CLI args           | `--outdir dist`, `--format esm`, `--rename true`, `--allow-update false`, `--minify false`, `--warning false` |
+| Config       | `entryPoints[].format`           | Output module format(s)                               | `["esm"]`                                                                                                     |
+| Config       | `entryPoints[].renameDuplicates` | Rename duplicate declarations                         | `true`                                                                                                        |
+| Config       | `entryPoints[].tsconfigFilePath` | Custom tsconfig path                                  | `undefined`                                                                                                   |
+| Config       | `entryPoints[].plugins`          | Post-process plugin list                              | `[]`                                                                                                          |
+| Config       | `outDir`                         | Root output directory                                 | `"dist"`                                                                                                      |
+| Config       | `allowUpdatePackageJson`         | Update package fields based on output                 | `false`                                                                                                       |
 
 ## CLI Usage
 
@@ -103,17 +105,17 @@ type OutputFormat = ("commonjs" | "esm")[];
 interface EntryPoint {
   entry: string;
   exportPath: "." | `./${string}`;
-  format?: OutputFormat;                 // default: ["esm"]
+  format?: OutputFormat; // default: ["esm"]
   tsconfigFilePath?: string | undefined; // default: undefined
-  renameDuplicates?: boolean;            // default: true
-  plugins?: unknown[];                   // default: []
-  warning?: boolean;                     // default: false
+  renameDuplicates?: boolean; // default: true
+  plugins?: unknown[]; // default: []
+  warning?: boolean; // default: false
 }
 
 interface SuSeeConfig {
   entryPoints: EntryPoint[];
-  outDir?: string;                       // default: "dist"
-  allowUpdatePackageJson?: boolean;      // default: false
+  outDir?: string; // default: "dist"
+  allowUpdatePackageJson?: boolean; // default: false
 }
 ```
 
@@ -173,10 +175,10 @@ Declaration files are emitted by the compiler when available.
 
 ## Build Output Matrix
 
-| Input | Output Directory Rule | ESM Files | CommonJS Files |
-| --- | --- | --- | --- |
-| `entry: "src/index.ts"`, `exportPath: "."` | `<outDir>` | `index.mjs`, `index.mjs.map`, `index.d.mts` | `index.cjs`, `index.cjs.map`, `index.d.cts` |
-| `entry: "src/foo.ts"`, `exportPath: "./foo"` | `<outDir>/foo` | `foo.mjs`, `foo.mjs.map`, `foo.d.mts` | `foo.cjs`, `foo.cjs.map`, `foo.d.cts` |
+| Input                                        | Output Directory Rule | ESM Files                                   | CommonJS Files                              |
+| -------------------------------------------- | --------------------- | ------------------------------------------- | ------------------------------------------- |
+| `entry: "src/index.ts"`, `exportPath: "."`   | `<outDir>`            | `index.mjs`, `index.mjs.map`, `index.d.mts` | `index.cjs`, `index.cjs.map`, `index.d.cts` |
+| `entry: "src/foo.ts"`, `exportPath: "./foo"` | `<outDir>/foo`        | `foo.mjs`, `foo.mjs.map`, `foo.d.mts`       | `foo.cjs`, `foo.cjs.map`, `foo.d.cts`       |
 
 Notes:
 
@@ -188,11 +190,11 @@ Notes:
 
 When `allowUpdatePackageJson` (config) or `--allow-update` (CLI build) is enabled, Susee can update package fields.
 
-| Context | Condition | Updated Fields | Observed Result |
-| --- | --- | --- | --- |
-| Main export build | `exportPath: "."` with ESM + CommonJS outputs | `main`, `module` | `main: "dist/index.cjs"`, `module: "dist/index.mjs"` |
-| Main export build | `exportPath: "."` with declarations | `types` | Set from generated CommonJS declaration path when available |
-| Subpath export build | `exportPath: "./foo"` | `exports` (subpath mapping) | Currently remains `{}` in tested behavior |
+| Context              | Condition                                     | Updated Fields              | Observed Result                                             |
+| -------------------- | --------------------------------------------- | --------------------------- | ----------------------------------------------------------- |
+| Main export build    | `exportPath: "."` with ESM + CommonJS outputs | `main`, `module`            | `main: "dist/index.cjs"`, `module: "dist/index.mjs"`        |
+| Main export build    | `exportPath: "."` with declarations           | `types`                     | Set from generated CommonJS declaration path when available |
+| Subpath export build | `exportPath: "./foo"`                         | `exports` (subpath mapping) | Currently remains `{}` in tested behavior                   |
 
 Notes:
 
