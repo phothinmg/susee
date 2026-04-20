@@ -28,10 +28,17 @@ export interface EntryPoint {
    * default - [esm]
    */
   format?: OutputFormat;
-  dts?: boolean;
-  sourceMap?: boolean;
-  isNodeJS?: boolean;
-  removeComment?: boolean;
+  /**
+   * Custom tsconfig.json path for package typescript compiler options
+   *
+   * Priority -
+   *  1. this custom tsconfig.json
+   *  2. tsconfig.json at root directory
+   *  3. default compiler options of susee
+   *
+   * default - undefined
+   */
+  tsconfigFilePath?: string | undefined;
   /**
    * When bundling , if there are duplicate declared names , susee will auto rename , if renameDuplicates = false exist with code 1.
    *
@@ -44,6 +51,7 @@ export interface EntryPoint {
    * default - []
    */
   plugins?: (SuseePlugin | SuseePluginFunction)[];
+  warning?: boolean;
 }
 /**
  * Configuration for Susee Bundler
@@ -137,44 +145,30 @@ export type BuildEntryPoint = {
   entry: string;
   exportPath: "." | `./${string}`;
   format: OutputFormat;
-  dts: boolean;
-  sourceMap: boolean;
-  isNodeJS: boolean;
-  removeComment: boolean;
+  tsconfigFilePath: string | undefined;
   rename: boolean;
   plugins: (SuseePlugin | SuseePluginFunction)[];
   outputDirectoryPath: string;
-  fileExt: string;
-  fileName: string;
+  warning: boolean;
 };
 export type BuildOptions = {
   buildEntryPoints: BuildEntryPoint[];
   updatePackage: boolean;
+  outDir: string;
 };
-function getFileNameAndExt(entry: string) {
-  const base = path.basename(entry).split(".");
-  const fileName = base[0];
-  const ext = base[1];
-  return {
-    fileName: fileName as string,
-    fileExt: ext as string,
-  };
-}
 
 function generateBuildOptions(config: SuSeeConfig) {
   const outDir = config.outDir ?? "dist";
   const points: BuildEntryPoint[] = [];
+  checkEntries(config.entryPoints);
   for (const ent of config.entryPoints) {
-    const { fileName, fileExt } = getFileNameAndExt(ent.entry);
     const entry = ent.entry;
     const exportPath = ent.exportPath;
+    const tsconfigFilePath = ent.tsconfigFilePath ?? undefined;
     const format: OutputFormat = ent.format
       ? [...new Set(ent.format)]
       : ["esm"];
-    const dts = ent.dts ?? false;
-    const sourceMap = ent.sourceMap ?? false;
-    const isNodeJS = ent.isNodeJS ?? true;
-    const removeComment = ent.removeComment ?? false;
+    const warning = ent.warning ?? false;
     const rename = ent.renameDuplicates ?? true;
     const plugins = ent.plugins ?? [];
     const outputDirectoryPath =
@@ -183,20 +177,17 @@ function generateBuildOptions(config: SuSeeConfig) {
       entry,
       exportPath,
       format,
-      dts,
-      sourceMap,
-      isNodeJS,
-      removeComment,
+      tsconfigFilePath,
       rename,
       plugins,
+      warning,
       outputDirectoryPath,
-      fileName,
-      fileExt,
     });
   }
   return {
     buildEntryPoints: points,
     updatePackage: config.allowUpdatePackageJson ?? false,
+    outDir,
   } as BuildOptions;
 }
 
@@ -215,4 +206,4 @@ async function finalSuseeConfig(): Promise<BuildOptions> {
   return generateBuildOptions(config);
 }
 
-export { finalSuseeConfig };
+export { finalSuseeConfig, generateBuildOptions };

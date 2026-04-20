@@ -3,18 +3,18 @@
   "version": "1.5.1",
   "description": "TypeScript-first bundler for library packages",
   "type": "module",
-  "main": "dist/index.cjs.map",
-  "types": "dist/index.d.cts",
-  "module": "dist/index.mjs",
+  "main": "out/index.cjs",
+  "types": "out/index.d.cts",
+  "module": "out/index.mjs",
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
+        "types": "./out/index.d.mts",
+        "default": "./out/index.mjs"
       },
       "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs.map"
+        "types": "./out/index.d.cts",
+        "default": "./out/index.cjs"
       }
     }
   },
@@ -23,7 +23,7 @@
   },
   "scripts": {
     "build": "tsx build.ts",
-    "test": "tsx --test",
+    "test": "tsx --test __tests__/test-suites/**/*.test.ts",
     "test:module": "",
     "hooks:install": "bash scripts/install-hooks.sh",
     "fmt": "bash scripts/fmt.sh",
@@ -63,9 +63,13 @@
     "url": "https://github.com/phothinmg/susee/issues"
   },
   "dependencies": {
-    "@suseejs/color": "^0.0.2",
-    "@suseejs/type": "^0.0.2",
-    "@suseejs/utilities": "^0.0.2",
+    "@suseejs/bundler": "^0.0.3",
+    "@suseejs/color": "^0.0.3",
+    "@suseejs/compiler": "^0.0.3",
+    "@suseejs/files": "^0.0.3",
+    "@suseejs/tsoptions": "^0.0.3",
+    "@suseejs/type": "^0.0.3",
+    "@suseejs/utilities": "^0.0.3",
     "typescript": "^6.0.2"
   },
   "devDependencies": {

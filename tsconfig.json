@@ -51,6 +51,7 @@
     "build.ts",
     "__tests__/**/*",
     "a.ts", // for local test run
-    "scripts/**/*"
+    "scripts/**/*",
+    "sr/**/*"
   ]
 }
