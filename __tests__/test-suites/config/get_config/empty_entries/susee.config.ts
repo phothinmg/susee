@@ -1,5 +1,5 @@
 import type { SuSeeConfig } from "../../../../../src/lib/suseeConfig.js";
 
 export default {
-  entryPoints: [],
+	entryPoints: [],
 } as SuSeeConfig;

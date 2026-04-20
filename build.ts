@@ -1,8 +1,8 @@
 import { exec } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { susee } from "./src/index.js";
-import { files } from "./src/lib/utils/files.js";
+import { build } from "./src/index.js";
+import { files } from "@suseejs/files";
 
 const ef = "dist/bin/index.mjs";
 const bf = "bin/susee";
@@ -24,7 +24,16 @@ async function writeBinary() {
 	await files.writeFile(bf, content);
 }
 
-await susee();
+await build({
+	entryPoints: [
+		{
+			entry: "src/index.ts",
+			exportPath: ".",
+			format: ["esm", "commonjs"],
+		},
+	],
+	allowUpdatePackageJson: true,
+});
 const cliCommand =
 	"npx tsx src/cli/index.ts build src/cli/index.ts --format esm --outdir dist/bin --minify";
 

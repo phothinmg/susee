@@ -1,8 +1,20 @@
 import path from "node:path";
+import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
 import { fail } from "./fail.js";
 
+interface CliOptions {
+	entry: string;
+	outDir?: string | undefined;
+	format?: "commonjs" | "esm" | undefined;
+	tsconfig?: string | undefined;
+	rename?: boolean | undefined;
+	allowUpdate?: boolean | undefined;
+	minify?: boolean | undefined;
+	warning?: boolean | undefined;
+}
+
 export function isFile(entry: string) {
-	const exts = [".js", ".ts", ".mts", ".mjs"];
+	const exts = [".js", ".ts", ".mts", ".mjs", ".cjs", ".cts"];
 	return exts.includes(path.extname(entry));
 }
 // biome-ignore lint/suspicious/noExplicitAny: unknown
@@ -21,15 +33,7 @@ export function parseBooleanFlag(flag: string, value: string) {
 }
 // biome-ignore lint/suspicious/noExplicitAny: unknown
 export function parseArgs(argv: any[]) {
-	const opts: {
-		entry: string;
-		outDir?: string | undefined;
-		format?: "commonjs" | "esm" | undefined;
-		tsconfig?: string | undefined;
-		rename?: boolean | undefined;
-		allowUpdate?: boolean | undefined;
-		minify?: boolean | undefined;
-	} = {
+	const opts: CliOptions = {
 		entry: "",
 	};
 	for (let index = 0; index < argv.length; index += 1) {
@@ -108,10 +112,53 @@ export function parseArgs(argv: any[]) {
 					opts.minify = true;
 				}
 				break;
+			case "--warning":
+				if (inlineValue !== undefined) {
+					opts.warning = parseBooleanFlag("warning", inlineValue);
+				} else if (nextValue === "true" || nextValue === "false") {
+					opts.warning = parseBooleanFlag("warning", nextValue);
+					index += 1;
+				} else {
+					opts.warning = true;
+				}
+				break;
 		}
 	}
 	if (isEmptyObject(opts) || opts.entry === "") {
 		fail("Entry point required");
 	}
 	return opts;
+}
+export interface CliBuildOptions {
+	entry: string;
+	outDir: string;
+	format: "commonjs" | "esm";
+	tsconfig: string | undefined;
+	rename: boolean;
+	allowUpdate: boolean;
+	minify: boolean;
+	warning: boolean;
+	plugins: (SuseePlugin | SuseePluginFunction)[];
+}
+
+export function getDefaultOptions(args: CliOptions): CliBuildOptions {
+	const entry = args.entry;
+	const outDir = args.outDir ?? "dist";
+	const format = args.format ?? "esm";
+	const tsconfig = args.tsconfig ?? undefined;
+	const rename = args.rename ?? true;
+	const allowUpdate = args.allowUpdate ?? false;
+	const minify = args.minify ?? false;
+	const warning = args.warning ?? false;
+	return {
+		entry,
+		outDir,
+		format,
+		tsconfig,
+		rename,
+		allowUpdate,
+		minify,
+		warning,
+		plugins: [],
+	};
 }
