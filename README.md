@@ -224,8 +224,8 @@ Violations print an error and exit with code `1`.
 
 <!-- Need to update version -->
 
-[sb_img]: https://badge.socket.dev/npm/package/susee/1.5.1
-[sb_url]: https://badge.socket.dev/npm/package/susee/1.5.1
+[sb_img]: https://badge.socket.dev/npm/package/susee/1.5.2
+[sb_url]: https://badge.socket.dev/npm/package/susee/1.5.2
 
 <!--  -->
 
