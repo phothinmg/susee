@@ -9,7 +9,7 @@ cd "$repo_root"
 PS3="Select a number for commit type: "
 
 
-options=("⭐ feat" "🐛 bug" "🎨 modified" "🔒 security" "👕 refactor" "⚠️ deprecated" "🚀 release" "✅ tests")
+options=("⭐ feat" "🐛 bug" "🎨 modified" "🔒 security" "👕 refactor" "⚠️ deprecated" "🚀 release" "✅ tests" "📝 docs")
 
 select opt in "${options[@]}"
 do

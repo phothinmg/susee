@@ -8,7 +8,7 @@ if [[ -z "$subject" ]]; then
   exit 1
 fi
 
-pattern='^(⭐ feat|🐛 bug|🎨 modified|🔒 security|👕 refactor|⚠️ deprecated|🚀 release|✅ tests)[[:space:]]*:[[:space:]]+.+$'
+pattern='^(⭐ feat|🐛 bug|🎨 modified|🔒 security|👕 refactor|⚠️ deprecated|🚀 release|✅ tests|📝 docs)[[:space:]]*:[[:space:]]+.+$'
 
 if [[ ! "$subject" =~ $pattern ]]; then
   echo "ERROR: Invalid commit message format."
