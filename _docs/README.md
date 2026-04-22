@@ -1,106 +1,135 @@
-<details><summary>Directory Metadata (for smart change detection)</summary>
+# 📚 susee Documentation
 
-```json
-{
-  "doc_type": "directory_index",
-  "directory_path": "_docs",
-  "directory_hash": "53366c1cdb483b6bea76716ac3c7e222d841ff0591b53de55f35a2fa00bffbb1",
-  "file_count": 1,
-  "file_hashes": {
-    "build.ts": "1a646b6a4fba1388"
-  }
-}
+Welcome to the complete documentation for this repository. This documentation is automatically generated and maintained by Woden Docbot.
+
+![Health: Healthy](https://img.shields.io/badge/Health-Healthy-green) ![Files Documented: 37](https://img.shields.io/badge/Files_Documented-37-blue) ![Coverage: 100](https://img.shields.io/badge/Coverage-100-green) ![Last Updated: 2026-04-22](https://img.shields.io/badge/Last_Updated-2026--04--22-gray)
+
+## 🔗 Quick Links
+
+[📂 __tests__](./__tests__/README.md) | [📂 scripts](./scripts/README.md) | [📂 src](./src/README.md)
+[📋 Dependencies](./DEPENDENCIES.md)
+
+
+---
+
+> TypeScript-based documentation tooling and test harness with CLI scaffolding and repository helper scripts
+
+
+
+## 📖 Overview
+
+susee is a small, focused codebase that provides the tooling and test harness for a documentation site layer. It centralizes documentation build and runtime configuration in TypeScript, supplies a command-line interface for common docs tasks, and includes documentation-oriented tests that validate behavior and LCOV coverage artifacts. It also contains lightweight repository-level shell scripts to automate developer workflows such as committing changes and installing Git hooks.
+
+The repository is organized into a few cooperating parts. The src tree is the TypeScript implementation that powers the docs layer: a root index.ts entry point and two subdirectories. src/cli implements the CLI scaffolding and commands (build.ts, cli.ts, index.ts) that operators use to run or build documentation-related tasks; src/lib contains configuration and library code (suseeConfig.ts). The __tests__ area groups documentation-focused test code: an lcov/ subdirectory with TypeScript files for LCOV coverage tests and a test-suites/ area with reusable test helpers. At the repository level the scripts directory holds commit.sh and install-hooks.sh (Unix-like shell scripts) to standardize commit-time behavior and hook installation. Together these elements let contributors run, extend, and validate docs-related tooling and coverage checks while using repository-level automation for consistent developer workflows.
+
+
+### 🧩 Key Components
+
+| Component | Purpose | Technologies |
+| --- | --- | --- |
+| **src (root / entry)** | Root TypeScript entry point that coordinates or re-exports functionality from the CLI and library submodules for the documentation site layer. | `TypeScript` |
+| **src/cli** | Command-line interface scaffolding and implementations (build.ts, cli.ts, index.ts) used to run or build documentation-related tasks and workflows. | `TypeScript` |
+| **src/lib** | Library and configuration code (suseeConfig.ts) that provides shared configuration and utilities used by the CLI and other docs tooling. | `TypeScript` |
+| **__tests__** | Documentation-oriented test suites and helpers. Contains an lcov/ area with TypeScript files focused on LCOV coverage testing and a test-suites/ area with reusable test helpers and suites. | `TypeScript`, `LCOV` |
+| **scripts** | Repository-level shell scripts (commit.sh, install-hooks.sh) to automate routine developer tasks such as standardized commits and installing Git hooks. | `git`, `sh / bash` |
+
+
+
+
+**Component Architecture:**
+
+```mermaid
+graph TD
+    C0[src (root / entry)]
+    C1[src/cli]
+    C2[src/lib]
+    C3[__tests__]
+    C4[scripts]
+    C0 --> C1
+    C1 --> C2
+    C2 --> C3
 ```
 
-</details>
+### 🏗️ Architecture
 
-[Documentation Home](README.md)
+A layered, single-repository tooling layout: TypeScript source (entry + CLI + library) for docs functionality, a dedicated tests area for documentation and LCOV validation, and Unix shell scripts for repository operational tasks.
 
----
+### 💡 Use Cases
 
-# 📁 _docs
-
-> **Purpose:** Holds the documentation-site build script and supporting documentation source, tooling scripts, and test scaffolding used to produce and validate repository documentation artifacts.
-> 
-
-![Organization: Hierarchical](https://img.shields.io/badge/Organization-Hierarchical-blue)
-
-## 📑 Table of Contents
+- ✦ Run and extend documentation build and CLI tasks for a documentation site using the TypeScript CLI implementation
+- ✦ Validate documentation behavior and produce/verify LCOV coverage artifacts via the documentation-focused test suites
+- ✦ Automate developer workflows at the repo level (standardized commits, Git hook installation) using provided shell scripts
 
 
-- [Overview](#overview)
-- [Subdirectories](#subdirectories)
-- [All Files](#all-files)
-- [Dependencies](#dependencies)
-- [Architecture Notes](#architecture-notes)
+
+### 🔧 Technologies
+
+
+**Languages:** ![TypeScript: ](https://img.shields.io/badge/TypeScript--blue)
+![LCOV: ](https://img.shields.io/badge/LCOV--blue) ![git: ](https://img.shields.io/badge/git--blue) ![sh / bash: ](https://img.shields.io/badge/sh_/_bash--blue)
 
 ---
 
-## Overview
+## 📑 Documentation Sections
 
-The _docs directory contains a single TypeScript build script at the root (build.ts) plus three focused subdirectories that together provide the sources, developer utilities, and tests for the documentation layer. The root-level build.ts is the primary script file present in this directory and is intended to be the entry point for build-related tasks for documentation outputs; its presence indicates build orchestration or build-time transformations are performed here.
+### [__tests__](./__tests__/README.md)
+Holds documentation-oriented test code and test suites for the docs area, organizing LCOV-specific tests and reusable docs test helpers.
 
-The scripts/ subdirectory contains repository-level shell scripts (commit.sh and install-hooks.sh) that automate common developer tasks such as making commits and installing Git hooks, helping enforce repository policies when working with docs. The src/ subdirectory holds TypeScript source used by the documentation site layer: a root index module plus focused subfolders for CLI scaffolding and library/configuration code that the docs build consumes. The __tests__/ subdirectory is reserved for documentation-oriented tests and LCOV-related coverage helpers; at present it is organized into focused test folders and contains no root files. Together, these components let developers run the docs build, inspect and edit the documentation source, run docs-specific tests, and use repository scripts to maintain commit and hook hygiene.
+
+This directory is dedicated to documentation-level tests under docs/__tests__.
+
+### [scripts](./scripts/README.md)
+Contains repository-level shell scripts that automate common developer tasks such as making commits and installing Git hooks to enforce repository policies.
 
 
-### File Organization
-
-A single root build script coordinates documentation build tasks, while functional areas are separated into subdirectories: scripts/ for repository-level shell utilities, src/ for the TypeScript documentation source and runtime modules, and __tests__/ for documentation-focused tests and coverage helpers. This keeps build orchestration, source code, utilities, and tests isolated for clarity and maintainability.
-
-## 📂 Subdirectories
-
-This directory contains the following subdirectories:
-
-### [📁 scripts/](./scripts//README.md)
-
-**Purpose:** Contains repository-level shell scripts that automate common developer tasks such as making commits and installing Git hooks to enforce repository policies.
+This directory holds a small set of shell scripts intended to support developer workflows at the repository level.
 
 ![Files: 2](https://img.shields.io/badge/Files-2-blue)
 
----
+### [src](./src/README.md)
+Holds the TypeScript source used for the project's documentation site layer, including a root index module and two focused subdirectories for CLI scaffolding and library/configuration code.
 
-### [📁 src/](./src//README.md)
 
-**Purpose:** Holds the TypeScript source used for the project's documentation site layer, including a root index module and focused subdirectories for CLI scaffolding and library/configuration code.
+This directory contains the TypeScript source that powers the documentation-related code.
 
 ![Files: 1](https://img.shields.io/badge/Files-1-blue)
 
 ---
 
-### [📁 __tests__/](./__tests__//README.md)
+## 📊 Documentation Statistics
 
-**Purpose:** Holds documentation-oriented test code and test suites for the docs area, organizing LCOV-specific tests and reusable docs test helpers.
-
-![Files: 0](https://img.shields.io/badge/Files-0-blue)
-
----
-## 📂 All Files
-
-| File | Type |
-| --- | --- |
-| [build.ts](./build.ts.md) | 📘 TypeScript |
-
-## Dependencies
-
-### Internal Dependencies
-
-| Dependency | Usage |
-| --- | --- |
-| [src/](../src/.md) | Source modules and configuration consumed by build.ts to produce documentation artifacts |
-| [scripts/](../scripts/.md) | Repository-level utilities invoked by developers to automate commits and install Git hooks related to documentation workflows |
-
-## Architecture Notes
-
-- Separation of concerns: a single root build script orchestrates outputs while source, utilities, and tests live in dedicated subdirectories to avoid mixing responsibilities.
-- Tests and coverage helpers are organized under __tests__/ to keep test code distinct from production documentation source.
+- **Files Documented**: 37
+- **Directories**: 32
+- **Coverage**: 100%
+- **Last Updated**: 2026-04-22
 
 ---
 
-## Navigation
+## 🧭 How to Navigate
 
-**↑ Parent Directory:** [Go up](../README.md)
-**🔗 Related:** [scripts/](./scripts//README.md) • [src/](./src//README.md) • [__tests__/](./__tests__//README.md)
+> ℹ️ **INFO**
+> Each directory has its own README.md with detailed information about that section. Use the breadcrumb navigation at the top of each page to navigate back to parent directories.
+
+### Navigation Features
+
+- **Breadcrumbs** - At the top of each page, showing your current location
+- **Directory READMEs** - Each folder has a comprehensive overview
+- **File Documentation** - Click through to individual file documentation
+- **Search** - Use GitHub's search or your IDE's search functionality
 
 ---
 
-*Generated by Woden Docbot*
+## 🤖 About Woden DocBot
+
+This documentation is automatically generated and kept up-to-date by Woden DocBot, an AI-powered documentation assistant. DocBot analyzes code on every pull request and updates documentation to reflect changes.
+
+### Features
+
+- **Automatic Updates** - Documentation updates on every PR
+- **Comprehensive Coverage** - Files, functions, classes, and directories
+- **Smart Navigation** - Breadcrumbs, related files, and parent links
+- **AI-Powered** - Uses Azure GPT models for intelligent documentation generation
+
+---
+
+*Generated by Woden DocBot for susee*
