@@ -7,6 +7,15 @@ import {
 	type SuSeeConfig,
 } from "./lib/suseeConfig.js";
 
+/**
+ * Run a Susee build.
+ *
+ * Resolution order:
+ * 1. Use `options` when provided.
+ * 2. Otherwise try loading root config via `finalSuseeConfig()`.
+ *
+ * If neither source is available, this logs an error and exits with code 1.
+ */
 async function build(options?: SuSeeConfig) {
 	console.time(tcolor.cyan("[Build] "));
 	let buildOptions = {} as BuildOptions;

@@ -50,6 +50,13 @@ export interface EntryPoint {
 	 * default - []
 	 */
 	plugins?: (SuseePlugin | SuseePluginFunction)[];
+	/**
+	 * When generating a dependency graph, Susee checks whether referenced npm modules are installed.
+	 * If a module is not installed in your project, Susee emits a warning message.
+	 * If this option is `true`, Susee treats those warnings as fatal and exits with code 1.
+	 *
+	 * default - false
+	 */
 	warning?: boolean;
 }
 /**

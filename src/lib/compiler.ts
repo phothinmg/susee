@@ -4,6 +4,7 @@ import { files } from "@suseejs/files";
 import { getCompilerOptions } from "@suseejs/tsoptions";
 import type { BuildEntryPoint, BuildOptions } from "./suseeConfig.js";
 
+// this is extend from @suseejs/compiler for JS API usages.
 class Compiler {
 	private _files: files.OutFiles;
 	private _object: BuildOptions;
@@ -50,6 +51,7 @@ class Compiler {
 			compiled.out_dir,
 			`${compiled.file_name}.cjs.map`,
 		);
+		// replace source mapping url
 		compiledCode = compiledCode.replace(
 			new RegExp(`${compiled.file_name}.js.map`, "gm"),
 			`${compiled.file_name}.cjs.map`,
@@ -67,6 +69,7 @@ class Compiler {
 				}
 			}
 		}
+		// if allow update create file object
 		if (this._update()) {
 			this._files.commonjs = mainFilePath;
 			if (compiled.dts) {
@@ -110,6 +113,7 @@ class Compiler {
 			compiled.out_dir,
 			`${compiled.file_name}.mjs.map`,
 		);
+		// replace source mapping url
 		compiledCode = compiledCode.replace(
 			new RegExp(`${compiled.file_name}.js.map`, "gm"),
 			`${compiled.file_name}.mjs.map`,

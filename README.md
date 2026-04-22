@@ -141,6 +141,28 @@ export default config;
 
 ## Programmatic API
 
+### `build(options?)`
+
+Signature:
+
+```ts
+function build(options?: SuSeeConfig): Promise<void>
+```
+
+Parameters:
+
+1. `options` (optional): Build options passed directly from code.
+
+Returns:
+
+1. `Promise<void>` that resolves when compilation completes.
+
+Runtime behavior:
+
+1. If `options` is provided, Susee builds from that object.
+2. If `options` is omitted, Susee tries to load config from project root.
+3. If both are missing, Susee logs an error and exits with code `1`.
+
 ```ts
 import { build, type SuSeeConfig } from "susee";
 
@@ -156,12 +178,6 @@ const options: SuSeeConfig = {
 
 await build(options);
 ```
-
-Behavior of `build(options?)`:
-
-1. If `options` is provided, Susee builds from that object.
-2. If `options` is omitted, Susee tries to load a config file from root.
-3. If both are missing, Susee prints an error and exits with code `1`.
 
 ## Output Notes
 
