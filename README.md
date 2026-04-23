@@ -6,7 +6,9 @@
 </div>
 <!-- markdownlint-enable MD033 -->
 
-[![NPM][nodei_img]][nodei_url] [![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![Socket Badge][sb_img]][sb_url] [![codecov][codecov_img]][codecov_url]
+[![NPM][nodei_img]][nodei_url]
+
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![Socket Badge][sb_img]][sb_url] [![codecov][codecov_img]][codecov_url]
 
 ## About
 
@@ -17,18 +19,22 @@ A **TypeScript-first** bundler designed specifically for **library packages** th
 ## Key Features
 
 ✅ **TypeScript-first** - Built with TypeScript for maximum type safety
+
 ✅ **Dual Output** - Generate both ESM and CommonJS formats automatically
+
 ✅ **Automatic Renaming** - Handles duplicate declarations intelligently
+
 ✅ **Fast Builds** - Optimized for library packages with minimal overhead
+
 ✅ **Package.json Management** - Automatic updates to package.json fields based on the build results
+
 ✅ **Plugin System** - Extend functionality with custom plugins
+
 ✅ **CLI & Programmatic API** - Use as a CLI tool or integrate directly
 
 ---
 
 ## Installation and Quick Start
-
----
 
 ### Installation Methods
 
@@ -105,39 +111,6 @@ Build a single entry directly without a config file.This method uses default val
 
 ```bash
 npx susee build src/index.ts --outdir dist --format esm
-```
-
----
-
-TypeScript-first bundler for library packages.
-
-Susee can be used in two ways:
-
-1. Programmatic API from `susee` (`build(options?)`)
-2. CLI (`susee`, `susee init`, `susee build ...`)
-
-The sections below are based on the code in `src`.
-
-## Install
-
-```bash
-npm i -D susee
-```
-
-## Quick Start (CLI)
-
-1. Generate config:
-
-```bash
-npx susee init
-```
-
-<!-- markdownlint-disable MD029 -->
-
-2. Build using config:
-
-```bash
-npx susee
 ```
 
 ---
