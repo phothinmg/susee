@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import readline from "node:readline/promises";
 import tcolor from "@suseejs/color";
+import pkg from "../../package.json" with { type: "json" };
 import { cliBuild } from "./build.js";
 import { cliCompiler } from "./cli.js";
 import { getDefaultOptions, parseArgs } from "./lib/parse_argv.js";
@@ -144,6 +145,9 @@ async function suseeCliBuild() {
 	if (args.length === 0) {
 		await cliBuild();
 	} else if (args.length === 1) {
+		if (args[0] === "--version" || args[0] === "-v") {
+			console.log(tcolor.cyan(`susee v${pkg.version}`));
+		}
 		if (args[0] === "--help") {
 			printHelp();
 		}

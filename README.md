@@ -6,9 +6,108 @@
 </div>
 <!-- markdownlint-enable MD033 -->
 
-[![NPM][nodei_img]][nodei_url]
+[![NPM][nodei_img]][nodei_url] [![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![Socket Badge][sb_img]][sb_url] [![codecov][codecov_img]][codecov_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![Socket Badge][sb_img]][sb_url] [![codecov][codecov_img]][codecov_url]
+## About
+
+A **TypeScript-first** bundler designed specifically for **library packages** that delivers **fast builds**, **type safety**, and **modern JavaScript output** with minimal configuration.
+
+---
+
+## Key Features
+
+✅ **TypeScript-first** - Built with TypeScript for maximum type safety
+✅ **Dual Output** - Generate both ESM and CommonJS formats automatically
+✅ **Automatic Renaming** - Handles duplicate declarations intelligently
+✅ **Fast Builds** - Optimized for library packages with minimal overhead
+✅ **Package.json Management** - Automatic updates to package.json fields based on the build results
+✅ **Plugin System** - Extend functionality with custom plugins
+✅ **CLI & Programmatic API** - Use as a CLI tool or integrate directly
+
+---
+
+## Installation and Quick Start
+
+---
+
+### Installation Methods
+
+#### Local Development Dependency (Recommended)
+
+Install `susee` as a development dependency in your project:
+
+```bash
+npm i -D susee
+```
+
+This method is recommended for library projects as it ensures the bundler version is locked to the project and available for CI/CD pipelines.
+
+#### Global Installation
+
+For system-wide availability of the `susee` CLI:
+
+```bash
+npm install -g susee
+```
+
+Global installation enables running `susee` directly from any directory without the `npx` prefix.
+
+#### Installation Verification
+
+After installation, verify the package is available by checking the version command:
+
+```bash
+npx susee --version
+```
+
+---
+
+### Quick Start
+
+### Using config file
+
+The easiest way to start is using the built-in initialization command which generates a configuration template at your project root.This command creates a `susee.config.ts`, `susee.config.js`, or `susee.config.mjs` file.
+
+```bash
+npx susee init
+```
+
+Build your project by running:
+
+```bash
+npx susee
+```
+
+### Using Programmatic API
+
+You can trigger the build process within a TypeScript/JavaScript script using the `build()` function.
+
+```typescript
+import { build } from "susee";
+
+await build({
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: ["esm", "commonjs"],
+      renameDuplicates: true,
+    },
+  ],
+  outDir: "dist",
+  allowUpdatePackageJson: true,
+});
+```
+
+### Using CLI (Direct Build)
+
+Build a single entry directly without a config file.This method uses default values for options not explicitly provided.
+
+```bash
+npx susee build src/index.ts --outdir dist --format esm
+```
+
+---
 
 TypeScript-first bundler for library packages.
 
@@ -41,6 +140,8 @@ npx susee init
 npx susee
 ```
 
+---
+
 ## API Quick Reference
 
 | Surface      | Command / API                    | Purpose                                               | Defaults                                                                                                      |
@@ -56,6 +157,8 @@ npx susee
 | Config       | `outDir`                         | Root output directory                                 | `"dist"`                                                                                                      |
 | Config       | `allowUpdatePackageJson`         | Update package fields based on output                 | `false`                                                                                                       |
 
+---
+
 ## CLI Usage
 
 ```txt
@@ -64,11 +167,12 @@ Susee CLI.
 Usage:
   susee                                 Build using susee.config.{ts,js,mjs}
   susee init                            Generate susee.config.{ts,js,mjs}
-  susee --help                          Show this message
+  susee --version | -v                  Check susee version
+  susee --help | -h                     Show this message
   susee build <entry> [options]         Build from a single entry file
 ```
 
-### CLI Options
+### CLI Build Options
 
 ```txt
 --entry <path>                Entry file (optional if provided as positional <entry>)
@@ -88,6 +192,8 @@ npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
 npx susee build --entry src/index.ts --format esm --minify
 ```
+
+---
 
 ## Config File
 
@@ -146,7 +252,7 @@ export default config;
 Signature:
 
 ```ts
-function build(options?: SuSeeConfig): Promise<void>
+function build(options?: SuSeeConfig): Promise<void>;
 ```
 
 Parameters:
