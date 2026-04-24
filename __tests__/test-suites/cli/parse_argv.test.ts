@@ -14,6 +14,15 @@ import { setupTempDir } from "../test_helpers.js";
 
 const execFileAsync = promisify(execFile);
 
+function getTsxBin() {
+	return path.resolve(
+		process.cwd(),
+		"node_modules",
+		".bin",
+		process.platform === "win32" ? "tsx.cmd" : "tsx",
+	);
+}
+
 describe("parse_argv", () => {
 	it("isFile recognizes valid source extensions", () => {
 		assert.strictEqual(isFile("src/index.ts"), true);
@@ -103,7 +112,7 @@ parseArgs(["src/index.ts", "--format", "amd"]);
 		);
 
 		await assert.rejects(
-			execFileAsync("npx", ["tsx", scriptPath], { cwd: tmpDir }),
+			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
 			(error: NodeJS.ErrnoException) => {
 				assert.strictEqual(error.code, 1);
 				const stderr = String(error.message ?? "");
@@ -129,7 +138,7 @@ parseArgs(["--minify"]);
 		);
 
 		await assert.rejects(
-			execFileAsync("npx", ["tsx", scriptPath], { cwd: tmpDir }),
+			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
 			(error: NodeJS.ErrnoException) => {
 				assert.strictEqual(error.code, 1);
 				const stderr = String(error.message ?? "");

@@ -1,0 +1,5 @@
+[90m┌[39m  [36mWelcome to Susee![39m
+[90m│[39m
+[36m◇[39m  [1mIs TypeScript Project(y/n) : [90my[39m [0m
+[90m│[39m
+[90m└[39m  [1mDone! Susee config file [36msusee.config.ts [39m is created at project root[0m

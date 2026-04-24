@@ -11,11 +11,21 @@ interface CliResult {
 	stderr: string;
 }
 
+function getTsxBin() {
+	return path.resolve(
+		process.cwd(),
+		"node_modules",
+		".bin",
+		process.platform === "win32" ? "tsx.cmd" : "tsx",
+	);
+}
+
 function runCli(args: string[], cwd: string, input = ""): Promise<CliResult> {
 	const cliEntry = path.resolve(process.cwd(), "src/cli/index.ts");
+	const tsxBin = getTsxBin();
 
 	return new Promise((resolve, reject) => {
-		const child = spawn("npx", ["tsx", cliEntry, ...args], {
+		const child = spawn(tsxBin, [cliEntry, ...args], {
 			cwd,
 			stdio: "pipe",
 		});
@@ -84,12 +94,40 @@ describe("CLI integration", () => {
 		assert.strictEqual(result.stderr.trim(), "");
 	});
 
+	it("prints help for -h", async () => {
+		const cwd = await setupTempDir("cli-help-short");
+		const result = await runCli(["-h"], cwd);
+
+		assert.strictEqual(result.code, 0);
+		assert.match(result.stdout, /Usage:/);
+		assert.match(result.stdout, /susee build <entry> \[options\]/);
+		assert.strictEqual(result.stderr.trim(), "");
+	});
+
 	it("prints help for build --help", async () => {
 		const cwd = await setupTempDir("cli-build-help");
 		const result = await runCli(["build", "--help"], cwd);
 
 		assert.strictEqual(result.code, 0);
 		assert.match(result.stdout, /Usage:/);
+		assert.strictEqual(result.stderr.trim(), "");
+	});
+
+	it("prints help for build -h", async () => {
+		const cwd = await setupTempDir("cli-build-help-short");
+		const result = await runCli(["build", "-h"], cwd);
+
+		assert.strictEqual(result.code, 0);
+		assert.match(result.stdout, /Usage:/);
+		assert.strictEqual(result.stderr.trim(), "");
+	});
+
+	it("prints help for build with no entry", async () => {
+		const cwd = await setupTempDir("cli-build-no-entry");
+		const result = await runCli(["build"], cwd);
+
+		assert.strictEqual(result.code, 0);
+		assert.match(result.stdout, /susee build <entry> \[options\]/);
 		assert.strictEqual(result.stderr.trim(), "");
 	});
 
@@ -110,7 +148,10 @@ describe("CLI integration", () => {
 			await fileExists(path.join(cwd, "susee.config.ts")),
 			true,
 		);
-		assert.match(result.stdout, /susee\.config\.ts is created/);
+		assert.match(result.stdout, /Welcome to Susee!/);
+		assert.match(result.stdout, /Is TypeScript Project\(y\/n\)/);
+		assert.match(result.stdout, /susee\.config\.ts/);
+		assert.match(result.stdout, /is created at project root/);
 	});
 
 	it("init creates susee.config.js for esm JavaScript projects", async () => {
@@ -128,7 +169,8 @@ describe("CLI integration", () => {
 			await fileExists(path.join(cwd, "susee.config.js")),
 			true,
 		);
-		assert.match(result.stdout, /susee\.config\.js is created/);
+		assert.match(result.stdout, /susee\.config\.js/);
+		assert.match(result.stdout, /is created at project root/);
 	});
 
 	it("init creates susee.config.mjs for commonjs JavaScript projects", async () => {
@@ -146,7 +188,8 @@ describe("CLI integration", () => {
 			await fileExists(path.join(cwd, "susee.config.mjs")),
 			true,
 		);
-		assert.match(result.stdout, /susee\.config\.mjs is created/);
+		assert.match(result.stdout, /susee\.config\.mjs/);
+		assert.match(result.stdout, /is created at project root/);
 	});
 
 	it("build command compiles entry with explicit flags", async () => {

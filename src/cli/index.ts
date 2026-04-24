@@ -112,7 +112,12 @@ async function cliInit() {
 		input: process.stdin,
 		output: process.stdout,
 	});
-	const is_ts = await rl.question(tcolor.cyan("Is TypeScript project(y/n) : "));
+	console.log(`${tcolor.gray("┌")} ${tcolor.green("Welcome to Susee!")}`);
+	console.log("");
+	console.log(`${tcolor.gray("│")}`);
+	const is_ts = await rl.question(
+		`${tcolor.cyan("◇")} Is TypeScript Project(y/n) : `,
+	);
 	const isTs = !!(is_ts === "y" || is_ts === "Y" || is_ts === "");
 	rl.close();
 	let configFile = "";
@@ -135,8 +140,11 @@ async function cliInit() {
 	const configFilePath = path.resolve(process.cwd(), configFile);
 	if (fs.existsSync(configFilePath)) await fs.promises.unlink(configFilePath);
 	await fs.promises.writeFile(configFilePath, str);
+	console.log("");
+	console.log(`${tcolor.gray("│")}`);
+	console.log("");
 	console.info(
-		tcolor.cyan(`Susee config file ${configFile} is created at project root`),
+		`${tcolor.gray("└")} Done! Susee config file ${tcolor.cyan(configFile)} is created at project root`,
 	);
 }
 
@@ -148,7 +156,7 @@ async function suseeCliBuild() {
 		if (args[0] === "--version" || args[0] === "-v") {
 			console.log(tcolor.cyan(`susee v${pkg.version}`));
 		}
-		if (args[0] === "--help") {
+		if (args[0] === "--help" || args[0] === "-h") {
 			printHelp();
 		}
 		if (args[0] === "init") {

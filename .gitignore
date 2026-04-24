@@ -13,3 +13,7 @@ a.ts
 sr
 out
 site
+
+# Vitepress
+docs/.vitepress/dist
+docs/.vitepress/cache

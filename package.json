@@ -32,7 +32,10 @@
 		"commit": "bash scripts/commit.sh",
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
-		"v:major": "npm version major --no-git-tag-version"
+		"v:major": "npm version major --no-git-tag-version",
+		"docs:dev": "vitepress dev docs",
+		"docs:build": "vitepress build docs",
+		"docs:preview": "vitepress preview docs"
 	},
 	"keywords": [
 		"bundler",
@@ -79,6 +82,8 @@
 		"@biomejs/biome": "^2.4.12",
 		"@suseejs/banner-text-plugin": "^0.0.4",
 		"@types/node": "^25.6.0",
-		"tsx": "^4.21.0"
+		"tsx": "^4.21.0",
+		"vitepress": "^2.0.0-alpha.17",
+		"vitepress-plugin-group-icons": "^1.7.5"
 	}
 }
