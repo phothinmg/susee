@@ -54,8 +54,7 @@ async function loadCliCompiler() {
 	const modulePath = pathToFileURL(
 		path.resolve(repoRoot, "src/cli/cli.ts"),
 	).href;
-	const uniquePath = `${modulePath}?v=${Date.now()}-${Math.random()}`;
-	const mod = (await import(uniquePath)) as {
+	const mod = (await import(modulePath)) as {
 		cliCompiler: { compile: (opts: unknown) => Promise<void> };
 	};
 	return mod.cliCompiler;
