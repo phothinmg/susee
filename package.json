@@ -3,18 +3,12 @@
 	"version": "1.5.2",
 	"description": "TypeScript-first bundler for library packages",
 	"type": "module",
-	"main": "dist/index.cjs",
-	"types": "dist/index.d.cts",
 	"module": "dist/index.mjs",
 	"exports": {
 		".": {
 			"import": {
 				"types": "./dist/index.d.mts",
 				"default": "./dist/index.mjs"
-			},
-			"require": {
-				"types": "./dist/index.d.cts",
-				"default": "./dist/index.cjs"
 			}
 		}
 	},
