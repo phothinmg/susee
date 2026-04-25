@@ -56,9 +56,23 @@ The `susee` package consumes these core packages, so for behavior changes:
 - verify `susee` integration behavior still matches expectations
 - avoid silent breaking changes
 
-## 5. Open PR in monorepo
+## 5. Commit and open PR
 
-Push your branch and open a pull request in:
+```sh
+# run this command in terminal
+npm run commit
+```
+
+```sh
+1) ⭐ feat          3) 🎨 modified      5) 👕 refactor      7) 📦 add(package)  9) ✅ tests
+2) 🐛 bug           4) 🔒 security      6) ⚠️ deprecated     8) 🚀 release
+Select a number for commit type: # select number what your change
+Enter commit message: # enter your commit message
+
+# that will commit to your current branch
+```
+
+Then open a pull request in:
 
 - <https://github.com/phothinmg/suseejs>
 

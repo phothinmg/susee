@@ -49,10 +49,9 @@ npm run fmt
 ```sh
 # run this command in terminal
 npm run commit
+```
 
-> susee@1.5.2 commit
-> bash scripts/commit.sh
-
+```sh
 1) ⭐ feat       3) 🎨 modified   5) 👕 refactor   7) 🚀 release    9) 📝 docs
 2) 🐛 bug        4) 🔒 security   6) ⚠️ deprecated  8) ✅ tests
 Select a number for commit type: # select number what your change
