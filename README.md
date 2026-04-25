@@ -8,7 +8,7 @@
 
 [![NPM][nodei_img]][nodei_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![Socket Badge][sb_img]][sb_url] [![codecov][codecov_img]][codecov_url]
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![Socket Badge][sb_img]][sb_url] [![codecov][codecov_img]][codecov_url][![publish to npm][publish_npm_svg]][publish_npm]
 
 ## About
 
@@ -342,3 +342,5 @@ Violations print an error and exit with code `1`.
 [npm_v_img]: https://img.shields.io/npm/v/susee
 [npm_v_url]: https://www.npmjs.com/package/susee
 [license_img]: https://img.shields.io/npm/l/susee
+[publish_npm]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml
+[publish_npm_svg]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml/badge.svg?event=release
