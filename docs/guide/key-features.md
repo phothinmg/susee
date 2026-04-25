@@ -26,6 +26,8 @@ Susee can update relevant package metadata after build output is generated. This
 
 You can extend build behavior through plugins to fit project-specific requirements. This gives you flexibility for custom processing without replacing your whole build toolchain.
 
+For plugin categories, execution order, and implementation examples, see [Plugin Types and Lifecycle](/guide/plugin-types-lifecycle).
+
 ## CLI and programmatic API
 
 Susee supports both command-line usage and direct integration through its build API. Use the CLI for local development and CI commands, or call the API when you need custom scripting and orchestration.

@@ -13,6 +13,7 @@ a.ts
 sr
 out
 site
+gpg.sh
 
 # Vitepress
 docs/.vitepress/dist

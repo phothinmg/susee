@@ -113,6 +113,17 @@ Build a single entry directly without a config file.This method uses default val
 npx susee build src/index.ts --outdir dist --format esm
 ```
 
+### Contributor Setup (Repository)
+
+When contributing to this repository, use `npm` to keep installs aligned with `package-lock.json` and npm-based scripts.
+
+```bash
+npm install
+npm run hooks:install
+```
+
+This installs project dependencies and configures local git hooks for commit workflow checks.
+
 ---
 
 ## API Quick Reference

@@ -64,12 +64,43 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
 			text: "Configuration",
 			collapsed: false,
 			items: [
-				{ text: "What is Susee?", link: "what-is-susee" },
-				{ text: "Key Features", link: "key-features" },
+				{ text: "Configuration File Structure", link: "config-file-structure" },
+				{ text: "Entry Points", link: "entry-points" },
 				{
-					text: "Quick Start",
-					link: "quick-start",
+					text: "tsconfig & Custom Path Integration",
+					link: "tsconfig-and-custom-path-integration",
 				},
+			],
+		},
+		{
+			text: "Plugin System",
+			collapsed: false,
+			items: [
+				{ text: "Plugin Types and Lifecycle", link: "plugin-types-lifecycle" },
+				{ text: "How to Write Plugins", link: "how-to-write-plugins" },
+			],
+		},
+		{
+			text: "Ecosystem",
+			collapsed: false,
+			items: [
+				{ text: "Ecosystem Overview", link: "ecosystem-overview" },
+				{ text: "Core Build Packages", link: "ecosystem-core-build-packages" },
+				{ text: "Plugin Packages", link: "ecosystem-plugin-packages" },
+				{ text: "Foundation Packages", link: "ecosystem-foundation-packages" },
+			],
+		},
+		{
+			text: "Contribution",
+			collapsed: false,
+			items: [
+				{ text: "Contribution Overview", link: "contribution-overview" },
+				{ text: "Contributing to Susee", link: "contribution-susee" },
+				{
+					text: "Contributing to Core Build Packages",
+					link: "contribution-core-build-packages",
+				},
+				{ text: "Pull Request Checklist", link: "contribution-pr-checklist" },
 			],
 		},
 	];
