@@ -8,6 +8,7 @@ import {
 	getDefaultOptions,
 	isEmptyObject,
 	isFile,
+	parseBooleanFlag,
 	parseArgs,
 } from "../../../src/cli/lib/parse_argv.js";
 import { setupTempDir } from "../test_helpers.js";
@@ -76,6 +77,35 @@ describe("parse_argv", () => {
 		});
 	});
 
+	it("parseArgs supports inline values and explicit boolean values", () => {
+		const actual = parseArgs([
+			"--entry=src/index.ts",
+			"--outdir=lib",
+			"--tsconfig=tsconfig.json",
+			"--rename",
+			"false",
+			"--allow-update=false",
+			"--minify",
+			"true",
+			"--warning=false",
+		]);
+
+		assert.deepStrictEqual(actual, {
+			entry: "src/index.ts",
+			outDir: "lib",
+			tsconfig: "tsconfig.json",
+			rename: false,
+			allowUpdate: false,
+			minify: true,
+			warning: false,
+		});
+	});
+
+	it("parseBooleanFlag parses true and false", () => {
+		assert.strictEqual(parseBooleanFlag("warning", "true"), true);
+		assert.strictEqual(parseBooleanFlag("warning", "false"), false);
+	});
+
 	it("getDefaultOptions fills defaults consistently", () => {
 		const actual = getDefaultOptions({
 			entry: "src/index.ts",
@@ -117,6 +147,136 @@ parseArgs(["src/index.ts", "--format", "amd"]);
 				assert.strictEqual(error.code, 1);
 				const stderr = String(error.message ?? "");
 				assert.match(stderr, /Format must be cjs, commonjs, or esm\./);
+				return true;
+			},
+		);
+	});
+
+	it("parseArgs exits for invalid boolean flag value", async () => {
+		const tmpDir = await setupTempDir("parse-argv-invalid-boolean");
+		const scriptPath = path.join(tmpDir, "invalid-boolean.ts");
+		const parseArgvPath = path
+			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.replaceAll("\\", "/");
+
+		await fs.writeFile(
+			scriptPath,
+			`import { parseArgs } from "${parseArgvPath}";
+parseArgs(["src/index.ts", "--rename=maybe"]);
+`,
+			"utf8",
+		);
+
+		await assert.rejects(
+			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
+			(error: NodeJS.ErrnoException) => {
+				assert.strictEqual(error.code, 1);
+				const stderr = String(error.message ?? "");
+				assert.match(stderr, /Type of rename must be boolean\./);
+				return true;
+			},
+		);
+	});
+
+	it("parseArgs exits when entry is duplicated", async () => {
+		const tmpDir = await setupTempDir("parse-argv-duplicate-entry");
+		const scriptPath = path.join(tmpDir, "duplicate-entry.ts");
+		const parseArgvPath = path
+			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.replaceAll("\\", "/");
+
+		await fs.writeFile(
+			scriptPath,
+			`import { parseArgs } from "${parseArgvPath}";
+parseArgs(["src/index.ts", "--entry", "src/second.ts"]);
+`,
+			"utf8",
+		);
+
+		await assert.rejects(
+			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
+			(error: NodeJS.ErrnoException) => {
+				assert.strictEqual(error.code, 1);
+				const stderr = String(error.message ?? "");
+				assert.match(stderr, /Entry point already exists\./);
+				return true;
+			},
+		);
+	});
+
+	it("parseArgs exits when --entry value is missing", async () => {
+		const tmpDir = await setupTempDir("parse-argv-missing-entry-value");
+		const scriptPath = path.join(tmpDir, "missing-entry-value.ts");
+		const parseArgvPath = path
+			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.replaceAll("\\", "/");
+
+		await fs.writeFile(
+			scriptPath,
+			`import { parseArgs } from "${parseArgvPath}";
+parseArgs(["--entry", "--minify"]);
+`,
+			"utf8",
+		);
+
+		await assert.rejects(
+			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
+			(error: NodeJS.ErrnoException) => {
+				assert.strictEqual(error.code, 1);
+				const stderr = String(error.message ?? "");
+				assert.match(stderr, /Entry point required\./);
+				return true;
+			},
+		);
+	});
+
+	it("parseArgs exits when --outdir value is missing", async () => {
+		const tmpDir = await setupTempDir("parse-argv-missing-outdir");
+		const scriptPath = path.join(tmpDir, "missing-outdir.ts");
+		const parseArgvPath = path
+			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.replaceAll("\\", "/");
+
+		await fs.writeFile(
+			scriptPath,
+			`import { parseArgs } from "${parseArgvPath}";
+parseArgs(["src/index.ts", "--outdir", "--format", "esm"]);
+`,
+			"utf8",
+		);
+
+		await assert.rejects(
+			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
+			(error: NodeJS.ErrnoException) => {
+				assert.strictEqual(error.code, 1);
+				const stderr = String(error.message ?? "");
+				assert.match(stderr, /Output directory required\./);
+				return true;
+			},
+		);
+	});
+
+	it("parseArgs exits when --tsconfig value is missing", async () => {
+		const tmpDir = await setupTempDir("parse-argv-missing-tsconfig");
+		const scriptPath = path.join(tmpDir, "missing-tsconfig.ts");
+		const parseArgvPath = path
+			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.replaceAll("\\", "/");
+
+		await fs.writeFile(
+			scriptPath,
+			`import { parseArgs } from "${parseArgvPath}";
+parseArgs(["src/index.ts", "--tsconfig", "--rename"]);
+`,
+			"utf8",
+		);
+
+		await assert.rejects(
+			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
+			(error: NodeJS.ErrnoException) => {
+				assert.strictEqual(error.code, 1);
+				const stderr = String(error.message ?? "");
+				assert.match(stderr, /Tsconfig path required\./);
 				return true;
 			},
 		);
