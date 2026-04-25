@@ -32,6 +32,26 @@ function runCli(args: string[], cwd: string, input = ""): Promise<CliResult> {
 
 		let stdout = "";
 		let stderr = "";
+		let settled = false;
+
+		const finish = (error?: Error, code: number | null = null) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timeout);
+			child.stdout.removeAllListeners();
+			child.stderr.removeAllListeners();
+			child.removeAllListeners();
+			if (error) {
+				reject(error);
+				return;
+			}
+			resolve({ code, stdout, stderr });
+		};
+
+		const timeout = setTimeout(() => {
+			child.kill("SIGKILL");
+			finish(new Error(`CLI process timed out for args: ${args.join(" ")}`));
+		}, 30000);
 
 		child.stdout.on("data", (chunk) => {
 			stdout += chunk.toString();
@@ -39,9 +59,11 @@ function runCli(args: string[], cwd: string, input = ""): Promise<CliResult> {
 		child.stderr.on("data", (chunk) => {
 			stderr += chunk.toString();
 		});
-		child.on("error", reject);
-		child.on("close", (code) => {
-			resolve({ code, stdout, stderr });
+		child.once("error", (error) => {
+			finish(error);
+		});
+		child.once("close", (code) => {
+			finish(undefined, code);
 		});
 
 		if (input.length > 0) {
@@ -84,6 +106,24 @@ async function writeEntryFile(cwd: string) {
 }
 
 describe("CLI integration", () => {
+	it("prints version for --version", async () => {
+		const cwd = await setupTempDir("cli-version");
+		const result = await runCli(["--version"], cwd);
+
+		assert.strictEqual(result.code, 0);
+		assert.match(result.stdout, /susee v\d+\.\d+\.\d+/);
+		assert.strictEqual(result.stderr.trim(), "");
+	});
+
+	it("prints version for -v", async () => {
+		const cwd = await setupTempDir("cli-version-short");
+		const result = await runCli(["-v"], cwd);
+
+		assert.strictEqual(result.code, 0);
+		assert.match(result.stdout, /susee v\d+\.\d+\.\d+/);
+		assert.strictEqual(result.stderr.trim(), "");
+	});
+
 	it("prints help for --help", async () => {
 		const cwd = await setupTempDir("cli-help");
 		const result = await runCli(["--help"], cwd);
@@ -192,6 +232,19 @@ describe("CLI integration", () => {
 		assert.match(result.stdout, /is created at project root/);
 	});
 
+	it("init overwrites an existing config file", async () => {
+		const cwd = await setupTempDir("cli-init-overwrite");
+		const configPath = path.join(cwd, "susee.config.ts");
+		await fs.writeFile(configPath, "export default { stale: true };\n", "utf8");
+
+		const result = await runCli(["init"], cwd, "y\n");
+
+		assert.strictEqual(result.code, 0);
+		const content = await fs.readFile(configPath, "utf8");
+		assert.ok(content.includes("const config: SuSeeConfig"));
+		assert.ok(!content.includes("stale: true"));
+	});
+
 	it("build command compiles entry with explicit flags", async () => {
 		const cwd = await setupTempDir("cli-build-args");
 		await writeEntryFile(cwd);
@@ -254,5 +307,13 @@ describe("CLI integration", () => {
 			true,
 		);
 		assert.strictEqual(result.stderr.trim(), "");
+	});
+
+	it("default invocation exits with error when config is missing", async () => {
+		const cwd = await setupTempDir("cli-default-no-config");
+		const result = await runCli([], cwd);
+
+		assert.strictEqual(result.code, 1);
+		assert.match(result.stderr, /No susee\.config file/);
 	});
 });
