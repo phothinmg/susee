@@ -58,7 +58,7 @@ npm run commit
 Select a number for commit type: # select number what your change
 Enter commit message: # enter your commit message
 
-# commit to your current branch
+# that will commit to your current branch
 ```
 
 Then open a pull request in:
