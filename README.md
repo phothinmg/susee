@@ -8,7 +8,7 @@
 
 [![NPM][nodei_img]][nodei_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![codecov][codecov_img]][codecov_url][![publish to npm][publish_npm_svg]][publish_npm]
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![codecov][codecov_img]][codecov_url][![publish to npm][publish_npm_svg]][publish_npm][![CodeQL Advanced][code_ql_svg]][code_ql]
 
 ## About
 
@@ -344,3 +344,5 @@ Violations print an error and exit with code `1`.
 [license_img]: https://img.shields.io/npm/l/susee
 [publish_npm]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml
 [publish_npm_svg]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml/badge.svg?event=release
+[code_ql]: https://github.com/phothinmg/susee/actions/workflows/codeql.yml
+[code_ql_svg]: https://github.com/phothinmg/susee/actions/workflows/codeql.yml/badge.svg
