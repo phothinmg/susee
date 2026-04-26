@@ -9,12 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+
+## [1.5.3] 2026-04-26
+
 ### Added
 
 - cli flag `--version` and `-v` for check
-
-
-### Notes
 
 <!--
 https://keepachangelog.com/en/1.1.0/
