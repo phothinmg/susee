@@ -6,6 +6,10 @@ labels: ""
 assignees: ""
 ---
 
+> [!IMPORTANT]
+> If this is a security vulnerability, do not submit a public issue.
+> Report privately using <https://github.com/phothinmg/susee/security/advisories/new> and follow SECURITY.md.
+
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 

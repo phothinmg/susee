@@ -18,6 +18,12 @@ You can contribute to two places in the ecosystem:
 
 Choose one path first so your change stays focused.
 
+## Security Reporting
+
+If your report is security-related, do not open a public issue.
+
+Use the private disclosure instructions in [SECURITY.md](./SECURITY.md).
+
 ### Shared principles
 
 - Keep changes small and focused.

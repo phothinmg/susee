@@ -126,6 +126,14 @@ This installs project dependencies and configures local git hooks for commit wor
 
 ---
 
+## Security
+
+Please report vulnerabilities privately and follow the disclosure process in [SECURITY.md](./SECURITY.md).
+
+Do not open public issues for security reports.
+
+---
+
 ## API Quick Reference
 
 | Surface      | Command / API                    | Purpose                                               | Defaults                                                                                                      |
