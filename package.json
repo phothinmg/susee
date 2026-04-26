@@ -1,6 +1,6 @@
 {
 	"name": "susee",
-	"version": "1.5.2",
+	"version": "1.5.3",
 	"description": "TypeScript-first bundler for library packages",
 	"type": "module",
 	"module": "dist/index.mjs",
