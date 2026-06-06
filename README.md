@@ -8,7 +8,7 @@
 
 [![NPM][nodei_img]][nodei_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![codecov][codecov_img]][codecov_url][![publish to npm][publish_npm_svg]][publish_npm][![CodeQL Advanced][code_ql_svg]][code_ql]
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![codecov][codecov_img]][codecov_url][![publish to npm][publish_npm_svg]][publish_npm][![CodeQL Advanced][code_ql_svg]][code_ql] [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115)
 
 ## About
 
