@@ -3,6 +3,7 @@ import { suseeCompiler } from "@suseejs/compiler";
 import { files } from "@suseejs/files";
 import { suseeTerser } from "@suseejs/terser-plugin";
 import { getCompilerOptions } from "@suseejs/tsoptions";
+import { utils } from "@suseejs/utilities";
 import type { CliBuildOptions } from "./lib/parse_argv.js";
 
 class CliCompiler {
@@ -30,10 +31,12 @@ class CliCompiler {
 			opts.warning,
 			opts.rename,
 		);
+		const is_jsx = utils.checks.isJsxContent(bundledCode);
 		const compiled = suseeCompiler({
 			sourceCode: bundledCode,
 			fileName: opts.entry,
 			compilerOptions,
+			isJsx: is_jsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
@@ -96,10 +99,12 @@ class CliCompiler {
 			opts.warning,
 			opts.rename,
 		);
+		const is_jsx = utils.checks.isJsxContent(bundledCode);
 		const compiled = suseeCompiler({
 			sourceCode: bundledCode,
 			fileName: opts.entry,
 			compilerOptions,
+			isJsx: is_jsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(

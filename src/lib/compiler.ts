@@ -2,6 +2,7 @@ import { bundler } from "@suseejs/bundler";
 import { suseeCompiler } from "@suseejs/compiler";
 import { files } from "@suseejs/files";
 import { getCompilerOptions } from "@suseejs/tsoptions";
+import { utils } from "@suseejs/utilities";
 import type { BuildEntryPoint, BuildOptions } from "./suseeConfig.js";
 
 // this is extend from @suseejs/compiler for JS API usages.
@@ -33,10 +34,12 @@ class Compiler {
 			point.warning,
 			point.rename,
 		);
+		const is_jsx = utils.checks.isJsxContent(bundledCode);
 		const compiled = suseeCompiler({
 			sourceCode: bundledCode,
 			fileName: point.entry,
 			compilerOptions,
+			isJsx: is_jsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
@@ -95,10 +98,12 @@ class Compiler {
 			point.warning,
 			point.rename,
 		);
+		const is_jsx = utils.checks.isJsxContent(bundledCode);
 		const compiled = suseeCompiler({
 			sourceCode: bundledCode,
 			fileName: point.entry,
 			compilerOptions,
+			isJsx: is_jsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
