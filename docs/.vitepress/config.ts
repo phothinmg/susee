@@ -18,6 +18,7 @@ export default defineConfig({
 
 		sidebar: {
 			"/guide/": { base: "/guide/", items: sidebarGuide() },
+			"/references/": { base: "/references/", items: sidebarReferences() },
 		},
 
 		socialLinks: [
@@ -41,8 +42,13 @@ function nav(): DefaultTheme.NavItem[] {
 	return [
 		{
 			text: "Guide",
-			link: "/guide/what-is-susee",
+			link: "/guide/quick-start",
 			activeMatch: "/guide/",
+		},
+		{
+			text: "References",
+			link: "/references/command-line-interface",
+			activeMatch: "/references/",
 		},
 	];
 }
@@ -102,6 +108,22 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
 				},
 				{ text: "Pull Request Checklist", link: "contribution-pr-checklist" },
 			],
+		},
+	];
+}
+
+function sidebarReferences(): DefaultTheme.SidebarItem[] {
+	return [
+		{
+			text: "CLI and API Usage",
+			collapsed: false,
+			items: [
+				{ text: "Command Line Interface", link: "command-line-interface" },
+				{ text: "Programmatic API", link: "programmatic-api" },
+			],
+		},
+		{
+			items: [{ text: "Glossary", link: "glossary" }],
 		},
 	];
 }
