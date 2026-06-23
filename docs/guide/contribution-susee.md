@@ -1,4 +1,7 @@
-# Contributing to Susee
+---
+layout: docs
+title: Contributing to Susee
+---
 
 This page covers contribution workflow for this repository: `susee`.
 

@@ -1,8 +1,7 @@
 url: https://susee.js.org/
-# baseurl: /mmdevs-page
 # site
-title: Susee
-source: app
+title: susee
+source: docs
 markdown: kramdown
 kramdown:
   syntax_highlighter: none
@@ -34,51 +33,65 @@ mmdocs:
   logo:
     light: /images/logo-light.webp
     dark: /images/logo-dark.webp
-  nav_items:
-    - text: Cli
-      link: /mmsd
-    - text: Terms
-      link: /terms
   docs:
     - dir: guide
       label: Guide
       link: /guide/quick-start
       nav: true
       sidebar:
-      - sidebar_label: Introduction
-        items:
-        - text: What is Susee?
-          link: /guide/what-is-susee
-        - text: Key Features
-          link: /guide/key-features
-        - text: Quick Start
-          link: /guide/quick-start
-      - sidebar_label: Documentation
-        items:
-        - text: Subdomains
-          link: /guide/subdomains
-        - text: Push to branch
-          link: /guide/push-to-branch
-        - text: Open pull request
-          link: /guide/open-pull-request
-        - text: Deployment
-          link: /guide/deployment
-    - dir: reference
-      label: Reference
-      link: /reference/overview
+        - sidebar_label: Introduction
+          items:
+            - text: What is Susee?
+              link: /guide/what-is-susee
+            - text: Key Features
+              link: /guide/key-features
+            - text: Quick Start
+              link: /guide/quick-start
+        - sidebar_label: Configuration
+          items:
+            - text: Configuration File Structure
+              link: /guide/config-file-structure
+            - text: Entry Points
+              link: /guide/entry-points
+            - text: tsconfig & Custom Path Integration
+              link: /guide/tsconfig-and-custom-path-integration
+        - sidebar_label: Plugin System
+          items:
+            - text: Plugin Types and Lifecycle
+              link: /guide/plugin-types-lifecycle
+            - text: How to Write Plugins
+              link: /guide/how-to-write-plugins
+        - sidebar_label: Ecosystem
+          items:
+            - text: Ecosystem Overview
+              link: /guide/ecosystem-overview
+            - text: Core Build Packages
+              link: /guide/ecosystem-core-build-packages
+            - text: Plugin Packages
+              link: /guide/ecosystem-plugin-packages
+            - text: Foundation Packages
+              link: /guide/ecosystem-foundation-packages
+        - sidebar_label: Contribution
+          items:
+            - text: Contribution Overview
+              link: /guide/contribution-overview
+            - text: Contributing to Susee
+              link: /guide/contribution-susee
+            - text: Contributing to Core Build Packages
+              link: /guide/contribution-core-build-packages
+            - text: Pull Request Checklist
+              link: /guide/contribution-pr-checklist
+    - dir: references
+      label: References
+      link: /references/command-line-interface
       nav: true
       sidebar:
-      - sidebar_label: Reference
-        items:
-        - text: Overview
-          link: /reference/overview
-        - text: DNS Targets
-          link: /reference/dns-targets
-  posts:
-    - dir: posts
-      label: Blog
-      link: /posts
-      nav: true
+        - sidebar_label: CLI and API Usage
+          items:
+            - text: Command Line Interface
+              link: /references/command-line-interface
+            - text: Programmatic API
+              link: /references/programmatic-api
   footer:
     copyright:
       owner: Pho Thin Maung
@@ -86,7 +99,3 @@ mmdocs:
     social_links:
       - icon_class: ri-github-fill
         href: https://github.com/phothinmg/mmdevs.org
-      - icon_class: ri-twitter-x-line
-        href: ""
-      - icon_class: ri-instagram-line
-        href: ""

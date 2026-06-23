@@ -1,4 +1,7 @@
-# What is susee
+---
+layout: docs
+title: What is susee
+---
 
 Susee is a TypeScript-first bundler specialized for library packages.Unlike general-purpose bundlers that target application deployment, susee focuses on consolidating a package's local TypeScript dependency tree into single source units and compiling them into dual-format artifacts (ESM and CommonJS) with appropriate declaration files.
 

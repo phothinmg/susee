@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'jekyll'
-require 'nokogiri'
-require 'json'
-require 'open3'
+require "jekyll"
+require "nokogiri"
+require "json"
+require "open3"
 
 def shiki_highlight(code, lang)
-  script_path = File.expand_path('../node/shiki.js', __dir__)
+  script_path = File.expand_path("../node/shiki.js", __dir__)
   input = JSON.generate({ code: code, lang: lang })
-  stdout, stderr, status = Open3.capture3('node', script_path, stdin_data: input)
+  stdout, stderr, status = Open3.capture3("node", script_path, stdin_data: input)
   raise "Shiki highlight failed: #{stderr}" unless status.success?
 
   stdout
@@ -33,10 +33,10 @@ def replace_elements(node)
   return unless code_el
 
   code = code_el.text
-  lang = code_el['class']
+  lang = code_el["class"]
          &.split
-         &.find { |class_name| class_name.start_with?('language-') }
-         &.delete_prefix('language-')
+         &.find { |class_name| class_name.start_with?("language-") }
+         &.delete_prefix("language-")
   fragment = Nokogiri::HTML::DocumentFragment.parse(create_wrapper(lang, code))
   node.replace(fragment)
 end
@@ -46,7 +46,7 @@ module Jekyll
   module ShikiCodeBlock
     def shiki_code_block(html_content)
       doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
-      elements = doc.css('pre').select { |pre| pre.at_css('> code[class^="language-"]') }
+      elements = doc.css("pre").select { |pre| pre.at_css('> code[class^="language-"]') }
       return html_content if elements.empty?
 
       elements.each { |node| replace_elements(node) }

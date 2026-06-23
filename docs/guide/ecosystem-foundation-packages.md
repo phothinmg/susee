@@ -1,4 +1,7 @@
-# Foundation Packages
+---
+layout: docs
+title: Foundation Packages
+---
 
 These packages provide shared types, helpers, and terminal ergonomics used across Susee packages.
 

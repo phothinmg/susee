@@ -1,4 +1,7 @@
-# Entry Points
+---
+layout: docs
+title: Entry Points
+---
 
 `entryPoints` is the most important part of a Susee config. Each object in this array describes one published package entry, including where the source comes from, how it should be exported, and which build options apply to that specific entry.
 

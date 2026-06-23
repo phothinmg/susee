@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if there are changes in the specific app directories or config files
-git diff HEAD^ HEAD --quiet -- app/ _config.yml Gemfile
+git diff HEAD^ HEAD --quiet -- docs/ _config.yml Gemfile
 
 if [ $? -eq 0 ]; then
   echo "🛑 No relevant files changed. Skipping build."

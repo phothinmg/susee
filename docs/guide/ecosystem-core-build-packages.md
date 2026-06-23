@@ -1,4 +1,7 @@
-# Core Build Packages
+---
+layout: docs
+title: Core Build Packages
+---
 
 These packages make up the main Susee build pipeline.
 
@@ -80,9 +83,9 @@ import { getCompilerOptions } from "@suseejs/tsoptions";
 
 const opts = getCompilerOptions();
 const compiled = suseeCompiler({
- sourceCode: "export const x = 1;",
- fileName: "src/index.ts",
- compilerOptions: opts.esm("dist"),
+  sourceCode: "export const x = 1;",
+  fileName: "src/index.ts",
+  compilerOptions: opts.esm("dist"),
 });
 ```
 

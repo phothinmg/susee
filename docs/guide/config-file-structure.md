@@ -1,4 +1,7 @@
-# Configuration File Structure
+---
+layout: docs
+title: Configuration File Structure
+---
 
 This page explains how `susee.config.*` is structured and how each option affects the build. The configuration is centered around one root object, `SuSeeConfig`, with one or more package entry definitions.
 

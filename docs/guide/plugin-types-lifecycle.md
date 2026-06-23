@@ -1,4 +1,7 @@
-# Plugin Types and Lifecycle
+---
+layout: docs
+title: Plugin Types and Lifecycle
+---
 
 Susee supports three plugin types that run at different stages of the build pipeline.
 

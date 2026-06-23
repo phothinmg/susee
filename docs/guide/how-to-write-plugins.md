@@ -1,4 +1,7 @@
-# How to Write Plugins
+---
+layout: docs
+title: How to Write Plugins
+---
 
 This guide shows how to create plugins for Susee and wire them into your `susee.config.ts`.
 

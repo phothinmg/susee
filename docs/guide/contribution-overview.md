@@ -1,4 +1,7 @@
-# Contribution Overview
+---
+layout: docs
+title: Contribution Overview
+---
 
 This section describes how to contribute to:
 

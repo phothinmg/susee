@@ -1,4 +1,7 @@
-# Contributing to Core Build Packages
+---
+layout: docs
+title: Contributing to Core Build Packages
+---
 
 This page is for contributions to core `@suseejs/*` build packages in the monorepo:
 

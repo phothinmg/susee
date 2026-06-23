@@ -1,4 +1,7 @@
-# Pull Request Checklist
+---
+layout: docs
+title: Pull Request Checklist
+---
 
 Use this checklist before opening a PR in either repository:
 

@@ -1,4 +1,7 @@
-# tsconfig.json and Custom tsconfig Path Integration
+---
+layout: docs
+title: tsconfig.json and Custom tsconfig Path Integration
+---
 
 This page explains how Susee uses TypeScript compiler settings and how to provide a custom `tsconfig` path for different build workflows.
 
@@ -36,8 +39,8 @@ Example:
     "module": "nodenext",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
-  }
+    "sourceMap": true,
+  },
 }
 ```
 

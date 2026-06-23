@@ -1,4 +1,8 @@
-# Programmatic API
+---
+layout: docs
+docs: references
+title: Programmatic API
+---
 
 This page documents how to use susee programmatically by importing and invoking the `build()` function in TypeScript or JavaScript code. This approach is suitable for integrating susee into build scripts, custom tooling, or automation workflows where command-line execution is not preferred.
 

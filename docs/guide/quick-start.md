@@ -1,4 +1,7 @@
-# Quick Start
+---
+layout: docs
+title: Quick Start
+---
 
 ## Prerequisites
 
@@ -9,77 +12,27 @@ Before you begin, make sure your project already has:
 
 Susee can be used as a CLI tool or from code through its API.
 
-## 1. Install susee
+## Install susee
 
 Install susee as a development dependency in your package:
 
-::: code-group
-
-```sh [npm]
+```sh
 npm i -D susee
 ```
 
-```sh [pnpm]
-pnpm add -D susee
-```
-
-```sh [yarn]
-yarn add -D susee
-```
-
-```sh [bun]
-bun add -D susee
-```
-
-:::
-
 Check that installation works:
 
-::: code-group
-
-```sh [npm]
+```sh
 npx susee --version
 ```
 
-```sh [pnpm]
-pnpm susee --version
-```
-
-```sh [yarn]
-yarn susee --version
-```
-
-```sh [bun]
-bun susee --version
-```
-
-:::
-
-## 2. Create a config file
+## Create a config file
 
 Generate a starter config in your project root:
 
-::: code-group
-
-```sh [npm]
+```sh
 npx susee init
 ```
-
-```sh [pnpm]
-pnpm susee init
-```
-
-```sh [yarn]
-yarn susee init
-```
-
-```sh [bun]
-bun susee init
-```
-
-:::
-
-<<< init.ansi
 
 Supported config filenames:
 
@@ -87,7 +40,7 @@ Supported config filenames:
 2. `susee.config.js`
 3. `susee.config.mjs`
 
-## 3. Define your package entries
+## Define your package entries
 
 Example `susee.config.ts`:
 
@@ -110,7 +63,7 @@ const config: SuSeeConfig = {
 export default config;
 ```
 
-## 4. Build with config
+## Build with config
 
 Run susee from your project root:
 
@@ -120,7 +73,7 @@ npx susee
 
 Susee reads your `susee.config.*`, builds each entry, and writes output to `dist` by default.
 
-## 5. Build directly from CLI (without config)
+## Build directly from CLI (without config)
 
 For quick one-off builds, use the direct build command:
 
@@ -136,7 +89,7 @@ Common options:
 - `--allow-update[=true|false]`
 - `--minify[=true|false]`
 
-## 6. Use the programmatic API
+## Use the programmatic API
 
 You can also run builds in scripts:
 
@@ -157,7 +110,7 @@ await build({
 });
 ```
 
-## 7. Verify output
+## Verify output
 
 After build, confirm:
 

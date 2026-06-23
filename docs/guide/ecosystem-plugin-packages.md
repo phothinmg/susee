@@ -1,4 +1,7 @@
-# Plugin Packages
+---
+layout: docs
+title: Plugin Packages
+---
 
 These `@suseejs/*` packages are ready-made plugins you can add to `entryPoints[].plugins` in Susee config.
 

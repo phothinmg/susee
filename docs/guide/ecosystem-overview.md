@@ -1,4 +1,7 @@
-# Ecosystem Overview
+---
+layout: docs
+title: Ecosystem Overview
+---
 
 The `@suseejs/*` ecosystem is split into focused packages so you can use only what your workflow needs.
 

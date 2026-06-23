@@ -1,4 +1,8 @@
-# Command Line Interface
+---
+layout: docs
+docs: references
+title: Command Line Interface
+---
 
 This document details the Command Line Interface (CLI) for susee, covering installation methods, execution patterns, and the internal architecture that enables command-line operation.
 

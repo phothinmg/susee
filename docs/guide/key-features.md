@@ -1,4 +1,7 @@
-# Key Features
+---
+layout: docs
+title: Key Features
+---
 
 This page explains the main capabilities of susee and why they matter for library package workflows. Each feature is designed to keep TypeScript package builds simple, predictable, and publish-ready.
 
