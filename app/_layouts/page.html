@@ -1,0 +1,16 @@
+---
+layout: default
+---
+
+{% if page.use_default == false %}
+  {{ content }} {% else %}
+  <main class="page_main">
+    <div class="page_content">
+      <article class="content_body">
+        <h1>{{ page.title }}</h1>
+        {{ content | shiki_code_block }}
+      </article>
+    </div>
+  </main>
+  {% include site_footer.html %}
+{% endif %}

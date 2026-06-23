@@ -1,0 +1,28 @@
+{% assign copyright_text = site.mmdocs.footer.copyright.owner | default: site.title %}
+<footer class="site_footer">
+  <div class="footer_meta">
+    {% if site.mmdocs.footer.copyright.link %}
+      <p>
+        © {{ site.time | date: '%Y' }}
+        <a
+          href="{{ site.mmdocs.footer.copyright.link }}"
+          target="_blank"
+          id="copyright-link">{{ copyright_text }}</a>
+      </p>
+    {% else %}
+      <p>© {{ site.time | date: '%Y' }} {{ copyright_text }}</p>
+    {% endif %}
+    <div class="footer_icons">
+      {% for social_link in site.mmdocs.footer.social_links %}
+        {% assign icon_class_parts = social_link.icon_class | split: "-" %}
+        <a
+          href="{{ social_link.href }}"
+          id="{{icon_class_parts[1]}}"
+          aria-label="{{icon_class_parts[1] |  capitalize}}"
+          target="_blank">
+          <i class="{{ social_link.icon_class }}" aria-hidden="true"></i>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</footer>

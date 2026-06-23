@@ -163,6 +163,13 @@ export type BuildOptions = {
 	outDir: string;
 };
 
+/**
+ * Generates normalized build options from the user config.
+ * It validates entry points, applies default values, removes duplicate formats,
+ * and resolves the output directory for each export path.
+ * @param {SuSeeConfig} config - raw susee configuration object.
+ * @returns {BuildOptions} normalized build options for the compiler.
+ */
 function generateBuildOptions(config: SuSeeConfig) {
 	const outDir = config.outDir ?? "dist";
 	const points: BuildEntryPoint[] = [];
@@ -197,6 +204,11 @@ function generateBuildOptions(config: SuSeeConfig) {
 	} as BuildOptions;
 }
 
+/**
+ * Loads the susee config file from the current working directory and converts it into build options.
+ * If no supported config file is found, it returns `undefined`.
+ * @returns {Promise<BuildOptions | undefined>} normalized build options or undefined when no config file exists.
+ */
 async function finalSuseeConfig(): Promise<BuildOptions | undefined> {
 	const configPath = getConfigPath();
 	if (configPath) {

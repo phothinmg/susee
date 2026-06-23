@@ -1,0 +1,64 @@
+---
+layout: default
+---
+
+{% assign docs_sections = site.mmdocs.docs | default: empty %}
+{% assign docs_section = nil %}
+{% assign docs_frontmatter_key = page.docs | default: page.doc | default: page.docs_dir | default: page.doc_dir %}
+{% assign page_url_parts = page.url | split: '/' %}
+{% assign page_url_dir = page_url_parts[1] %}
+
+{% for section in docs_sections %}
+  {% assign section_dir = section.dir | default: '' %}
+  {% assign section_label = section.label | default: '' %}
+  {% assign page_dir_name = page.dir | replace: '/', '' %}
+
+  {% if docs_frontmatter_key == section_dir or docs_frontmatter_key == section_label or page.label == section_label or page.dir == section_dir or page_dir_name == section_dir or page_url_dir == section_dir %}
+    {% assign docs_section = section %}
+    {% break %}
+  {% endif %}
+{% endfor %}
+
+{% assign docs_sidebar = docs_section.sidebar | default: site.mmdocs.sidebar %}
+{% assign docs_nav_label = docs_section.label | default: 'Documentation' %}
+
+  <main class="docs_main">
+  {% comment %} Docs Mobile Menu Bar {% endcomment %}
+  <div class="docs_mobile_menu">
+    <button type="button" id="sidebar-mobile-menu">
+      <i class="ri-menu-2-line"></i>
+      <span>Menu</span>
+    </button>
+  </div>
+  {% comment %} Sidebar Section {% endcomment %}
+  <aside class="sidebar" id="sidebar">
+    {% comment %} Sidebar Desktop {% endcomment %}
+    <nav aria-label="{{ docs_nav_label }}">
+      {% include docs/sidebar_panel.html sidebar=docs_sidebar %}
+    </nav>
+    {% comment %} Sidebar Mobile {% endcomment %}
+    <dialog id="sidebar-mobile-nav" aria-label="{{ docs_nav_label }} navigation">
+      {% include docs/sidebar_panel.html sidebar=docs_sidebar %}
+    </dialog>
+  </aside>
+  {% comment %} Docs Content Section {% endcomment %}
+  <div class="docs_content">
+    {% comment %} Markdown Content {% endcomment %}
+    <article class="content_body">
+      <h1>{{ page.title }}</h1>
+      {{ content | shiki_code_block }}
+    </article>
+  {% include docs/paginate.html sidebar=docs_sidebar %}
+    {% comment %} Docs Page Footer {% endcomment %}
+    {% include docs/docs_footer.html %}
+  </div>
+  {% comment %} TOC Section {% endcomment %}
+  {% if page.toc != false %}
+    <aside class="toc_aside" id="toc">
+      <div>
+        <p class="title">Table Of Content</p>
+        {% include docs/toc.html html=content toc=page.toc %}
+      </div>
+    </aside>
+  {% endif %}
+</main>

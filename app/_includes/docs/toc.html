@@ -1,0 +1,96 @@
+{% comment %} cspell:disable {% endcomment %}
+{% comment %} 
+                          Adapted from jekyll-toc.
+                          Source: https://github.com/allejo/jekyll-toc
+                          Copied and edited to match this site's TOC output.
+{% endcomment %}
+{% if include.toc != false %}
+  {% assign content_parts = include.html | split: "<h" %}
+
+  {% assign min = site.mmdocs.toc.min | default: 2 %}
+  {% if site.mmdocs.toc.min < 2 %}
+    {% assign min = 2 %}
+  {% endif %}
+  {% assign max = site.mmdocs.toc.max | default: 4 %}
+  {% if site.mmdocs.toc.max > 6 or site.mmdocs.toc.max < 2 %}
+    {% assign max = 4 %}
+  {% endif %}
+
+  {% capture mmdocs_toc %}{% endcapture %}
+  {% assign is_first = true %}
+  {% assign current = 0 %}
+  {% assign last = 0 %}
+
+  {% for part in content_parts %}
+
+    {% if part == "" %}
+      {% continue %}
+    {% endif %}
+
+    {% assign current = part | replace: '"', '' | slice: 0, 1 | times: 1 %}
+    {% if current < min or current > max %}
+      {% continue %}
+    {% endif %}
+
+
+    {% assign heading_and_rest = part | split: "</h" | first %}
+    {% assign heading_tag = heading_and_rest | split: ">" | first %}
+    {% assign heading_id_parts = heading_tag | split: 'id="' %}
+    {% assign heading_id_part = heading_id_parts[1] | split: '"' %}
+    {% assign heading_id = heading_id_part[0] %}
+
+    {% assign whole_heading_text = heading_and_rest | remove_first: heading_tag | remove_first: ">" %}
+    {% assign heading_text_parts = whole_heading_text | split: "<code" %}
+    {% capture heading_text_without_code_tags -%}
+      {%- for heading_text_part in heading_text_parts -%}
+        {%- if forloop.first -%}
+          {{- heading_text_part -}}
+        {%- else -%}
+          {%- assign heading_text_part_parts = heading_text_part | split: ">" -%}
+          {{- heading_text_part_parts | shift | join: ">" -}}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endcapture %}
+    {% assign heading_text = heading_text_without_code_tags | strip_html | strip %}
+
+
+    {% if is_first %}
+      {% assign min = current %}
+    {% endif %}
+
+    {% if heading_id %}
+      {% capture list_item %}<a href="#{{heading_id}}">{{ heading_text }}</a>{% endcapture %}
+    {% else %}
+      {% capture list_item %}{{ heading_text }}{% endcapture %}
+    {% endif %}
+
+    {% if current > last %}
+      {% capture mmdocs_toc %}{{  mmdocs_toc }}<ul>{% endcapture %}
+    {% elsif current < last %}
+      {% assign repeat = last | minus: current %}
+      {% for i in (1..repeat) %}
+        {% capture mmdocs_toc %}{{ mmdocs_toc }}</li></ul>{% endcapture %}
+      {% endfor %}
+      {% capture mmdocs_toc %}{{ mmdocs_toc }}</li>{% endcapture %}
+    {% else %}
+      {% capture mmdocs_toc %}{{ mmdocs_toc }}</li>{% endcapture %}
+    {% endif %}
+
+    {% capture mmdocs_toc %}{{ mmdocs_toc }}<li>{{ list_item }}{% endcapture %}
+    {% assign last = current %}
+    {% assign is_first = false %}
+  {% endfor %}
+
+  {% assign repeat = min | minus: 1 %}
+  {% assign repeat = last | minus: repeat %}
+
+  {% for i in (1..repeat) %}
+    {% capture mmdocs_toc %}{{ mmdocs_toc }}</li></ul>{% endcapture %}
+  {% endfor %}
+
+  {% if mmdocs_toc != '' %}
+    {% assign nodes = mmdocs_toc | split: '>' %}
+    {% capture mmdocs_toc %}<ul>{{ nodes | shift | join: '>' }}>{% endcapture %}
+  {% endif %}
+  {{ mmdocs_toc -}}
+{% endif %}

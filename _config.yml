@@ -1,0 +1,92 @@
+url: https://susee.js.org/
+# baseurl: /mmdevs-page
+# site
+title: Susee
+source: app
+markdown: kramdown
+kramdown:
+  syntax_highlighter: none
+sass:
+  style: compressed
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-pagefind
+  - jekyll-minify-js
+exclude:
+  - Makefile
+minify_js:
+  enabled: true # disable to skip minification
+  output_dir: js # destination directory under site dest
+  compress: true # enable compression
+  mangle: true # enable name mangling
+  source_map: true # produce .map files
+jekyll_pagefind:
+  quiet: true
+# mmdocs theme
+mmdocs:
+  toc:
+    min: 2
+    max: 4
+  remix_icon_version: 4.9.1
+  github_url: https://github.com/phothinmg/mmdevs.org
+  logo:
+    light: /images/logo-light.webp
+    dark: /images/logo-dark.webp
+  nav_items:
+    - text: Cli
+      link: /mmsd
+    - text: Terms
+      link: /terms
+  docs:
+    - dir: guide
+      label: Guide
+      link: /guide/quick-start
+      nav: true
+      sidebar:
+      - sidebar_label: Introduction
+        items:
+        - text: What is Susee?
+          link: /guide/what-is-susee
+        - text: Key Features
+          link: /guide/key-features
+        - text: Quick Start
+          link: /guide/quick-start
+      - sidebar_label: Documentation
+        items:
+        - text: Subdomains
+          link: /guide/subdomains
+        - text: Push to branch
+          link: /guide/push-to-branch
+        - text: Open pull request
+          link: /guide/open-pull-request
+        - text: Deployment
+          link: /guide/deployment
+    - dir: reference
+      label: Reference
+      link: /reference/overview
+      nav: true
+      sidebar:
+      - sidebar_label: Reference
+        items:
+        - text: Overview
+          link: /reference/overview
+        - text: DNS Targets
+          link: /reference/dns-targets
+  posts:
+    - dir: posts
+      label: Blog
+      link: /posts
+      nav: true
+  footer:
+    copyright:
+      owner: Pho Thin Maung
+      link: https://phothinmg.github.io/
+    social_links:
+      - icon_class: ri-github-fill
+        href: https://github.com/phothinmg/mmdevs.org
+      - icon_class: ri-twitter-x-line
+        href: ""
+      - icon_class: ri-instagram-line
+        href: ""

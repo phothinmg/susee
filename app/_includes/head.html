@@ -1,0 +1,118 @@
+<!-- cspell:disable -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="MMDEVS.ORG Documentation" />
+<script>
+  (function () {
+    var themeKey = "mmdocs_local_theme";
+    var root = document.documentElement;
+    var theme = "light";
+
+    try {
+      var storedTheme = localStorage.getItem(themeKey);
+      if (storedTheme === "dark" || storedTheme === "light") {
+        theme = storedTheme;
+      } else if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        theme = "dark";
+      }
+    } catch (e) {
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        theme = "dark";
+      }
+    }
+
+    root.setAttribute("data-mmdocs-theme", theme);
+    root.style.colorScheme = theme;
+  })();
+</script>
+<!-- CSS , Fonts and Icons -->
+<!-- https://remixicon.com/ -->
+<!-- https://github.com/Remix-Design/RemixIcon -->
+{% assign remix_icon_version = site.mmdocs.remix_icon_version | default: "4.9.0" %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@{{ remix_icon_version }}/fonts/remixicon.css" />
+<link
+  rel="preconnect"
+  href="https://fonts.gstatic.com"
+  crossorigin />
+<link
+  rel="preload"
+  href="{{ '/css/mmdocs.css' | relative_url }}"
+  as="style" />
+<link rel="stylesheet" href="{{ '/css/mmdocs.css' | relative_url }}" />
+<!-- Pagefind Builtin Component UI -->
+<!-- JS -->
+<script src="{{ '/pagefind/pagefind-component-ui.js' | relative_url }}" type="module"></script>
+<!-- CSS -->
+
+<link
+  rel="preload"
+  href="{{ '/pagefind/pagefind-component-ui.css' | relative_url }}"
+  as="style" />
+<link rel="stylesheet" href="{{ '/pagefind/pagefind-component-ui.css' | relative_url }}" />
+  <!-- Favicons -->
+<link
+  rel="icon"
+  type="image/png"
+  href="{{ '/favicon/android-chrome-512x512.png' | relative_url }}"
+  sizes="512x512" />
+<link
+  rel="icon"
+  type="image/png"
+  href="{{ '/favicon/android-chrome-192x192.png' | relative_url }}"
+  sizes="192x192" />
+<link rel="shortcut icon" href="{{ '/favicon/favicon.ico' | relative_url }}" />
+<link
+  rel="apple-touch-icon"
+  sizes="180x180"
+  href="{{ '/favicon/apple-touch-icon.png' | relative_url }}" />
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="{{ '/favicon/favicon-32x32.png' | relative_url }}" />
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="{{ '/favicon/favicon-16x16.png' | relative_url }}" />
+<link rel="manifest" href="{{ '/favicon/site.webmanifest' | relative_url }}" />
+<!-- MathJax -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"],
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"],
+      ],
+    },
+  };
+</script>
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  rel="preconnect"
+  href="https://fonts.gstatic.com"
+  crossorigin />
+
+{% if page.active_link %}
+  <link rel="canonical" href="{{  page.active_link }}">
+  <meta http-equiv="refresh" content="0; url={{  page.active_link }}">
+  <meta name="robots" content="noindex">
+  <script>
+      window.location.replace("{{  page.active_link }}");
+  </script>
+{% endif %}

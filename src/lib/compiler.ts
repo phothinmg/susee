@@ -5,10 +5,18 @@ import { getCompilerOptions } from "@suseejs/tsoptions";
 import { utils } from "@suseejs/utilities";
 import type { BuildEntryPoint, BuildOptions } from "./suseeConfig.js";
 
-// this is extend from @suseejs/compiler for JS API usages.
+/**
+ * Compiler for the JavaScript API.
+ * It bundles each configured entry point, emits CommonJS and ESM outputs,
+ * and optionally updates package export metadata.
+ */
 class Compiler {
 	private _files: files.OutFiles;
 	private _object: BuildOptions;
+	/**
+	 * Creates a compiler instance with normalized build options.
+	 * @param {BuildOptions} object - build options generated from the susee config.
+	 */
 	constructor(object: BuildOptions) {
 		this._object = object;
 		this._files = {
@@ -149,7 +157,12 @@ class Compiler {
 		if (compiled.dts) await files.writeFile(dtsFilePath, compiled.dts);
 		if (compiled.map) await files.writeFile(mapFilePath, compiled.map);
 	}
-	async compile() {
+	/**
+	 * Clears the output directory and compiles all configured entry points.
+	 * It also updates package.json export fields when package updates are enabled.
+	 * @returns {Promise<void>}
+	 */
+	async compile(): Promise<void> {
 		await files.clearFolder(this._object.outDir);
 		for (const point of this._object.buildEntryPoints) {
 			for (const format of point.format) {

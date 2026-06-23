@@ -50,6 +50,11 @@ function nav(): DefaultTheme.NavItem[] {
 			link: "/references/command-line-interface",
 			activeMatch: "/references/",
 		},
+		{
+			text: "API",
+			link: "/api/",
+			activeMatch: "/api/",
+		},
 	];
 }
 function sidebarGuide(): DefaultTheme.SidebarItem[] {

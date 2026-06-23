@@ -33,6 +33,7 @@
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
 		"v:major": "npm version major --no-git-tag-version",
+		"docs:init": "node scripts/init.mjs",
 		"docs:dev": "vitepress dev docs",
 		"docs:build": "vitepress build docs",
 		"docs:preview": "vitepress preview docs"
@@ -63,7 +64,7 @@
 		"url": "git+https://github.com/phothinmg/susee.git",
 		"type": "git"
 	},
-	"homepage": "https://github.com/phothinmg/susee#readme",
+	"homepage": "https://susee.js.org/",
 	"bugs": {
 		"url": "https://github.com/phothinmg/susee/issues"
 	},

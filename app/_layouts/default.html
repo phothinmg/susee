@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% include head.html %}
+    <title>
+      {% if page.title %}
+        {{ page.title }} |
+      {% endif %}
+      {{ site.title }}
+  </title>
+    <!-- Jekyll Plugin -->
+    {% feed_meta %}
+    {% seo %}
+  </head>
+  <body>
+    {% include nav_bar.html %}
+    {{ content }}
+    <script src="{{ '/js/mmdocs.js' | relative_url }}"></script>
+  </body>
+</html>
