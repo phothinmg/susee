@@ -1,7 +1,24 @@
 {
+	"redirects": [
+		{
+			"source": "/guid/:path*",
+			"destination": "/guide/:path*",
+			"permanent": true
+		},
+		{
+			"source": "/posts/:path*",
+			"destination": "/posts/:path*",
+			"permanent": true
+		},
+		{
+			"source": "/reference/:path*",
+			"destination": "/reference/:path*",
+			"permanent": true
+		}
+	],
 	"headers": [
 		{
-			"source": "/assets/(.*)",
+			"source": "/(css|js|images|pagefind|node|favicon)/:path*",
 			"headers": [
 				{
 					"key": "Cache-Control",
