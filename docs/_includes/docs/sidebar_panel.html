@@ -9,7 +9,7 @@
             <ul>
               {% for item in bar.items %}
                 <li>
-                  <a href="{{ item.link | relative_url }}" id="{{ item.text | downcase }}">
+                  <a href="{{ item.link | contents_url }}" id="{{ item.text | downcase }}">
                     <span>{{ item.text }}</span>
                   </a>
                 </li>

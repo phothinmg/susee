@@ -2,31 +2,6 @@
 
 require "jekyll"
 
-def mmdocs_collections(site)
-  mmdocs_config = site.config["mmdocs"]
-
-  mmdocs_sections = Array(mmdocs_config["docs"]) + Array(mmdocs_config["posts"])
-
-  return if mmdocs_sections.empty?
-
-  mmdocs_sections.each_with_object([]) do |section, mmdocs_dirs|
-    dir = section["dir"] || section[:dir]
-    mmdocs_dirs << { dir: dir }
-  end
-end
-
-def check_exists(collection, dir)
-  unless File.directory?(collection) # rubocop:disable Style/GuardClause
-    Jekyll.logger.info("", "-----------------------------------------------------------")
-    Jekyll.logger.error("", "\tTheme Error:")
-    Jekyll.logger.info("", "\tDirectory '#{dir}' dose not exists.")
-    Jekyll.logger.info("", "------------------------------------------------------------")
-    # Exit silently without printing the backtrace or error message
-    # Use 'exit!(1)'' instead of a standard 'exit 1'
-    exit!(1)
-  end
-end
-
 # Forces a dynamically created collection to read from a normal folder such as
 # `app/docs` instead of Jekyll's default `_collection_name` directory pattern.
 def define_custom_path_reader(site, collection, absolute_dir_path)
@@ -38,22 +13,19 @@ def define_custom_path_reader(site, collection, absolute_dir_path)
 end
 
 Jekyll::Hooks.register :site, :after_reset do |site|
-  docs_dirs = mmdocs_collections(site)
-  next if docs_dirs.nil? || docs_dirs.empty?
-
-  docs_dirs.each do |entry|
-    dir = entry["dir"] || entry[:dir]
+  docs_dirs = %w[contents]
+  docs_dirs.each do |dir|
     collection_name = File.join(site.source, dir)
-
-    check_exists(collection_name, dir)
     next if collection_name.start_with?("_")
 
     # Dynamically inject the collection config if not already defined
     next if site.config["collections"].key?(collection_name)
 
+    permalink = dir == "contents" ? "/:path/" : "/#{dir}/:path/"
+
     site.config["collections"][collection_name] = {
       "output" => true,
-      "permalink" => "/#{collection_name}/:path/"
+      "permalink" => permalink
     }
 
     # Instantiate and register the Collection object

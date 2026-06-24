@@ -1,6 +1,6 @@
 ---
 layout: docs
-docs: references
+label: references
 title: Command Line Interface
 ---
 

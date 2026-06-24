@@ -1,5 +1,6 @@
 ---
 layout: docs
+label: guide
 title: tsconfig.json and Custom tsconfig Path Integration
 ---
 

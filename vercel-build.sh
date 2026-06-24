@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Check if there are changes in the specific app directories or config files
-git diff HEAD^ HEAD --quiet -- docs/ _config.yml Gemfile
+# Check if there are changes in (docs/*|_config.yml|Gemfile|vercel.json)
+git diff HEAD^ HEAD --quiet -- docs/ _config.yml Gemfile vercel.json
 
 if [ $? -eq 0 ]; then
-  echo "🛑 No relevant files changed. Skipping build."
+  echo "🛑 No relevant docs files changed. Skipping build."
   exit 0
 else
-  echo "✅ Important files changed. Proceeding with build."
+  echo "✅ Docs files changed. Proceeding with build."
   exit 1
 fi

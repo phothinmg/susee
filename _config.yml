@@ -34,8 +34,7 @@ mmdocs:
     light: /images/logo-light.webp
     dark: /images/logo-dark.webp
   docs:
-    - dir: guide
-      label: Guide
+    - label: Guide
       link: /guide/quick-start
       nav: true
       sidebar:
@@ -81,8 +80,7 @@ mmdocs:
               link: /guide/contribution-core-build-packages
             - text: Pull Request Checklist
               link: /guide/contribution-pr-checklist
-    - dir: references
-      label: References
+    - label: References
       link: /references/command-line-interface
       nav: true
       sidebar:

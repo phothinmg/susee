@@ -1,5 +1,6 @@
 ---
 layout: docs
+label: guide
 title: Contributing to Susee
 ---
 

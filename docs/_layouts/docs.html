@@ -1,25 +1,21 @@
 ---
 layout: default
 ---
-
+{% comment %} cspell:disable {% endcomment %}
 {% assign docs_sections = site.mmdocs.docs | default: empty %}
 {% assign docs_section = nil %}
-{% assign docs_frontmatter_key = page.docs | default: page.doc | default: page.docs_dir | default: page.doc_dir %}
 {% assign page_url_parts = page.url | split: '/' %}
 {% assign page_url_dir = page_url_parts[1] %}
 
 {% for section in docs_sections %}
-  {% assign section_dir = section.dir | default: '' %}
-  {% assign section_label = section.label | default: '' %}
-  {% assign page_dir_name = page.dir | replace: '/', '' %}
-
-  {% if docs_frontmatter_key == section_dir or docs_frontmatter_key == section_label or page.label == section_label or page.dir == section_dir or page_dir_name == section_dir or page_url_dir == section_dir %}
+  {% assign section_label = section.label | downcase | default: '' %}
+  {% if page.label == section_label %}
     {% assign docs_section = section %}
     {% break %}
   {% endif %}
 {% endfor %}
 
-{% assign docs_sidebar = docs_section.sidebar | default: site.mmdocs.sidebar %}
+{% assign docs_sidebar = docs_section.sidebar | default: empty %}
 {% assign docs_nav_label = docs_section.label | default: 'Documentation' %}
 
   <main class="docs_main">
