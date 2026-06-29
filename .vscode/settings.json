@@ -24,5 +24,6 @@
 		"useBundler": true,
 		"lintOnSave": true,
 		"config": ".rubocop.yml"
-	}
+	},
+	"cSpell.words": ["Moji"]
 }

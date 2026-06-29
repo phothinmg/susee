@@ -1,4 +1,5 @@
 {% assign copyright_text = site.mmdocs.footer.copyright.owner | default: site.title %}
+{% assign footer_type = include.footer_type %}
 <footer class="site_footer">
   <div class="footer_meta">
     {% if site.mmdocs.footer.copyright.link %}
@@ -14,13 +15,17 @@
     {% endif %}
     <div class="footer_icons">
       {% for social_link in site.mmdocs.footer.social_links %}
-        {% assign icon_class_parts = social_link.icon_class | split: "-" %}
+        {% assign icon_name = social_link.icon %}
         <a
           href="{{ social_link.href }}"
-          id="{{icon_class_parts[1]}}"
-          aria-label="{{icon_class_parts[1] |  capitalize}}"
+          id="{{ icon_name }}"
+          aria-label="{{icon_name |  capitalize}}"
           target="_blank">
-          <i class="{{ social_link.icon_class }}" aria-hidden="true"></i>
+          {% if footer_type == "site" %}
+            {% tabler icon_name size=22 %}
+          {% else %}
+            {% tabler icon_name size=20 %}
+          {% endif %}
         </a>
       {% endfor %}
     </div>

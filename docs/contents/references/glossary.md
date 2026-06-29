@@ -1,4 +1,8 @@
-# Glossary
+---
+layout: docs
+label: references
+title: Glossary
+---
 
 This glossary defines the technical terms, internal concepts, and domain-specific jargon used within the `susee` codebase. It serves as a reference for onboarding engineers to understand the relationship between high-level bundling concepts and their specific implementations in the code.
 

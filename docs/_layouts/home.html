@@ -2,6 +2,7 @@
 layout: default
 ---
 
+{% assign footer = "site" %}
 {% if page.use_default == false %}
   {{ content }} {% else %}
   <main class="home">
@@ -29,15 +30,15 @@ layout: default
         {% endif %}
       {% endif %}
       <h1>{{ site.title }}</h1>
-      {% if page.tag_line %}
-        <p>{{ page.tag_line }}</p>
+      {% if page.tagLine %}
+        <p>{{ page.tagLine }}</p>
       {% endif %}
     </section>
     {% if page.actions %}
       <section class="actions" aria-label="Primary actions">
         <div>
           {% for action in page.actions %}
-            <a class="{% if action.theme %}{{ action.theme }}{% endif %}" href="{{ action.link | relative_url }}">
+            <a class="{% if action.theme %}{{ action.theme }}{% endif %}" href="{{ action.link | contents_url }}">
               {{ action.text }}
             </a>
           {% endfor %}
@@ -48,10 +49,13 @@ layout: default
       <section class="features" aria-labelledby="features-title">
         <div class="features_grid">
           {% for feature in page.features %}
-            {% assign icon_class =  feature.icon_class | default: "ri-verified-badge-line" %}
             <article class="feature_card">
-              <div class="feature_icon" aria-hidden="true">
-                <i class="{{ icon_class }}"></i>
+              <div class="feature_icon">
+                {% if feature.tabler_icon %}
+                  {% tabler feature.tabler_icon size=32 %}
+                {% else %}
+                  {% tabler ti-award size=32 %}
+                {% endif %}
               </div>
               <h3>{{ feature.title }}</h3>
               <p>{{ feature.details }}</p>
@@ -61,5 +65,5 @@ layout: default
       </section>
     {% endif %}
   </main>
-  {% include site_footer.html %}
+  {% include footer.html footer_type=footer %}
 {% endif %}

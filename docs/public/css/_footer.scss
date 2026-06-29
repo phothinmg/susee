@@ -1,0 +1,91 @@
+.site_footer {
+  padding: 0 1.25rem 1.5rem;
+  background: linear-gradient(180deg, var(--color-bg-3), var(--color-bg-1));
+  transition: background 0.35s ease;
+  border-top: 1px solid var(--color-border-2);
+  bottom: 0;
+  margin-top: auto;
+  width: 100%;
+
+  .footer_meta {
+    width: min(100%, var(--width-max));
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 0 0;
+
+    p {
+      margin: 0;
+      color: var(--color-text-2);
+      display: flex;
+      justify-content: center;
+      align-content: center;
+      gap: 10px;
+
+      a {
+        color: var(--color-text-1);
+        font-size: clamp(0.85rem, 0.7897rem + 0.2804vw, 1rem);
+        font-weight: 500;
+        font-style: italic;
+        text-decoration: none;
+        &:hover {
+          color: var(--color-indigo-2);
+        }
+      }
+    } // p
+    .footer_icons {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      column-gap: 9px;
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+
+        /* Box boundaries scale automatically based on the SVG child sizing */
+        border: 1px solid var(--color-border-2);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-bg-soft) 92%, transparent);
+
+        /* Uniform padding keeps the circular shape perfect at any SVG scale */
+        padding: 0.36rem;
+
+        transition:
+          border-color 0.4s,
+          background-color 0.4s,
+          transform 0.4s;
+
+        svg.jekyll-tabler-icon {
+          display: block; /* Eliminates baseline inline spacing bugs */
+          width: auto; /* Lets the HTML width attribute dictate scale */
+          height: auto; /* Lets the HTML height attribute dictate scale */
+          color: var(--color-text-2);
+          transition: color 0.4s;
+        }
+
+        &:hover {
+          text-decoration: none;
+          border-color: var(--color-indigo-2);
+          transform: translateY(-1px);
+
+          svg.jekyll-tabler-icon {
+            color: var(--color-indigo-2);
+          }
+        }
+      }
+    } // footer_icons
+
+    @media screen and (min-width: 1280px) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  } // footer_meta
+}

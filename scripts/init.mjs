@@ -8,12 +8,16 @@ async function init() {
 	const gemfileLock = path.resolve(root, "Gemfile.lock");
 	const bundleDir = path.resolve(root, ".bundle");
 	const vendorDir = path.resolve(root, "vendor");
+	const outDir = path.resolve(root, "_site");
+	const cacheDir = path.resolve(root, "docs/.jekyll-cache");
 	// Safely delete files and folders (replaces 'rm -rf')
 	// force: true ignores missing files, recursive: true handles folders
 	console.log("Cleaning old lock files and directories...");
 	await fs.promises.rm(gemfileLock, { force: true });
 	await fs.promises.rm(bundleDir, { recursive: true, force: true });
 	await fs.promises.rm(vendorDir, { recursive: true, force: true });
+	await fs.promises.rm(outDir, { recursive: true, force: true });
+	await fs.promises.rm(cacheDir, { recursive: true, force: true });
 
 	await sleep(1000);
 

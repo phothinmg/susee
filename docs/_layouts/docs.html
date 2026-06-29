@@ -6,6 +6,7 @@ layout: default
 {% assign docs_section = nil %}
 {% assign page_url_parts = page.url | split: '/' %}
 {% assign page_url_dir = page_url_parts[1] %}
+{% assign footer = "docs" %}
 
 {% for section in docs_sections %}
   {% assign section_label = section.label | downcase | default: '' %}
@@ -46,7 +47,7 @@ layout: default
     </article>
   {% include docs/paginate.html sidebar=docs_sidebar %}
     {% comment %} Docs Page Footer {% endcomment %}
-    {% include docs/docs_footer.html %}
+    {% include footer.html footer_type=footer %}
   </div>
   {% comment %} TOC Section {% endcomment %}
   {% if page.toc != false %}

@@ -1,3 +1,11 @@
+PATH
+  remote: ../../JEKYLL/jekyll-tabler
+  specs:
+    jekyll-tabler (0.1.1)
+      fileutils (>= 1.8)
+      jekyll (~> 4.4)
+      yaml (>= 0.4.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -192,6 +200,7 @@ GEM
       execjs (>= 0.3.0, < 3)
     unicode-display_width (2.6.0)
     webrick (1.9.2)
+    yaml (0.4.0)
 
 PLATFORMS
   aarch64-linux-gnu
@@ -212,6 +221,7 @@ DEPENDENCIES
   jekyll-pagefind
   jekyll-seo-tag
   jekyll-sitemap
+  jekyll-tabler!
   nokogiri
   pp
   rubocop (~> 1.81)
@@ -261,6 +271,7 @@ CHECKSUMS
   jekyll-sass-converter (3.1.0) sha256=83925d84f1d134410c11d0c6643b0093e82e3a3cf127e90757a85294a3862443
   jekyll-seo-tag (2.9.0) sha256=0260015a8e1df9bf195cdfb0c675b7b2883fd8cbf12556e1c1cbe36a831c6852
   jekyll-sitemap (1.4.0) sha256=0de08c5debc185ea5a8f980e1025c7cd3f8e0c35c8b6ef592f15c46235cf4218
+  jekyll-tabler (0.1.1)
   jekyll-watch (2.2.1) sha256=bc44ed43f5e0a552836245a54dbff3ea7421ecc2856707e8a1ee203a8387a7e1
   json (2.20.0) sha256=9362bc6e55a952b056abf9167cf053358181c904cb70cd6eee0808ea830fc32b
   kramdown (2.5.2) sha256=1ba542204c66b6f9111ff00dcc26075b95b220b07f2905d8261740c82f7f02fa
@@ -312,6 +323,7 @@ CHECKSUMS
   terser (1.2.7) sha256=1b12eb49769dadac44caac3485b38928ff4ab435f1bbbacfe8048cff84c6aa1b
   unicode-display_width (2.6.0) sha256=12279874bba6d5e4d2728cef814b19197dbb10d7a7837a869bab65da943b7f5a
   webrick (1.9.2) sha256=beb4a15fc474defed24a3bda4ffd88a490d517c9e4e6118c3edce59e45864131
+  yaml (0.4.0) sha256=240e69d1e6ce3584d6085978719a0faa6218ae426e034d8f9b02fb54d3471942
 
 BUNDLED WITH
   4.0.11

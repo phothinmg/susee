@@ -4,7 +4,7 @@ title: susee
 source: docs
 markdown: kramdown
 kramdown:
-  syntax_highlighter: none
+  syntax_highlighter: shiki
 sass:
   style: compressed
 plugins:
@@ -17,6 +17,7 @@ exclude:
   - Makefile
 minify_js:
   enabled: true # disable to skip minification
+  entry_dir: public/js
   output_dir: js # destination directory under site dest
   compress: true # enable compression
   mangle: true # enable name mangling
@@ -90,10 +91,14 @@ mmdocs:
               link: /references/command-line-interface
             - text: Programmatic API
               link: /references/programmatic-api
+            - text: Glossary
+              link: /references/glossary
   footer:
     copyright:
-      owner: Pho Thin Maung
-      link: https://phothinmg.github.io/
+      owner: Susee
+      link: https://susee.js.org/
     social_links:
-      - icon_class: ri-github-fill
+      - icon: ti-brand-github
         href: https://github.com/phothinmg/mmdevs.org
+      - icon: ti-mail
+        href: mailto:phothinmg@disroot.org

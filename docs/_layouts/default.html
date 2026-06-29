@@ -1,13 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    {% include head.html %}
-    <title>
-      {% if page.title %}
-        {{ page.title }} |
-      {% endif %}
-      {{ site.title }}
-  </title>
+  {% include head.html %}
     <!-- Jekyll Plugin -->
     {% feed_meta %}
     {% seo %}
@@ -15,6 +9,6 @@
   <body>
     {% include nav_bar.html %}
     {{ content }}
-    <script src="{{ '/js/mmdocs.js' | relative_url }}"></script>
+    <script src="{{ '/js/mmdocs.js' | asset_url }}"></script>
   </body>
 </html>

@@ -27,24 +27,24 @@
     {% if prev_page %}
       <div class="paginate_card prev">
         <p>Previous page</p>
-        <a href="{{ prev_page.link | relative_url }}">{{ prev_page.text }}</a>
+        <a href="{{ prev_page.link | contents_url }}">{{ prev_page.text }}</a>
       </div>
       <a
-        href="{{ prev_page.link | relative_url }}"
+        href="{{ prev_page.link | contents_url }}"
         class="paginate_card_mobile"
         title="{{ prev_page.text }}">
-        <i class="ri-arrow-left-s-line"></i>
+        {% tabler ti-chevron-left %}
         prev
       </a>
     {% endif %}
     {% if next_page %}
       <div class="paginate_card next">
         <p>Next page</p>
-        <a href="{{ next_page.link | relative_url }}">{{ next_page.text }}</a>
+        <a href="{{ next_page.link | contents_url }}">{{ next_page.text }}</a>
       </div>
-      <a href="{{ next_page.link | relative_url }}" class="paginate_card_mobile">
+      <a href="{{ next_page.link | contents_url }}" class="paginate_card_mobile">
         next
-        <i class="ri-arrow-right-s-line"></i>
+        {% tabler ti-chevron-right %}
       </a>
     {% endif %}
   </nav>

@@ -2,41 +2,19 @@
   <nav>
     <a href="{{'/'|relative_url}}" class="nav_logo">{{ site.title }}</a>
     <div class="nav_menu" id="nav-menu">
-      {% assign nav_links = '' | split: '' %}
-      {% assign docs_sections = site.mmdocs.docs | default: empty %}
-      {% assign posts_sections = site.mmdocs.posts | default: empty %}
-
+      {% assign nav_links = '' | split: '' %} {% assign docs_sections = site.mmdocs.docs | default: empty %} {% assign posts_sections = site.mmdocs.posts | default: empty %}
       {% for section in docs_sections %}
         {% if section.nav == true %}
           {% assign nav_links = nav_links | push: section %}
         {% endif %}
       {% endfor %}
-
       {% for section in posts_sections %}
-        {% if section.nav == true %}
-          {% assign nav_links = nav_links | push: section %}
+        {%
+          if section.nav == true %}
+          {% assign nav_links = nav_links | push: section
+          %}
         {% endif %}
       {% endfor %}
-
-      {% comment %} {% assign page_links = '' | split: '' %}
-
-                      {% for item in site.mmdocs.nav_items %}
-                        {% assign item_link = item.link | default: '' %}
-                        {% assign item_text = item.text | default: '' %}
-                        {% assign duplicate_doc_link = false %}
-
-                        {% for section in nav_links %}
-                          {% if section.link == item_link or section.label == item_text %}
-                            {% assign duplicate_doc_link = true %}
-                            {% break %}
-                          {% endif %}
-                        {% endfor %} 
-
-                        {% unless duplicate_doc_link %}
-                          {% assign page_links = page_links | push: item %}
-                        {% endunless %}
-                  {% endfor %} {% endcomment %}
-
       {% if nav_links.size > 0 or site.mmdocs.nav_items.size > 0 %}
         <ul class="nav_list">
           {% if site.mmdocs.nav_items.size > 0 %}
@@ -45,7 +23,7 @@
               <ul class="drop-content">
                 {% for item in site.mmdocs.nav_items %}
                   <li>
-                    <a href="{{ item.link|relative_url }}">{{ item.text }}</a>
+                    <a href="{{ item.link | contents_url }}">{{ item.text }}</a>
                   </li>
                 {% endfor %}
               </ul>
@@ -55,7 +33,7 @@
             {% for item in nav_links %}
               <li class="nav_item">
                 <a
-                  href="{{item.link|relative_url}}"
+                  href="{{ item.link | contents_url }}"
                   class="nav_link"
                   id="{{ item.text | default: item.label | downcase }}">{{ item.text | default: item.label }}</a>
               </li>
@@ -71,7 +49,8 @@
           type="button"
           aria-label="Switch to dark mode"
           title="Switch to dark mode">
-          <i class="ri-moon-line"></i>
+          {% tabler ti-sun %}
+          {% tabler ti-moon %}
           <span>Dark mode</span>
         </button>
       </div>
@@ -81,7 +60,7 @@
         id="nav-close"
         type="button"
         aria-label="Close menu">
-        <i class="ri-close-line"></i>
+        {% tabler ti-x %}
       </button>
     </div>
     <div class="nav_actions">
@@ -93,7 +72,8 @@
         type="button"
         aria-label="Switch to dark mode"
         title="Switch to dark mode">
-        <i class="ri-moon-line"></i>
+        {% tabler ti-sun %}
+        {% tabler ti-moon %}
       </button>
 
       <!-- Search button -->
@@ -102,7 +82,7 @@
         id="search-btn"
         type="button"
         aria-label="Open search">
-        <i class="ri-search-line"></i>
+        {% tabler ti-search %}
       </button>
 
       <button
@@ -110,7 +90,7 @@
         id="nav-toggle"
         type="button"
         aria-label="Open menu">
-        <i class="ri-menu-3-line"></i>
+        {% tabler ti-menu-2 %}
       </button>
     </div>
   </nav>
@@ -125,6 +105,6 @@
     id="search-close"
     type="button"
     aria-label="Close search">
-    <i class="ri-close-line"></i>
+    {% tabler ti-x %}
   </button>
 </div>
