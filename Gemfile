@@ -11,7 +11,7 @@ group :jekyll_plugins do
   gem "jekyll-pagefind"
   gem "jekyll-seo-tag"
   gem "jekyll-sitemap"
-  gem "jekyll-tabler", path: "../../JEKYLL/jekyll-tabler"
+  gem "jekyll-tabler"
 end
 group :development do
   gem "rubocop", "~> 1.81"
