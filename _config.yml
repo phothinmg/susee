@@ -19,9 +19,10 @@ minify_js:
   enabled: true # disable to skip minification
   entry_dir: public/js
   output_dir: js # destination directory under site dest
-  compress: true # enable compression
-  mangle: true # enable name mangling
-  source_map: true # produce .map files
+  terser_opts:
+    compress: true # enable compression
+    mangle: true # enable name mangling
+    source_map: true # produce .map files
 jekyll_pagefind:
   quiet: true
 # mmdocs theme

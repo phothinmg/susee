@@ -13,6 +13,21 @@
     {% else %}
       <p>© {{ site.time | date: '%Y' }} {{ copyright_text }}</p>
     {% endif %}
+    {% if footer_type == "site" %}
+       <p>
+      Power By
+      <a
+        href="https://jekyllrb.com/"
+        target="_blank"
+        rel="noopener noreferrer">Jekyll</a>
+      and  
+      host on
+      <a
+        href="https://vercel.com/"
+        target="_blank"
+        rel="noopener noreferrer">Vercel</a>
+    </p>
+    {% endif %}
     <div class="footer_icons">
       {% for social_link in site.mmdocs.footer.social_links %}
         {% assign icon_name = social_link.icon %}
