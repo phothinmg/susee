@@ -1,6 +1,6 @@
 {% assign copyright_text = site.mmdocs.footer.copyright.owner | default: site.title %}
 {% assign footer_type = include.footer_type %}
-<footer class="site_footer">
+<footer class="site_footer" role="contentinfo">
   <div class="footer_meta">
     {% if site.mmdocs.footer.copyright.link %}
       <p>
@@ -14,19 +14,19 @@
       <p>© {{ site.time | date: '%Y' }} {{ copyright_text }}</p>
     {% endif %}
     {% if footer_type == "site" %}
-       <p>
-      Power By
-      <a
-        href="https://jekyllrb.com/"
-        target="_blank"
-        rel="noopener noreferrer">Jekyll</a>
-      and  
+      <p>
+        Power By
+        <a
+          href="https://jekyllrb.com/"
+          target="_blank"
+          rel="noopener noreferrer">Jekyll</a>
+        and   
       host on
-      <a
-        href="https://vercel.com/"
-        target="_blank"
-        rel="noopener noreferrer">Vercel</a>
-    </p>
+        <a
+          href="https://vercel.com/"
+          target="_blank"
+          rel="noopener noreferrer">Vercel</a>
+      </p>
     {% endif %}
     <div class="footer_icons">
       {% for social_link in site.mmdocs.footer.social_links %}

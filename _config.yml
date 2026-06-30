@@ -27,11 +27,11 @@ jekyll_pagefind:
   quiet: true
 # mmdocs theme
 mmdocs:
-  toc:
-    min: 2
-    max: 4
-  remix_icon_version: 4.9.1
-  github_url: https://github.com/phothinmg/mmdevs.org
+  description: TypeScript-first bundler for library packages
+  keywords:
+    - bundler
+    - library
+    - typescript
   logo:
     light: /images/logo-light.webp
     dark: /images/logo-dark.webp

@@ -1,5 +1,5 @@
-<header class="header">
-  <nav>
+<header class="header" role="banner">
+  <nav role="navigation">
     <a href="{{'/'|relative_url}}" class="nav_logo">{{ site.title }}</a>
     <div class="nav_menu" id="nav-menu">
       {% assign nav_links = '' | split: '' %} {% assign docs_sections = site.mmdocs.docs | default: empty %} {% assign posts_sections = site.mmdocs.posts | default: empty %}
@@ -96,8 +96,14 @@
   </nav>
 </header>
 <!-- ==================== SEARCH ==================== -->
-<div class="search" id="search">
-  <div id="pf-search" class="search_form">
+<div
+  class="search"
+  id="search"
+  role="search">
+  <div
+    id="pf-search"
+    class="search_form"
+    role="searchbox">
     <pagefind-searchbox></pagefind-searchbox>
   </div>
   <button

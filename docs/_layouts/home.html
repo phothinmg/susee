@@ -5,7 +5,7 @@ layout: default
 {% assign footer = "site" %}
 {% if page.use_default == false %}
   {{ content }} {% else %}
-  <main class="home">
+  <main class="home" role="main">
     <section class="hero">
       {% if site.mmdocs.logo and site.mmdocs.logo.size > 0 %}
         {% if site.mmdocs.logo.light %}
@@ -15,8 +15,7 @@ layout: default
             height="100"
             width="100"
             class="logo_light"
-            fetchpriority="high"
-            aria-hidden="true" />
+            fetchpriority="high" />
         {% endif %}
         {% if site.mmdocs.logo.dark %}
           <img
@@ -25,8 +24,7 @@ layout: default
             height="100"
             width="100"
             class="logo_dark"
-            fetchpriority="high"
-            aria-hidden="true" />
+            fetchpriority="high" />
         {% endif %}
       {% endif %}
       <h1>{{ site.title }}</h1>
