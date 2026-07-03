@@ -403,7 +403,7 @@ function codeBlockCopy() {
   }
 
   codeBlocks.forEach((block) => {
-    const copyBtn = block.querySelector("[data-copy-btn]");
+    const copyBtn = block.querySelector("[data-shiki-copy-btn]");
     const code = block.querySelector("pre code");
     if (!copyBtn || !code) return;
 
@@ -420,16 +420,11 @@ function codeBlockCopy() {
     });
   });
 }
-
-(() => {
-  if (typeof window !== undefined) {
-    themeToggle();
-    searchToggle();
-    deskMenuToggle();
-    mobileMenuToggle();
-    sidebarDeskToggle();
-    sidebarMobileToggle();
-    tocToggle();
-    codeBlockCopy();
-  }
-})();
+themeToggle();
+searchToggle();
+deskMenuToggle();
+mobileMenuToggle();
+sidebarDeskToggle();
+sidebarMobileToggle();
+tocToggle();
+codeBlockCopy();

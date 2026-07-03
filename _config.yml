@@ -12,21 +12,24 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
   - jekyll-pagefind
-  - jekyll-minify-js
 exclude:
   - Makefile
-minify_js:
-  enabled: true # disable to skip minification
-  entry_dir: public/js
-  output_dir: js # destination directory under site dest
-  terser_opts:
-    compress: true # enable compression
-    mangle: true # enable name mangling
-    source_map: true # produce .map files
-jekyll_pagefind:
-  quiet: true
+# minify_js:
+#   enabled: true # disable to skip minification
+#   entry_dir: public/js
+#   output_dir: js # destination directory under site dest
+#   terser_opts:
+#     compress: true # enable compression
+#     mangle: true # enable name mangling
+#     source_map: true # produce .map files
+# jekyll_pagefind:
+#   quiet: true
 # mmdocs theme
 mmdocs:
+  minify:
+    enabled: true
+    entry_dir: public/js
+    output_dir: js
   description: TypeScript-first bundler for library packages
   keywords:
     - bundler

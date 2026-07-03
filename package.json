@@ -33,7 +33,8 @@
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
 		"v:major": "npm version major --no-git-tag-version",
-		"docs:init": "node scripts/init.mjs"
+		"docs:init": "node scripts/init.mjs",
+		"docs:copy": "node scripts/copy.mjs"
 	},
 	"keywords": [
 		"bundler",
