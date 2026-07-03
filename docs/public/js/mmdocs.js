@@ -403,7 +403,7 @@ function codeBlockCopy() {
   }
 
   codeBlocks.forEach((block) => {
-    const copyBtn = block.querySelector("[data-shiki-copy-btn]");
+    const copyBtn = block.querySelector("[data-copy-btn]");
     const code = block.querySelector("pre code");
     if (!copyBtn || !code) return;
 

@@ -69,6 +69,9 @@ GEM
       webrick (~> 1.7)
     jekyll-feed (0.17.0)
       jekyll (>= 3.7, < 5.0)
+    jekyll-minify-js (0.2.14)
+      jekyll (~> 4.4)
+      terser (>= 1.2.7)
     jekyll-pagefind (0.3.3)
       jekyll (~> 4.4)
       open3 (~> 0.2.1)
@@ -188,6 +191,8 @@ GEM
       google-protobuf (~> 4.31)
     terminal-table (3.0.2)
       unicode-display_width (>= 1.1.1, < 3)
+    terser (1.2.7)
+      execjs (>= 0.3.0, < 3)
     unicode-display_width (2.6.0)
     webrick (1.9.2)
     yaml (0.4.0)
@@ -205,9 +210,9 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  execjs
   jekyll
   jekyll-feed
+  jekyll-minify-js
   jekyll-pagefind
   jekyll-seo-tag
   jekyll-sitemap
@@ -250,6 +255,7 @@ CHECKSUMS
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
   jekyll (4.4.1) sha256=4c1144d857a5b2b80d45b8cf5138289579a9f8136aadfa6dd684b31fe2bc18c1
   jekyll-feed (0.17.0) sha256=689aab16c877949bb9e7a5c436de6278318a51ecb974792232fd94d8b3acfcc3
+  jekyll-minify-js (0.2.14) sha256=fe7544fb6efe0d319cc11d0094d5828a8cfc84f235b710cc63f41365e4f9b0d1
   jekyll-pagefind (0.3.3) sha256=6cf2b41e29d891eef7b1c388a2436a4d3d30b744f00324b1b86de5c8176615af
   jekyll-pagefind (0.3.3-aarch64-linux-gnu) sha256=dd866488956fc8a4908fad6e3e0c2e8155d487a753ffcfc7fcdebaf263e32994
   jekyll-pagefind (0.3.3-aarch64-linux-musl) sha256=e350bac895241b179bace0aa5543cf7a2e72a0b2c677c861d96edd3712d2301d
@@ -309,6 +315,7 @@ CHECKSUMS
   sass-embedded (1.101.0-x86_64-linux-gnu) sha256=ff48452b2351eaaf4e6e02f59de0e9e35f6f163e8456d520db49b4d87cf73c27
   sass-embedded (1.101.0-x86_64-linux-musl) sha256=2286feef3c7a8d9bbb075aa1651e1a81942aca1213f7c2d30cc1d6f4eb5b4104
   terminal-table (3.0.2) sha256=f951b6af5f3e00203fb290a669e0a85c5dd5b051b3b023392ccfd67ba5abae91
+  terser (1.2.7) sha256=1b12eb49769dadac44caac3485b38928ff4ab435f1bbbacfe8048cff84c6aa1b
   unicode-display_width (2.6.0) sha256=12279874bba6d5e4d2728cef814b19197dbb10d7a7837a869bab65da943b7f5a
   webrick (1.9.2) sha256=beb4a15fc474defed24a3bda4ffd88a490d517c9e4e6118c3edce59e45864131
   yaml (0.4.0) sha256=240e69d1e6ce3584d6085978719a0faa6218ae426e034d8f9b02fb54d3471942
