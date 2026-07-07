@@ -49,66 +49,18 @@ A typical Susee build flow:
 
 Install a core package:
 
-::: code-group
-
-```sh [npm]
+```sh
 npm i @suseejs/bundler
 ```
 
-```sh [pnpm]
-pnpm add @suseejs/bundler
-```
-
-```sh [yarn]
-yarn add @suseejs/bundler
-```
-
-```sh [bun]
-bun add @suseejs/bundler
-```
-
-:::
-
 Install plugin packages:
 
-::: code-group
-
-```sh [npm]
+```sh
 npm i @suseejs/banner-text-plugin @suseejs/terser-plugin
 ```
 
-```sh [pnpm]
-pnpm add @suseejs/banner-text-plugin @suseejs/terser-plugin
-```
-
-```sh [yarn]
-yarn add @suseejs/banner-text-plugin @suseejs/terser-plugin
-```
-
-```sh [bun]
-bun add @suseejs/banner-text-plugin @suseejs/terser-plugin
-```
-
-:::
-
 Install foundation packages:
 
-::: code-group
-
-```sh [npm]
+```sh
 npm i @suseejs/type @suseejs/utilities @suseejs/color
 ```
-
-```sh [pnpm]
-pnpm add @suseejs/type @suseejs/utilities @suseejs/color
-```
-
-```sh [yarn]
-yarn add @suseejs/type @suseejs/utilities @suseejs/color
-```
-
-```sh [bun]
-bun add @suseejs/type @suseejs/utilities @suseejs/color
-```
-
-:::

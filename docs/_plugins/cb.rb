@@ -38,7 +38,7 @@ def create_wrapper(lan, code, site)
   lang = lan.capitalize
   highlighted_code = shiki_highlight(code, lan, site)
   <<~HTML
-    <div class="shiki_code" data-highlighter>
+    <div class="shiki_code" data-shiki-highlighter>
       <div class="code_head">
         <span>#{lan}</span>
         <button type="button" aria-label="Highlight-#{lang}" data-copy-btn></button>

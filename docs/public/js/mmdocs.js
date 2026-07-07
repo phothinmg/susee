@@ -367,7 +367,7 @@ function tocToggle() {
 }
 
 function codeBlockCopy() {
-  const codeBlocks = document.querySelectorAll("[data-highlighter]");
+  const codeBlocks = document.querySelectorAll("[data-shiki-highlighter]");
   if (!codeBlocks.length) return;
 
   function fallbackCopy(text) {
