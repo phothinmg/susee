@@ -44,7 +44,7 @@
   type="image/png"
   sizes="16x16"
   href="{{ '/favicons/favicon-16x16.png' | asset_url }}" />
-  <link rel="manifest" href="{{ '/favicons/site.webmanifest' | asset_url }}" />
+<link rel="manifest" href="{{ '/favicons/site.webmanifest' | asset_url }}" />
   {% comment %} Local CSS {% endcomment %}
 <link
   rel="preload"
@@ -63,32 +63,3 @@
   {% assign site_title = page.title | append: ' | ' | append: main_title %}
 {% endif %}
 <title>{{ site_title }}</title>
-{% comment %} Theme Init {% endcomment %}
-<script>
-  (function () {
-    var themeKey = "mmdocs_local_theme";
-    var root = document.documentElement;
-    var theme = "light";
-
-    try {
-      var storedTheme = localStorage.getItem(themeKey);
-      if (storedTheme === "dark" || storedTheme === "light") {
-        theme = storedTheme;
-      } else if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        theme = "dark";
-      }
-    } catch (e) {
-      if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        theme = "dark";
-      }
-    }
-
-    root.setAttribute("data-mmdocs-theme", theme);
-  })();
-</script>

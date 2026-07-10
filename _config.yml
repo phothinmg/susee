@@ -36,6 +36,18 @@ mmdocs:
   logo:
     light: /images/logo-light.webp
     dark: /images/logo-dark.webp
+  giscus:
+    repo: phothinmg/susee
+    repo_id: R_kgDORCj2TQ
+    category: General
+    category_id: DIC_kwDORCj2Tc4C7st0
+    mapping: pathname
+    strict: "0"
+    reactions_enabled: "1"
+    emit_metadata: "0"
+    input_position: bottom
+    theme: dark
+    lang: en
   docs:
     - label: Guide
       link: /guide/quick-start

@@ -176,7 +176,7 @@ Use this checklist before opening a PR in either repository.
 
 These docs pages were used as the source for this file:
 
-- `docs/guide/contribution-overview.md`
-- `docs/guide/contribution-susee.md`
-- `docs/guide/contribution-core-build-packages.md`
-- `docs/guide/contribution-pr-checklist.md`
+- `docs/contents/guide/contribution-overview.md`
+- `docs/contents/guide/contribution-susee.md`
+- `docs/contents/guide/contribution-core-build-packages.md`
+- `docs/contents/guide/contribution-pr-checklist.md`

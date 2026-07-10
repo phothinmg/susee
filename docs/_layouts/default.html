@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-  {% include head.html %}
+    {% include head.html %}
+  {% include initTheme.html %}
     <!-- Jekyll Plugin -->
     {% feed_meta %}
     {% seo %}
@@ -10,5 +11,6 @@
     {% include nav_bar.html %}
     {{ content }}
     <script src="{{ '/js/mmdocs.js' | asset_url }}"></script>
+    <script src="{{ '/js/theme.js' | asset_url }}"></script>
   </body>
 </html>

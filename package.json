@@ -1,6 +1,6 @@
 {
 	"name": "susee",
-	"version": "1.5.5",
+	"version": "1.5.6",
 	"description": "TypeScript-first bundler for library packages",
 	"type": "module",
 	"main": "dist/index.cjs",
@@ -67,20 +67,23 @@
 		"url": "https://github.com/phothinmg/susee/issues"
 	},
 	"dependencies": {
-		"@suseejs/bundler": "^0.0.6",
-		"@suseejs/color": "^0.0.6",
-		"@suseejs/compiler": "^0.0.6",
-		"@suseejs/files": "^0.0.6",
-		"@suseejs/terser-plugin": "^0.0.6",
-		"@suseejs/tsoptions": "^0.0.6",
-		"@suseejs/type": "^0.0.6",
-		"@suseejs/utilities": "^0.0.6",
+		"@suseejs/bundler": "^0.0.7",
+		"@suseejs/color": "^0.0.7",
+		"@suseejs/compiler": "^0.0.7",
+		"@suseejs/files": "^0.0.7",
+		"@suseejs/terser-plugin": "^0.0.7",
+		"@suseejs/tsoptions": "^0.0.7",
+		"@suseejs/type": "^0.0.7",
+		"@suseejs/utilities": "^0.0.7",
 		"typescript": "^6.0.3"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
-		"@suseejs/banner-text-plugin": "^0.0.6",
+		"@suseejs/banner-text-plugin": "^0.0.7",
 		"@types/node": "^25.6.0",
 		"tsx": "^4.21.0"
+	},
+	"allowScripts": {
+		"esbuild@0.28.1": true
 	}
 }
