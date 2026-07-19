@@ -26,7 +26,7 @@
 		"lint": "biome check src  --write",
 		"fmt": "biome format --write",
 		"test": "tsx --test __tests__/test-suites/**/*.test.ts",
-		"coverage": "tsx __tests__/lcov/index.ts",
+		"coverage": "npx tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
 		"hooks:install": "bash scripts/install-hooks.sh",
 		"lint:test": "biome check tests --write",
 		"commit": "bash scripts/commit.sh",
