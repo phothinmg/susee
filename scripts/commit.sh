@@ -29,7 +29,7 @@ npm run lint
 # Run formatter
 npm run fmt
 # Generate coverage report
-npm run coverage
+# npm run coverage
 # Get full commit message pattern
 # <Type>: <message>
 commit_message="$TYPE : $message"

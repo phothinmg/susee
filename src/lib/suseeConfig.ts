@@ -1,6 +1,6 @@
 import tcolor from "@suseejs/color";
 import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
-import ts from "typescript";
+import ts6 from "@typescript/typescript6";
 
 export type OutputFormat = ("commonjs" | "esm")[];
 export interface EntryPoint {
@@ -93,8 +93,8 @@ const getConfigPath = (): string | undefined => {
 	const fileNames = ["susee.config.ts", "susee.config.js", "susee.config.mjs"];
 	let configFile: string | undefined;
 	for (const file of fileNames) {
-		const _file = ts.sys.resolvePath(file);
-		if (ts.sys.fileExists(_file)) {
+		const _file = ts6.sys.resolvePath(file);
+		if (ts6.sys.fileExists(_file)) {
 			configFile = _file;
 			break;
 		}
@@ -116,7 +116,7 @@ function checkEntries(entries: EntryPoint[]) {
 				`No entry found in susee.config file or build options, at least one entry required`,
 			),
 		);
-		ts.sys.exit(1);
+		ts6.sys.exit(1);
 	}
 	const objectStore: Record<string, boolean> = {};
 	const duplicateExportPaths: string[] = [];
@@ -136,13 +136,13 @@ function checkEntries(entries: EntryPoint[]) {
 				`Duplicate export paths/path (${duplicateExportPaths.join(",")}) found in your susee.config file or build options , that will error for bundled output`,
 			),
 		);
-		ts.sys.exit(1);
+		ts6.sys.exit(1);
 	}
 
 	for (const obj of entries) {
-		if (!ts.sys.fileExists(ts.sys.resolvePath(obj.entry))) {
+		if (!ts6.sys.fileExists(ts6.sys.resolvePath(obj.entry))) {
 			console.error(tcolor.magenta(`Entry file ${obj.entry} dose not exists.`));
-			ts.sys.exit(1);
+			ts6.sys.exit(1);
 		}
 	}
 }
