@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
-import { generateGraph } from "../../src/packages/graph.js";
+import { generateGraph } from "../../src/lib/graph.js";
 
 function writeFile(filePath: string, content: string): void {
 	fs.mkdirSync(path.dirname(filePath), { recursive: true });

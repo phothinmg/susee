@@ -1,6 +1,6 @@
-import tcolor from "./packages/tcolor.js";
-import suseeTs from "./suseeTs.js";
-import type { SuseePlugin, SuseePluginFunction } from "./types.js";
+import ts6 from "@typescript/typescript6";
+import type { SuseePlugin, SuseePluginFunction } from "../types.js";
+import tcolor from "./tcolor.js";
 
 export type OutputFormat = ("commonjs" | "esm")[];
 export interface EntryPoint {
@@ -37,7 +37,6 @@ export interface EntryPoint {
 	 *
 	 * default - undefined
 	 *
-	 * @deprecated since v1.5.7
 	 */
 	tsconfigFilePath?: string | undefined;
 	/**
@@ -60,9 +59,6 @@ export interface EntryPoint {
 	 * default - false
 	 */
 	warning?: boolean;
-	declaration?: boolean;
-	declarationMap?: boolean;
-	sourceMap?: boolean;
 }
 /**
  * Configuration for Susee Bundler
@@ -98,8 +94,8 @@ const getConfigPath = (): string | undefined => {
 	const fileNames = ["susee.config.ts", "susee.config.js", "susee.config.mjs"];
 	let configFile: string | undefined;
 	for (const file of fileNames) {
-		const _file = suseeTs.sys.resolvePath(file);
-		if (suseeTs.sys.fileExists(_file)) {
+		const _file = ts6.sys.resolvePath(file);
+		if (ts6.sys.fileExists(_file)) {
 			configFile = _file;
 			break;
 		}
@@ -121,7 +117,7 @@ function checkEntries(entries: EntryPoint[]) {
 				`No entry found in susee.config file or build options, at least one entry required`,
 			),
 		);
-		suseeTs.sys.exit(1);
+		ts6.sys.exit(1);
 	}
 	const objectStore: Record<string, boolean> = {};
 	const duplicateExportPaths: string[] = [];
@@ -141,13 +137,13 @@ function checkEntries(entries: EntryPoint[]) {
 				`Duplicate export paths/path (${duplicateExportPaths.join(",")}) found in your susee.config file or build options , that will error for bundled output`,
 			),
 		);
-		suseeTs.sys.exit(1);
+		ts6.sys.exit(1);
 	}
 
 	for (const obj of entries) {
-		if (!suseeTs.sys.fileExists(suseeTs.sys.resolvePath(obj.entry))) {
+		if (!ts6.sys.fileExists(ts6.sys.resolvePath(obj.entry))) {
 			console.error(tcolor.magenta(`Entry file ${obj.entry} dose not exists.`));
-			suseeTs.sys.exit(1);
+			ts6.sys.exit(1);
 		}
 	}
 }
@@ -160,9 +156,7 @@ export type BuildEntryPoint = {
 	plugins: (SuseePlugin | SuseePluginFunction)[];
 	outputDirectoryPath: string;
 	warning: boolean;
-	sourceMap: boolean;
-	declaration: boolean;
-	declarationMap: boolean;
+	tsconfigFilePath: string | undefined;
 };
 export type BuildOptions = {
 	buildEntryPoints: BuildEntryPoint[];
@@ -190,11 +184,9 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
 		const warning = ent.warning ?? false;
 		const rename = ent.renameDuplicates ?? true;
 		const plugins = ent.plugins ?? [];
+		const tsconfigFilePath = ent.tsconfigFilePath ?? undefined;
 		const outputDirectoryPath =
 			ent.exportPath === "." ? outDir : `${outDir}${ent.exportPath.slice(1)}`;
-		const sourceMap = ent.sourceMap ?? true;
-		const declaration = ent.declaration ?? true;
-		const declarationMap = ent.declarationMap ?? true;
 		points.push({
 			entry,
 			exportPath,
@@ -203,9 +195,7 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
 			plugins,
 			warning,
 			outputDirectoryPath,
-			sourceMap,
-			declaration,
-			declarationMap,
+			tsconfigFilePath,
 		});
 	}
 	return {

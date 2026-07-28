@@ -2,7 +2,7 @@ import { exec } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { build } from "./src/index.js";
-import { files } from "@suseejs/files";
+import { files } from "./src/lib/files.js";
 import { suseeTerser } from "@suseejs/terser-plugin";
 import { suseeBannerText } from "@suseejs/banner-text-plugin";
 

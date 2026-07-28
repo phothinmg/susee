@@ -1,4 +1,4 @@
-import type suseeTs from "./suseeTs.js";
+import type ts6 from "@typescript/typescript6";
 
 export const pkgName = "SUSEEJS";
 // 1. Bundler
@@ -86,7 +86,7 @@ export type DependencyPlugin =
 			async: true;
 			func: (
 				depsFiles: DepsFiles,
-				compilerOptions: suseeTs.CompilerOptions,
+				compilerOptions: ts6.CompilerOptions,
 			) => Promise<DepsFiles>;
 			name?: string;
 	  }
@@ -95,7 +95,7 @@ export type DependencyPlugin =
 			async: false;
 			func: (
 				DepsFiles: DepsFiles,
-				compilerOptions: suseeTs.CompilerOptions,
+				compilerOptions: ts6.CompilerOptions,
 			) => DepsFiles;
 			name?: string;
 	  };

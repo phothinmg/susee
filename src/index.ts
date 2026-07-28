@@ -1,11 +1,11 @@
-import tcolor from "@suseejs/color";
 import { Compiler } from "./lib/compiler.js";
 import {
 	type BuildOptions,
 	finalSuseeConfig,
 	generateBuildOptions,
 	type SuSeeConfig,
-} from "./suseeConfig.js";
+} from "./lib/suseeConfig.js";
+import tcolor from "./lib/tcolor.js";
 
 /**
  * Run a Susee build.

@@ -1,13 +1,13 @@
 import fs from "node:fs";
 import module from "node:module";
 import path from "node:path";
-import suseeTs from "../suseeTs.js";
+import ts6 from "@typescript/typescript6";
 
 // ----------------------------------------------------Handlers------------------------------------------------------//
 
-function handleImports(node: suseeTs.Node, processFn: (input: string) => void) {
+function handleImports(node: ts6.Node, processFn: (input: string) => void) {
 	// Handle : import declaration
-	if (suseeTs.isImportDeclaration(node) && node.moduleSpecifier) {
+	if (ts6.isImportDeclaration(node) && node.moduleSpecifier) {
 		const moduleText = node.moduleSpecifier
 			.getText()
 			.replace(/^['"`]|['"`]$/g, "");
@@ -15,52 +15,46 @@ function handleImports(node: suseeTs.Node, processFn: (input: string) => void) {
 		return;
 	} //--
 	// Recursively visit all children
-	suseeTs.forEachChild(node, (n) => handleImports(n, processFn));
+	ts6.forEachChild(node, (n) => handleImports(n, processFn));
 }
-function handleImportEqual(
-	node: suseeTs.Node,
-	processFn: (input: string) => void,
-) {
+function handleImportEqual(node: ts6.Node, processFn: (input: string) => void) {
 	// Handle : import equal declaration
 	if (
-		suseeTs.isImportEqualsDeclaration(node) &&
-		suseeTs.isExternalModuleReference(node.moduleReference) &&
-		suseeTs.isStringLiteral(node.moduleReference.expression)
+		ts6.isImportEqualsDeclaration(node) &&
+		ts6.isExternalModuleReference(node.moduleReference) &&
+		ts6.isStringLiteral(node.moduleReference.expression)
 	) {
 		const moduleText = node.moduleReference.expression.text;
 		processFn(moduleText);
 		return;
 	} //--
 	// Recursively visit all children
-	suseeTs.forEachChild(node, (n) => handleImportEqual(n, processFn));
+	ts6.forEachChild(node, (n) => handleImportEqual(n, processFn));
 }
 
-function handleAwaitImport(
-	node: suseeTs.Node,
-	processFn: (input: string) => void,
-) {
+function handleAwaitImport(node: ts6.Node, processFn: (input: string) => void) {
 	// Handle : import equal declaration
 	if (
-		suseeTs.isAwaitExpression(node) &&
-		suseeTs.isCallExpression(node.expression) &&
-		node.expression.expression.kind === suseeTs.SyntaxKind.ImportKeyword
+		ts6.isAwaitExpression(node) &&
+		ts6.isCallExpression(node.expression) &&
+		node.expression.expression.kind === ts6.SyntaxKind.ImportKeyword
 	) {
 		const firstArg = node.expression.arguments[0];
-		if (firstArg && suseeTs.isStringLiteral(firstArg)) {
+		if (firstArg && ts6.isStringLiteral(firstArg)) {
 			processFn(firstArg.text);
 		}
 		return;
 	} //--
 	// Recursively visit all children
-	suseeTs.forEachChild(node, (n) => handleAwaitImport(n, processFn));
+	ts6.forEachChild(node, (n) => handleAwaitImport(n, processFn));
 }
 
-function handleRequire(node: suseeTs.Node, processFn: (input: string) => void) {
+function handleRequire(node: ts6.Node, processFn: (input: string) => void) {
 	// Handle : require calls , `var foo = require("foo")`
 	// can't handle import equal statement like `import foo = require("foo")`
 	if (
-		suseeTs.isCallExpression(node) &&
-		suseeTs.isIdentifier(node.expression) &&
+		ts6.isCallExpression(node) &&
+		ts6.isIdentifier(node.expression) &&
 		node.expression.text === "require" &&
 		node.arguments.length > 0
 	) {
@@ -68,7 +62,7 @@ function handleRequire(node: suseeTs.Node, processFn: (input: string) => void) {
 		// index 0 of arguments is moduleText
 		// I didn't use forEach or for-off loop to avoid multiple processing.
 		const firstArg = node.arguments[0];
-		if (firstArg && suseeTs.isStringLiteral(firstArg)) {
+		if (firstArg && ts6.isStringLiteral(firstArg)) {
 			processFn(firstArg.text);
 		}
 		return; // Skip children for property access require calls
@@ -76,24 +70,24 @@ function handleRequire(node: suseeTs.Node, processFn: (input: string) => void) {
 
 	// Handle : property access like `var foo = require("foo").foo`
 	if (
-		suseeTs.isPropertyAccessExpression(node) &&
-		suseeTs.isCallExpression(node.expression) &&
-		suseeTs.isIdentifier(node.expression.expression) &&
+		ts6.isPropertyAccessExpression(node) &&
+		ts6.isCallExpression(node.expression) &&
+		ts6.isIdentifier(node.expression.expression) &&
 		node.expression.expression.text === "require" &&
 		node.expression.arguments.length > 0
 	) {
 		const firstArg = node.expression.arguments[0];
-		if (firstArg && suseeTs.isStringLiteral(firstArg)) {
+		if (firstArg && ts6.isStringLiteral(firstArg)) {
 			processFn(firstArg.text);
 		}
 		return; // Skip children for property access require calls
 	}
 
 	// Recursively visit all children (except for require calls we already processed)
-	suseeTs.forEachChild(node, (n) => handleRequire(n, processFn));
+	ts6.forEachChild(node, (n) => handleRequire(n, processFn));
 }
 
-function handlers(node: suseeTs.Node, processFn: (input: string) => void) {
+function handlers(node: ts6.Node, processFn: (input: string) => void) {
 	Promise.all([
 		handleImports(node, processFn),
 		handleRequire(node, processFn),
@@ -169,7 +163,7 @@ function resolveExtension(filePath: string) {
 		// const files = fs.globSync(
 		//   `${dirName}/**/*.{js,cjs,mjs,ts,cts,mts,jsx,tsx}`
 		// );
-		const files = suseeTs.sys.readDirectory(dirName);
+		const files = ts6.sys.readDirectory(dirName);
 		const match = files
 			.map((f) => {
 				const [name, ext = ""] = path.basename(f).split(".");
@@ -253,10 +247,10 @@ function collectDependencies(
 			collectedWarning.push([`File not found: ${checkedAbsPath}`]);
 		}
 		const content = fs.readFileSync(checkedAbsPath, "utf8");
-		const sourceFile = suseeTs.createSourceFile(
+		const sourceFile = ts6.createSourceFile(
 			file,
 			content,
-			suseeTs.ScriptTarget.Latest,
+			ts6.ScriptTarget.Latest,
 			true,
 		);
 		const importFiles: string[] = [];
@@ -304,7 +298,7 @@ function collectDependencies(
 				warn.push(moduleText);
 			}
 		}
-		suseeTs.forEachChild(sourceFile, (node) => handlers(node, processModule));
+		ts6.forEachChild(sourceFile, (node) => handlers(node, processModule));
 		dependencies.push({
 			file: absPath,
 			index,

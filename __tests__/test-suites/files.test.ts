@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { after, before, describe, it } from "node:test";
-import type { files as filesNamespace } from "../../src/packages/files.js";
+import type { files as filesNamespace } from "../../src/lib/files.js";
 
 let files: typeof filesNamespace;
 let tempDir: string;
@@ -30,7 +30,7 @@ describe("files namespace", () => {
 		tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "suseejs-files-"));
 		seedPackageJson();
 		process.chdir(tempDir);
-		({ files } = await import("../../src/packages/files.js"));
+		({ files } = await import("../../src/lib/files.js"));
 	});
 
 	after(() => {

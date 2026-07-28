@@ -67,14 +67,7 @@
 		"url": "https://github.com/phothinmg/susee/issues"
 	},
 	"dependencies": {
-		"@suseejs/bundler": "^0.0.7",
-		"@suseejs/color": "^0.0.7",
-		"@suseejs/compiler": "^0.0.7",
-		"@suseejs/files": "^0.0.7",
 		"@suseejs/terser-plugin": "^0.0.7",
-		"@suseejs/tsoptions": "^0.0.7",
-		"@suseejs/type": "^0.0.7",
-		"@suseejs/utilities": "^0.0.7",
 		"@typescript/typescript6": "^6.0.2"
 	},
 	"devDependencies": {

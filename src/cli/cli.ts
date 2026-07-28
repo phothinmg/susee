@@ -1,9 +1,9 @@
-import { bundler } from "@suseejs/bundler";
-import { suseeCompiler } from "@suseejs/compiler";
-import { files } from "@suseejs/files";
 import { suseeTerser } from "@suseejs/terser-plugin";
-import { getCompilerOptions } from "@suseejs/tsoptions";
-import { utils } from "@suseejs/utilities";
+import { bundler } from "../lib/bundler/index.js";
+import { files } from "../lib/files.js";
+import { suseeCompiler } from "../lib/suseeCompiler.js";
+import { getCompilerOptions } from "../lib/tsoptions.js";
+import { utils } from "../lib/utilities.js";
 import type { CliBuildOptions } from "./lib/parse_argv.js";
 
 class CliCompiler {

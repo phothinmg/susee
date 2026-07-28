@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { suseeCompiler } from "../../src/packages/suseeCompiler.js";
+import { suseeCompiler } from "../../src/lib/suseeCompiler.js";
 import suseeTs from "../../src/suseeTs.js";
 
 describe("SuseeCompilers", () => {

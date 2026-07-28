@@ -1,9 +1,9 @@
 import path from "node:path";
-import suseeTs from "../suseeTs.js";
+import ts6 from "@typescript/typescript6";
 export interface CompilerPrams {
 	sourceCode: string;
 	fileName: string;
-	compilerOptions: suseeTs.CompilerOptions;
+	compilerOptions: ts6.CompilerOptions;
 	isJsx?: boolean;
 }
 
@@ -15,13 +15,13 @@ export interface CompilerPrams {
  * passes, it enables DOM libs and defaults `jsx` to `ReactJSX` if unset.
  *
  * @param {string} sourceCode - Source text to inspect for JSX runtime imports.
- * @param {suseeTs.CompilerOptions} compilerOptions - User-provided compiler options.
+ * @param {ts6.CompilerOptions} compilerOptions - User-provided compiler options.
  * @param {boolean} isJsx - Whether JSX mode is enabled for this compilation.
- * @returns {suseeTs.CompilerOptions} Compiler options to pass into program creation.
+ * @returns {ts6.CompilerOptions} Compiler options to pass into program creation.
  */
 function jsxCompilerOptions(
 	sourceCode: string,
-	compilerOptions: suseeTs.CompilerOptions,
+	compilerOptions: ts6.CompilerOptions,
 	isJsx: boolean,
 ) {
 	if (!isJsx) {
@@ -50,12 +50,12 @@ function jsxCompilerOptions(
 	}
 
 	const { jsx, lib, ...rest } = compilerOptions;
-	const _jsx = jsx ?? suseeTs.JsxEmit.ReactJSX;
+	const _jsx = jsx ?? ts6.JsxEmit.ReactJSX;
 	return {
 		lib: ["dom", "dom.iterable", "esnext"],
 		jsx: _jsx,
 		...rest,
-	} as suseeTs.CompilerOptions;
+	} as ts6.CompilerOptions;
 }
 /**
  * Creates a ts.CompilerHost that can be used with the typescript compiler.
@@ -71,20 +71,20 @@ function createHost(
 	fileName: string,
 ): {
 	createdFiles: Record<string, string>;
-	host: suseeTs.CompilerHost;
+	host: ts6.CompilerHost;
 } {
 	const createdFiles: Record<string, string> = {};
-	const host: suseeTs.CompilerHost = {
+	const host: ts6.CompilerHost = {
 		getSourceFile: (file, languageVersion) => {
 			if (file === fileName) {
-				return suseeTs.createSourceFile(file, sourceCode, languageVersion);
+				return ts6.createSourceFile(file, sourceCode, languageVersion);
 			}
 			return undefined;
 		},
 		writeFile: (fileName, contents) => {
 			createdFiles[fileName] = contents;
 		},
-		getDefaultLibFileName: (options) => suseeTs.getDefaultLibFilePath(options),
+		getDefaultLibFileName: (options) => ts6.getDefaultLibFilePath(options),
 		getCurrentDirectory: () => "",
 		getDirectories: () => [],
 		fileExists: (file) => file === fileName,
@@ -107,7 +107,7 @@ function suseeCompiler({
 	const _host = createHost(sourceCode, fileName);
 	const createdFiles: Record<string, string> = _host.createdFiles;
 	const host = _host.host;
-	const program = suseeTs.createProgram([fileName], compilerOptions, host);
+	const program = ts6.createProgram([fileName], compilerOptions, host);
 	program.emit();
 	let dts: string | undefined;
 	let map: string | undefined;

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import module from "node:module";
 import path from "node:path";
 import process from "node:process";
-import suseeTs from "../suseeTs.js";
+import ts6 from "@typescript/typescript6";
 import tcolor from "./tcolor.js";
 
 namespace utils {
@@ -12,10 +12,10 @@ namespace utils {
 			let cjsCount = 0;
 			let unknownCount = 0;
 
-			const sourceFile = suseeTs.createSourceFile(
+			const sourceFile = ts6.createSourceFile(
 				file,
 				content,
-				suseeTs.ScriptTarget.Latest,
+				ts6.ScriptTarget.Latest,
 				true,
 			);
 
@@ -24,37 +24,37 @@ namespace utils {
 				let hasCommonJS = false;
 
 				// Walk through the AST to detect module syntax
-				function walk(node: suseeTs.Node) {
+				function walk(node: ts6.Node) {
 					// Check for ESM import/export syntax
 					if (
-						suseeTs.isImportDeclaration(node) ||
-						suseeTs.isImportEqualsDeclaration(node) ||
-						suseeTs.isExportDeclaration(node) ||
-						suseeTs.isExportSpecifier(node) ||
-						suseeTs.isExportAssignment(node)
+						ts6.isImportDeclaration(node) ||
+						ts6.isImportEqualsDeclaration(node) ||
+						ts6.isExportDeclaration(node) ||
+						ts6.isExportSpecifier(node) ||
+						ts6.isExportAssignment(node)
 					) {
 						hasESMImports = true;
 					}
 
 					// Check for export modifier on declarations
 					if (
-						(suseeTs.isVariableStatement(node) ||
-							suseeTs.isFunctionDeclaration(node) ||
-							suseeTs.isInterfaceDeclaration(node) ||
-							suseeTs.isTypeAliasDeclaration(node) ||
-							suseeTs.isEnumDeclaration(node) ||
-							suseeTs.isClassDeclaration(node)) &&
+						(ts6.isVariableStatement(node) ||
+							ts6.isFunctionDeclaration(node) ||
+							ts6.isInterfaceDeclaration(node) ||
+							ts6.isTypeAliasDeclaration(node) ||
+							ts6.isEnumDeclaration(node) ||
+							ts6.isClassDeclaration(node)) &&
 						node.modifiers?.some(
-							(mod) => mod.kind === suseeTs.SyntaxKind.ExportKeyword,
+							(mod) => mod.kind === ts6.SyntaxKind.ExportKeyword,
 						)
 					) {
 						hasESMImports = true;
 					}
 
 					// Check for CommonJS require/exports
-					if (suseeTs.isCallExpression(node)) {
+					if (ts6.isCallExpression(node)) {
 						if (
-							suseeTs.isIdentifier(node.expression) &&
+							ts6.isIdentifier(node.expression) &&
 							node.expression.text === "require" &&
 							node.arguments.length > 0
 						) {
@@ -63,7 +63,7 @@ namespace utils {
 					}
 
 					// Check for module.exports or exports.xxx
-					if (suseeTs.isPropertyAccessExpression(node)) {
+					if (ts6.isPropertyAccessExpression(node)) {
 						const text = node.getText(sourceFile);
 						if (
 							text.startsWith("module.exports") ||
@@ -74,7 +74,7 @@ namespace utils {
 					}
 
 					// Continue walking the AST
-					suseeTs.forEachChild(node, walk);
+					ts6.forEachChild(node, walk);
 				} //---
 				walk(sourceFile);
 
@@ -97,7 +97,7 @@ namespace utils {
 			}
 			if (unknownCount > 0) {
 				console.error(tcolor.magenta(`Error checking module format.`));
-				suseeTs.sys.exit(1);
+				ts6.sys.exit(1);
 			}
 
 			return {
@@ -111,27 +111,27 @@ namespace utils {
 		 * @returns true if the file contains JSX, false otherwise.
 		 */
 		export function isJsxContent(code: string): boolean {
-			const sourceFile = suseeTs.createSourceFile(
+			const sourceFile = ts6.createSourceFile(
 				"file.tsx",
 				code,
-				suseeTs.ScriptTarget.Latest,
+				ts6.ScriptTarget.Latest,
 				/*setParentNodes*/ true,
-				suseeTs.ScriptKind.TSX,
+				ts6.ScriptKind.TSX,
 			);
 
 			let containsJsx = false;
 
-			function visitor(node: suseeTs.Node) {
+			function visitor(node: ts6.Node) {
 				// Check for JSX Elements, Self Closing Elements, or JSX Fragments
 				if (
-					suseeTs.isJsxElement(node) ||
-					suseeTs.isJsxSelfClosingElement(node) ||
-					suseeTs.isJsxFragment(node)
+					ts6.isJsxElement(node) ||
+					ts6.isJsxSelfClosingElement(node) ||
+					ts6.isJsxFragment(node)
 				) {
 					containsJsx = true;
 					return;
 				}
-				suseeTs.forEachChild(node, visitor);
+				ts6.forEachChild(node, visitor);
 			}
 
 			visitor(sourceFile);
@@ -144,12 +144,12 @@ namespace utils {
 		 * @param n The node to check.
 		 * @returns true if the node is inside a namespace declaration, false otherwise.
 		 */
-		export const isInsideNamespace = (n: suseeTs.Node): boolean => {
-			let current: suseeTs.Node | undefined = n.parent;
+		export const isInsideNamespace = (n: ts6.Node): boolean => {
+			let current: ts6.Node | undefined = n.parent;
 			while (current) {
 				if (
-					suseeTs.isModuleDeclaration(current) &&
-					current.flags === suseeTs.NodeFlags.Namespace
+					ts6.isModuleDeclaration(current) &&
+					current.flags === ts6.NodeFlags.Namespace
 				) {
 					return true;
 				}
@@ -462,37 +462,37 @@ namespace utils {
 		 * @returns The modified code after applying the transformer.
 		 */
 		export function transformFunction(
-			transformer: suseeTs.TransformerFactory<suseeTs.SourceFile>,
-			sourceFile: suseeTs.SourceFile,
-			compilerOptions: suseeTs.CompilerOptions,
+			transformer: ts6.TransformerFactory<ts6.SourceFile>,
+			sourceFile: ts6.SourceFile,
+			compilerOptions: ts6.CompilerOptions,
 		) {
-			const transformationResult = suseeTs.transform(
+			const transformationResult = ts6.transform(
 				sourceFile,
 				[transformer],
 				compilerOptions,
 			);
 			const transformedSourceFile = transformationResult.transformed[0];
-			const printer = suseeTs.createPrinter({
-				newLine: suseeTs.NewLineKind.LineFeed,
+			const printer = ts6.createPrinter({
+				newLine: ts6.NewLineKind.LineFeed,
 				removeComments: false,
 			});
 			const modifiedCode = printer.printFile(
-				transformedSourceFile as suseeTs.SourceFile,
+				transformedSourceFile as ts6.SourceFile,
 			);
 			transformationResult.dispose();
 			return modifiedCode;
 		} //--
 		/**
 		 * Finds all the properties accessed in the given node.
-		 * @param {suseeTs.Node} node - The node to search through.
+		 * @param {ts6.Node} node - The node to search through.
 		 * @returns {string[]} - An array of all the properties accessed.
 		 */
-		export function findProperty(node: suseeTs.Node): string[] {
+		export function findProperty(node: ts6.Node): string[] {
 			const properties: string[] = [];
-			function walk(n: suseeTs.Node) {
+			function walk(n: ts6.Node) {
 				if (
-					suseeTs.isPropertyAccessExpression(n) &&
-					suseeTs.isIdentifier(n.expression)
+					ts6.isPropertyAccessExpression(n) &&
+					ts6.isIdentifier(n.expression)
 				) {
 					properties.push(n.expression.text);
 				}

@@ -1,9 +1,9 @@
-import { bundler } from "@suseejs/bundler";
-import { suseeCompiler } from "@suseejs/compiler";
-import { files } from "@suseejs/files";
-import { getCompilerOptions } from "@suseejs/tsoptions";
-import { utils } from "@suseejs/utilities";
-import type { BuildEntryPoint, BuildOptions } from "../suseeConfig.js";
+import { bundler } from "./bundler/index.js";
+import { files } from "./files.js";
+import { suseeCompiler } from "./suseeCompiler.js";
+import type { BuildEntryPoint, BuildOptions } from "./suseeConfig.js";
+import { getCompilerOptions } from "./tsoptions.js";
+import { utils } from "./utilities.js";
 
 /**
  * Compiler for the JavaScript API.
