@@ -8,7 +8,7 @@
 
 [![NPM][nodei_img]][nodei_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![mmcov][mmcov_svg]][mmcov_url] [![codecov][codecov_img]][codecov_url][![publish to npm][publish_npm_svg]][publish_npm][![CodeQL Advanced][code_ql_svg]][code_ql] [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![mmcov][mmcov_svg]][mmcov_url] [![publish to npm][publish_npm_svg]][publish_npm][![CodeQL Advanced][code_ql_svg]][code_ql] [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
 
 ## About
 
@@ -19,6 +19,7 @@ A **TypeScript-first** bundler designed specifically for **library packages** th
 > As part of the TypeScript 6.0/7.0 transition, TypeScript published a compatibility package, `@typescript/typescript6`. This package provides a `tsc6` executable, allowing you to install `TypeScript 7.0` side by side with its own `tsc` binary and avoid naming conflicts. It also re-exports the TypeScript 6.0 API, so you can use `tsc` for TypeScript 7 while other tooling continues to rely on 6.0.
 > See the details in this [blog post](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/).
 > The `susee` package and its ecosystem are currently adapting to the new compatibility package, `@typescript/typescript6`, so some Susee APIs may be temporarily unavailable.
+
 ---
 
 ## Key Features
