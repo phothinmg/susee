@@ -1,17 +1,17 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import suseeTs from "../../../src/suseeTs.js";
+import ts6 from "@typescript/typescript6";
 import {
 	finalSuseeConfig,
 	type BuildEntryPoint,
-} from "../../../src/suseeConfig.js";
+} from "../../../src/lib/suseeConfig.js";
 import { exitWithCodeOneAndMessage, sortObject } from "../test_helpers.js";
 
 describe("finalSuseeConfig", async () => {
 	it("If duplicate path found in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
-		const temp = suseeTs.sys.resolvePath(
+		const temp = ts6.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/duplicate",
 		);
 		process.chdir(temp);
@@ -27,7 +27,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If empty entries in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
-		const temp = suseeTs.sys.resolvePath(
+		const temp = ts6.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/empty_entries",
 		);
 		const filePath = "lib/get_config.ts";
@@ -45,7 +45,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If no susee.config file found, return undefined ", async () => {
-		const temp = suseeTs.sys.resolvePath(
+		const temp = ts6.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/not_found",
 		);
 		const cwd = process.cwd();
@@ -59,7 +59,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If one of entry file in susee.config file dose exits , return exit with 0 and warn message if it is provide ", (_t, done) => {
-		const temp = suseeTs.sys.resolvePath(
+		const temp = ts6.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/entry_not_found",
 		);
 		const filePath = "lib/get_config.ts";
@@ -77,7 +77,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	//==
 	it("If no error", async () => {
-		const temp = suseeTs.sys.resolvePath(
+		const temp = ts6.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/ok",
 		);
 		const cwd = process.cwd();
@@ -97,9 +97,7 @@ describe("finalSuseeConfig", async () => {
 					plugins: [],
 					rename: true,
 					warning: false,
-					declaration: true,
-					declarationMap: true,
-					sourceMap: true,
+					tsconfigFilePath: undefined,
 				}),
 			);
 

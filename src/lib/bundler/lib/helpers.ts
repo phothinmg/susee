@@ -1,6 +1,7 @@
 import path from "node:path";
 import ts6 from "@typescript/typescript6";
 import type { DependenciesTree } from "../../../types.js";
+import { utils } from "../../utilities.js";
 
 export const isJSON = (tree: DependenciesTree): boolean => {
 	const json = tree.depFiles.find(
@@ -15,6 +16,34 @@ export const jsonExtToTs = (file: string) => {
 		return file;
 	}
 };
+
+export const createBundledSourceFile = (file: string, content: string) => {
+	return ts6.createSourceFile(
+		jsonExtToTs(file),
+		content,
+		ts6.ScriptTarget.Latest,
+		true,
+	);
+};
+
+export const transformBundledSource = (
+	sourceFile: ts6.SourceFile,
+	compilerOptions: ts6.CompilerOptions,
+	transformer: ts6.TransformerFactory<ts6.SourceFile>,
+) => {
+	return utils.gen.transformFunction(transformer, sourceFile, compilerOptions);
+};
+
+export const transformBundledContent = (
+	file: string,
+	content: string,
+	compilerOptions: ts6.CompilerOptions,
+	transformer: ts6.TransformerFactory<ts6.SourceFile>,
+) => {
+	const sourceFile = createBundledSourceFile(file, content);
+	return transformBundledSource(sourceFile, compilerOptions, transformer);
+};
+
 const normalizePathKey = (filePath: string) => {
 	const parsed = path.parse(filePath);
 	let noExt = path.join(parsed.dir, parsed.name);

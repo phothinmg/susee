@@ -54,6 +54,7 @@ describe("parse_argv", () => {
 			"--allow-update",
 			"--minify=true",
 			"--warning",
+			"--profile",
 		]);
 
 		assert.deepStrictEqual(actual, {
@@ -65,6 +66,7 @@ describe("parse_argv", () => {
 			allowUpdate: true,
 			minify: true,
 			warning: true,
+			profile: true,
 		});
 	});
 
@@ -88,6 +90,7 @@ describe("parse_argv", () => {
 			"--minify",
 			"true",
 			"--warning=false",
+			"--profile=false",
 		]);
 
 		assert.deepStrictEqual(actual, {
@@ -98,6 +101,7 @@ describe("parse_argv", () => {
 			allowUpdate: false,
 			minify: true,
 			warning: false,
+			profile: false,
 		});
 	});
 
@@ -122,6 +126,7 @@ describe("parse_argv", () => {
 			allowUpdate: false,
 			minify: true,
 			warning: false,
+			profile: false,
 			plugins: [],
 		});
 	});

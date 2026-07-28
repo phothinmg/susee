@@ -364,7 +364,6 @@ namespace utils {
 						.split(",")
 						.map((s) => s.trim())
 						.filter(Boolean);
-					// biome-ignore  lint/suspicious/useIterableCallbackReturn : just add name for names each
 					names.forEach((name) => targetMap.get(modulePath)?.add(name));
 				} else if (importClause.startsWith("* as")) {
 					// Namespace import: import * as name from 'module'

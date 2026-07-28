@@ -7,11 +7,11 @@ import type {
 	DuplicatesNameMap,
 	NamesSets,
 } from "../../../types.js";
-import { utils } from "../../utilities.js";
 import {
+	createBundledSourceFile,
 	getFileKey,
 	getModuleKeyFromSpecifier,
-	jsonExtToTs,
+	transformBundledSource,
 } from "./helpers.js";
 import { uniqueName } from "./uniqueName.js";
 
@@ -30,6 +30,24 @@ const createDuplicateNameGenerator = () =>
 	});
 
 let duplicateName = createDuplicateNameGenerator();
+
+const toNameLookupKey = (file: string, base: string) => `${file}\u0000${base}`;
+
+const createNameLookup = (sets: NamesSets) => {
+	const lookup = new Map<string, string>();
+	for (const set of sets) {
+		lookup.set(toNameLookupKey(set.file, set.base), set.newName);
+	}
+	return lookup;
+};
+
+const getMappedName = (
+	lookup: Map<string, string>,
+	file: string,
+	base: string,
+) => {
+	return lookup.get(toNameLookupKey(file, base)) ?? null;
+};
 
 const isFunctionLikeScope = (node: ts6.Node) =>
 	ts6.isFunctionDeclaration(node) ||
@@ -187,32 +205,25 @@ const createShadowedNames = (
 
 const isTopLevelNode = (node: ts6.Node) => ts6.isSourceFile(node.parent);
 
-const duplicateCallExpression = (
+const duplicateUsageAndExportHandler = (
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler => {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
-			const getMappedName = (base: string) => {
-				const mapping = callNameMap.find(
-					(m) => m.base === base && m.file === file,
-				);
-				const importMapping = importNameMap.find(
-					(m) => m.base === base && m.file === file,
-				);
-
-				if (mapping) {
-					return mapping.newName;
+			const fileKey = getFileKey(file);
+			const callLookup = createNameLookup(callNameMap);
+			const importLookup = createNameLookup(importNameMap);
+			const resolveMappedEntry = (base: string) => {
+				const callMappedName = getMappedName(callLookup, file, base);
+				if (callMappedName) {
+					return { newName: callMappedName, isCallMapping: true };
 				}
 
-				if (importMapping) {
-					return importMapping.newName;
+				const importMappedName = getMappedName(importLookup, file, base);
+				if (importMappedName) {
+					return { newName: importMappedName, isCallMapping: false };
 				}
 
 				return null;
@@ -271,11 +282,11 @@ const duplicateCallExpression = (
 							);
 						}
 
-						const new_name = getMappedName(node.expression.text);
-						if (new_name) {
+						const mappedEntry = resolveMappedEntry(node.expression.text);
+						if (mappedEntry) {
 							return factory.updateCallExpression(
 								node,
-								factory.createIdentifier(new_name),
+								factory.createIdentifier(mappedEntry.newName),
 								node.typeArguments,
 								node.arguments,
 							);
@@ -291,11 +302,11 @@ const duplicateCallExpression = (
 							);
 						}
 
-						const new_name = getMappedName(node.expression.text);
-						if (new_name) {
+						const mappedEntry = resolveMappedEntry(node.expression.text);
+						if (mappedEntry) {
 							return factory.updatePropertyAccessExpression(
 								node,
-								factory.createIdentifier(new_name),
+								factory.createIdentifier(mappedEntry.newName),
 								node.name,
 							);
 						}
@@ -310,13 +321,51 @@ const duplicateCallExpression = (
 							);
 						}
 
-						const new_name = getMappedName(node.expression.text);
-						if (new_name) {
+						const mappedEntry = resolveMappedEntry(node.expression.text);
+						if (mappedEntry) {
 							return factory.updateNewExpression(
 								node,
-								factory.createIdentifier(new_name),
+								factory.createIdentifier(mappedEntry.newName),
 								node.typeArguments,
 								node.arguments,
+							);
+						}
+					}
+				} else if (ts6.isExportSpecifier(node)) {
+					if (ts6.isIdentifier(node.name)) {
+						const mappedEntry = resolveMappedEntry(node.name.text);
+						if (mappedEntry?.isCallMapping) {
+							exportNameMap.push({
+								base: node.name.text,
+								file: fileKey,
+								newName: mappedEntry.newName,
+							});
+						}
+						if (mappedEntry) {
+							return factory.updateExportSpecifier(
+								node,
+								node.isTypeOnly,
+								node.propertyName,
+								factory.createIdentifier(mappedEntry.newName),
+							);
+						}
+					}
+				} else if (ts6.isExportAssignment(node)) {
+					const expr = node.expression;
+					if (ts6.isIdentifier(expr)) {
+						const mappedEntry = resolveMappedEntry(expr.text);
+						if (mappedEntry?.isCallMapping) {
+							exportNameMap.push({
+								base: expr.text,
+								file: fileKey,
+								newName: mappedEntry.newName,
+							});
+						}
+						if (mappedEntry) {
+							return factory.updateExportAssignment(
+								node,
+								node.modifiers,
+								factory.createIdentifier(mappedEntry.newName),
 							);
 						}
 					}
@@ -339,19 +388,19 @@ const duplicateCallExpression = (
 						return node;
 					}
 
-					const new_name = getMappedName(node.text);
-					if (new_name) {
+					const mappedEntry = resolveMappedEntry(node.text);
+					if (mappedEntry) {
 						if (
 							ts6.isShorthandPropertyAssignment(node.parent) &&
 							node.parent.name === node
 						) {
 							return factory.createPropertyAssignment(
 								factory.createIdentifier(node.text),
-								factory.createIdentifier(new_name),
+								factory.createIdentifier(mappedEntry.newName),
 							);
 						}
 
-						return factory.createIdentifier(new_name);
+						return factory.createIdentifier(mappedEntry.newName);
 					}
 				}
 				/* ----------------------Returns for visitor function------------------------------- */
@@ -368,98 +417,10 @@ const duplicateCallExpression = (
 				) as ts6.SourceFile;
 		}; // transformer;
 		/* --------------------Returns for main handler function--------------------------------- */
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
-		);
-		return { file, content: _content, ...rest };
-	}; // returns
-};
-//--
-const duplicateExportExpression = (
-	compilerOptions: ts6.CompilerOptions,
-): BundledHandler => {
-	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
-		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
-			const { factory } = context;
-			const visitor = (node: ts6.Node): ts6.Node => {
-				if (ts6.isExportSpecifier(node)) {
-					if (ts6.isIdentifier(node.name)) {
-						const base = node.name.text;
-						let new_name: string | null = null;
-						const mapping = callNameMap.find(
-							(m) => m.base === base && m.file === file,
-						);
-						const importMapping = importNameMap.find(
-							(m) => m.base === base && m.file === file,
-						);
-						if (mapping) {
-							exportNameMap.push({
-								base,
-								file: getFileKey(file),
-								newName: mapping.newName,
-							});
-							new_name = mapping.newName;
-						} else if (importMapping) {
-							new_name = importMapping.newName;
-						}
-						if (new_name) {
-							return factory.updateExportSpecifier(
-								node,
-								node.isTypeOnly,
-								node.propertyName,
-								factory.createIdentifier(new_name),
-							);
-						}
-					}
-				} else if (ts6.isExportAssignment(node)) {
-					const expr = node.expression;
-					if (ts6.isIdentifier(expr)) {
-						const base = expr.text;
-						let new_name: string | null = null;
-						const mapping = callNameMap.find(
-							(m) => m.base === base && m.file === file,
-						);
-						const importMapping = importNameMap.find(
-							(m) => m.base === base && m.file === file,
-						);
-						if (mapping) {
-							exportNameMap.push({
-								base,
-								file: getFileKey(file),
-								newName: mapping.newName,
-							});
-							new_name = mapping.newName;
-						} else if (importMapping) {
-							new_name = importMapping.newName;
-						}
-						if (new_name) {
-							return factory.updateExportAssignment(
-								node,
-								node.modifiers,
-								factory.createIdentifier(new_name),
-							);
-						}
-					}
-				}
-				/* ----------------------Returns for visitor function------------------------------- */
-				return ts6.visitEachChild(node, visitor, context);
-			}; // visitor;
-			/* --------------------Returns for transformer function--------------------------------- */
-			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
-		}; // transformer;
-		/* --------------------Returns for main handler function--------------------------------- */
-		const _content = utils.gen.transformFunction(
 			transformer,
-			sourceFile,
-			compilerOptions,
 		);
 		return { file, content: _content, ...rest };
 	}; // returns
@@ -469,14 +430,10 @@ const duplicateImportExpression = (
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler => {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
+			const exportLookup = createNameLookup(exportNameMap);
 			const visitor = (node: ts6.Node): ts6.Node => {
 				if (ts6.isImportDeclaration(node)) {
 					const moduleKey = getModuleKeyFromSpecifier(
@@ -499,19 +456,17 @@ const duplicateImportExpression = (
 						ts6.isIdentifier(node.importClause.name)
 					) {
 						const base = node.importClause.name.text.trim();
-						const mapping = exportNameMap.find(
-							(m) => m.base === base && m.file === moduleKey,
-						);
+						const mapping = getMappedName(exportLookup, moduleKey, base);
 						if (mapping) {
 							importNameMap.push({
-								base: mapping.base,
+								base,
 								file,
-								newName: mapping.newName,
+								newName: mapping,
 							});
 							const newImportClause = factory.updateImportClause(
 								node.importClause,
 								node.importClause.phaseModifier,
-								factory.createIdentifier(mapping.newName),
+								factory.createIdentifier(mapping),
 								node.importClause.namedBindings,
 							);
 							return factory.updateImportDeclaration(
@@ -532,21 +487,20 @@ const duplicateImportExpression = (
 					) {
 						const updatedElements =
 							node.importClause.namedBindings.elements.map((el) => {
-								const mapping = exportNameMap.find(
-									(m) => m.base === el.name.text.trim() && m.file === moduleKey,
-								);
+								const base = el.name.text.trim();
+								const mapping = getMappedName(exportLookup, moduleKey, base);
 
 								if (mapping) {
 									importNameMap.push({
-										base: mapping.base,
+										base,
 										file,
-										newName: mapping.newName,
+										newName: mapping,
 									});
 									return factory.updateImportSpecifier(
 										el,
 										el.isTypeOnly,
 										el.propertyName,
-										factory.createIdentifier(mapping.newName),
+										factory.createIdentifier(mapping),
 									);
 								}
 								return el;
@@ -569,7 +523,7 @@ const duplicateImportExpression = (
 							node.attributes,
 						);
 					}
-				} //&&
+				}
 				/* ----------------------Returns for visitor function------------------------------- */
 				return ts6.visitEachChild(node, visitor, context);
 			}; // visitor;
@@ -577,118 +531,81 @@ const duplicateImportExpression = (
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		}; // transformer;
 		/* --------------------Returns for main handler function--------------------------------- */
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, ...rest };
 	}; // returns
 };
 //--
-const duplicateCollector = (
-	compilerOptions: ts6.CompilerOptions,
-): BundledHandler => {
-	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
-		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
-			function visitNode(
-				node: ts6.Node,
-				isGlobalScope: boolean = true,
-			): ts6.Node {
-				// Global declarations များကိုသာ collect လုပ်မယ်
-				if (isGlobalScope) {
-					// Variable statements (const, let, var)
-					if (ts6.isVariableStatement(node)) {
-						node.declarationList.declarations.forEach((decl) => {
-							if (ts6.isIdentifier(decl.name)) {
-								const $name = decl.name.text;
-								if (!duplicateNameMap.has($name)) {
-									duplicateNameMap.set($name, new Set([{ file }]));
-								} else {
-									// biome-ignore  lint/style/noNonNullAssertion : !duplicateNameMap.has($name) before
-									duplicateNameMap.get($name)!.add({ file });
-								}
-							}
-						});
-					}
-					// Function, Class, Enum, Interface, Type declarations
-					else if (
-						ts6.isFunctionDeclaration(node) ||
-						ts6.isClassDeclaration(node) ||
-						ts6.isEnumDeclaration(node) ||
-						ts6.isInterfaceDeclaration(node) ||
-						ts6.isTypeAliasDeclaration(node)
-					) {
-						const $name = node.name?.text;
-						if ($name) {
-							if (!duplicateNameMap.has($name)) {
-								duplicateNameMap.set($name, new Set([{ file }]));
-							} else {
-								// biome-ignore  lint/style/noNonNullAssertion : !namesMap.has($name) before
-								duplicateNameMap.get($name)!.add({ file });
-							}
+const collectDuplicateDeclarations = (deps: DepsFile[]) => {
+	const collectFile = (file: string, node: ts6.Node, isGlobalScope = true) => {
+		if (isGlobalScope) {
+			if (ts6.isVariableStatement(node)) {
+				node.declarationList.declarations.forEach((decl) => {
+					if (ts6.isIdentifier(decl.name)) {
+						const name = decl.name.text;
+						if (!duplicateNameMap.has(name)) {
+							duplicateNameMap.set(name, new Set([{ file }]));
+						} else {
+							duplicateNameMap.get(name)?.add({ file });
 						}
 					}
-				}
-
-				// Local scope ထဲရောက်သွားတဲ့ node တွေအတွက် recursive visit
-				if (
-					ts6.isBlock(node) ||
-					ts6.isFunctionDeclaration(node) ||
-					ts6.isFunctionExpression(node) ||
-					ts6.isArrowFunction(node) ||
-					ts6.isMethodDeclaration(node) ||
-					ts6.isClassDeclaration(node)
-				) {
-					// Local scope ထဲကို ဝင်သွားပြီဆိုတာနဲ့ isGlobalScope = false
-					if (ts6.isBlock(node)) {
-						ts6.visitNodes(node.statements, (child) => visitNode(child, false));
+				});
+			} else if (
+				ts6.isFunctionDeclaration(node) ||
+				ts6.isClassDeclaration(node) ||
+				ts6.isEnumDeclaration(node) ||
+				ts6.isInterfaceDeclaration(node) ||
+				ts6.isTypeAliasDeclaration(node)
+			) {
+				const name = node.name?.text;
+				if (name) {
+					if (!duplicateNameMap.has(name)) {
+						duplicateNameMap.set(name, new Set([{ file }]));
 					} else {
-						ts6.forEachChild(node, (child) => {
-							visitNode(child, false);
-						});
+						duplicateNameMap.get(name)?.add({ file });
 					}
-				} else {
-					// Global scope ထဲဆက်ရှိနေတဲ့ node တွေအတွက်
-					return ts6.visitEachChild(
-						node,
-						(child) => visitNode(child, isGlobalScope),
-						context,
-					);
 				}
-				/* ----------------------Returns for visitNode function------------------------------- */
-				return node;
-			} // visitNode
+			}
+		}
 
-			/* --------------------Returns for transformer function--------------------------------- */
-			return (rootNode) => visitNode(rootNode, true) as ts6.SourceFile;
-		}; // transformer;
-		/* --------------------Returns for main handler function--------------------------------- */
-		const _content = utils.gen.transformFunction(
-			transformer,
-			sourceFile,
-			compilerOptions,
-		);
-		return { file, content: _content, ...rest };
-	}; // returns
+		if (
+			ts6.isBlock(node) ||
+			ts6.isFunctionDeclaration(node) ||
+			ts6.isFunctionExpression(node) ||
+			ts6.isArrowFunction(node) ||
+			ts6.isMethodDeclaration(node) ||
+			ts6.isClassDeclaration(node)
+		) {
+			if (ts6.isBlock(node)) {
+				node.statements.forEach((child) => collectFile(file, child, false));
+			} else {
+				ts6.forEachChild(node, (child) => {
+					collectFile(file, child, false);
+				});
+			}
+			return;
+		}
+
+		ts6.forEachChild(node, (child) => {
+			collectFile(file, child, isGlobalScope);
+		});
+	};
+
+	for (const dep of deps) {
+		const sourceFile = createBundledSourceFile(dep.file, dep.content);
+		collectFile(dep.file, sourceFile, true);
+	}
 };
-//
+
 const duplicateUpdater = (
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler => {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
 			const visitor = (node: ts6.Node): ts6.Node => {
@@ -793,10 +710,10 @@ const duplicateUpdater = (
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		}; // transformer;
 		/* --------------------Returns for main handler function--------------------------------- */
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, ...rest };
 	}; // returns
@@ -828,20 +745,11 @@ const duplicateHandlers = {
 		compilerOptions: ts6.CompilerOptions,
 	): Promise<DepsFile[]> => {
 		resetDuplicateState();
-		// order is important here
-		const duplicates = utils.promises.resolve([
-			[duplicateCollector, compilerOptions],
-			[duplicateUpdater, compilerOptions],
-			[duplicateCallExpression, compilerOptions],
-			[duplicateExportExpression, compilerOptions],
-			[duplicateImportExpression, compilerOptions],
-			[duplicateCallExpression, compilerOptions],
-			[duplicateExportExpression, compilerOptions],
-		]);
-		const duplicate = await duplicates.concurrent();
-		for (const func of duplicate) {
-			deps = deps.map(func);
-		}
+		collectDuplicateDeclarations(deps);
+		deps = deps.map(duplicateUpdater(compilerOptions));
+		deps = deps.map(duplicateUsageAndExportHandler(compilerOptions));
+		deps = deps.map(duplicateImportExpression(compilerOptions));
+		deps = deps.map(duplicateUsageAndExportHandler(compilerOptions));
 		return deps;
 	},
 	/**
@@ -854,20 +762,15 @@ const duplicateHandlers = {
 	 */
 	notRenamed: async (
 		deps: DepsFile[],
-		compilerOptions: ts6.CompilerOptions,
+		_compilerOptions: ts6.CompilerOptions,
 	): Promise<DepsFile[]> => {
 		resetDuplicateState();
 		let _err = false;
-		const duplicates = utils.promises.resolve([
-			[duplicateCollector, duplicateNameMap, compilerOptions],
-		]);
-		const duplicate = await duplicates.concurrent();
-		deps.map(duplicate[0]);
+		collectDuplicateDeclarations(deps);
 		duplicateNameMap.forEach((files, name) => {
 			if (files.size > 1) {
 				_err = true;
 				console.warn(`Name -> ${name} declared in multiple files : `);
-				// biome-ignore lint/suspicious/useIterableCallbackReturn : just log warn
 				files.forEach((f) => console.warn(`  - ${f.file}`));
 			}
 		});

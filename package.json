@@ -26,15 +26,13 @@
 		"lint": "biome check src  --write",
 		"fmt": "biome format --write",
 		"test": "tsx --test",
-		"coverage": "npx tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
+		"coverage": "npx tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=__tests__/coverage/lcov.info",
 		"hooks:install": "bash scripts/install-hooks.sh",
 		"lint:test": "biome check tests --write",
 		"commit": "bash scripts/commit.sh",
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
-		"v:major": "npm version major --no-git-tag-version",
-		"docs:init": "node scripts/init.mjs",
-		"docs:copy": "node scripts/copy.mjs"
+		"v:major": "npm version major --no-git-tag-version"
 	},
 	"keywords": [
 		"bundler",

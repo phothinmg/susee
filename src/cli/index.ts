@@ -3,10 +3,15 @@ import path from "node:path";
 import process from "node:process";
 import readline from "node:readline/promises";
 import pkg from "../../package.json" with { type: "json" };
+import { setProfileEnabled } from "../lib/profile.js";
 import tcolor from "../lib/tcolor.js";
 import { cliBuild } from "./build.js";
 import { cliCompiler } from "./cli.js";
-import { getDefaultOptions, parseArgs } from "./lib/parse_argv.js";
+import {
+	getDefaultOptions,
+	parseArgs,
+	parseBooleanFlag,
+} from "./lib/parse_argv.js";
 import { printHelp } from "./lib/print_help.js";
 
 const tsFileText = `
@@ -148,8 +153,41 @@ async function cliInit() {
 	);
 }
 
+function extractProfileFlag(args: string[]) {
+	const nextArgs: string[] = [];
+	let profile = false;
+
+	for (let index = 0; index < args.length; index += 1) {
+		const argument = args[index] as string;
+		const [flag, inlineValue] = argument.split("=", 2);
+
+		if (flag !== "--profile") {
+			nextArgs.push(argument);
+			continue;
+		}
+
+		const nextValue = args[index + 1] as string | undefined;
+		if (inlineValue !== undefined) {
+			profile = parseBooleanFlag("profile", inlineValue);
+			continue;
+		}
+		if (nextValue === "true" || nextValue === "false") {
+			profile = parseBooleanFlag("profile", nextValue);
+			index += 1;
+			continue;
+		}
+		profile = true;
+	}
+
+	return { args: nextArgs, profile };
+}
+
 async function suseeCliBuild() {
-	const args = process.argv.slice(2);
+	const rawArgs = process.argv.slice(2);
+	const { args, profile } = extractProfileFlag(rawArgs);
+	if (profile) {
+		setProfileEnabled(true);
+	}
 	if (args.length === 0) {
 		await cliBuild();
 	} else if (args.length === 1) {

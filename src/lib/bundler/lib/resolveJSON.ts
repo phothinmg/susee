@@ -1,8 +1,11 @@
 import path from "node:path";
 import ts6 from "@typescript/typescript6";
 import type { BundledHandler, DepsFile, NamesSets } from "../../../types.js";
-import { utils } from "../../utilities.js";
-import { getFileKey, jsonExtToTs } from "./helpers.js";
+import {
+	createBundledSourceFile,
+	getFileKey,
+	transformBundledSource,
+} from "./helpers.js";
 
 const jsonPrefix = "__jsonModule__";
 
@@ -60,12 +63,7 @@ function jsonModuleImportHandler(
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler {
 	return ({ file, content, fileExt, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
 			function visitor(node: ts6.Node): ts6.Node {
@@ -110,10 +108,10 @@ function jsonModuleImportHandler(
 			}
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		};
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, fileExt, ...rest };
 	};
@@ -123,12 +121,7 @@ function jsonModuleCallExpressionHandler(
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler {
 	return ({ file, content, fileExt, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
 			function visitor(node: ts6.Node): ts6.Node {
@@ -198,10 +191,10 @@ function jsonModuleCallExpressionHandler(
 			}
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		};
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, fileExt, ...rest };
 	};

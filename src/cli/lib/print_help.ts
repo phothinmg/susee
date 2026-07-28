@@ -15,11 +15,14 @@ Options:
   --rename[=true|false]                Enable/disable renaming
   --allow-update[=true|false]          Enable/disable dependency update
   --minify[=true|false]                Enable/disable minification
+  --profile[=true|false]               Print bundler/compiler phase timings
 
 Examples:
   susee build src/index.ts --outdir dist
   susee build src/index.ts --format commonjs
   susee build --entry src/index.ts --format esm --minify
+  susee build src/index.ts --profile
+  susee --profile
   
 `);
 }

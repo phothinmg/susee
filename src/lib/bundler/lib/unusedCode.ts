@@ -1,5 +1,5 @@
 import ts6 from "@typescript/typescript6";
-import { utils } from "../../utilities.js";
+import { createBundledSourceFile, transformBundledSource } from "./helpers.js";
 
 export interface ClearUnusedOptions {
 	/** Treat exported symbols as used (default: true) */
@@ -34,12 +34,7 @@ export default function (
 	compilerOptions: ts6.CompilerOptions,
 	options: ClearUnusedOptions = { treatExportsAsUsed: true },
 ) {
-	const sourceFile = ts6.createSourceFile(
-		file,
-		content,
-		ts6.ScriptTarget.Latest,
-		true,
-	);
+	const sourceFile = createBundledSourceFile(file, content);
 
 	const defined = new Map<string, { exported: boolean }>();
 	const used = new Set<string>();
@@ -82,7 +77,6 @@ export default function (
 				collectBindingNames(d.name, []);
 				const names: string[] = [];
 				collectBindingNames(d.name, names);
-				// biome-ignore  lint/suspicious/useIterableCallbackReturn : ts
 				names.forEach((n) => markDefined(n, exported));
 			});
 		} else if (
@@ -220,7 +214,6 @@ export default function (
 			// VariableStatement: remove whole statement only if none of declared names are used
 			if (ts6.isVariableStatement(node)) {
 				const names: string[] = [];
-				// biome-ignore  lint/suspicious/useIterableCallbackReturn : ts
 				node.declarationList.declarations.forEach((d) =>
 					collectBindingNames(d.name, names),
 				);
@@ -235,10 +228,10 @@ export default function (
 		return (root) => ts6.visitNode(root, visitor) as ts6.SourceFile;
 	};
 
-	const output = utils.gen.transformFunction(
-		transformer,
+	const output = transformBundledSource(
 		sourceFile,
 		compilerOptions,
+		transformer,
 	);
 	return output;
 }

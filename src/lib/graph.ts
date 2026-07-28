@@ -308,7 +308,6 @@ function collectDependencies(
 		collectedNpmModules.push(npmModules);
 		collectedNodeModules.push(nodeModules);
 		collectedWarning.push(warn);
-		// biome-ignore lint/suspicious/useIterableCallbackReturn: Recursively visit local file dependencies
 		importFiles.forEach((depFile) => visit(depFile, dependencies.length));
 	}
 	visit(entry, 0);

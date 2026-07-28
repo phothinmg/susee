@@ -6,40 +6,18 @@ import type {
 	TypeObj,
 } from "../../../types.js";
 import { utils } from "../../utilities.js";
-import { jsonExtToTs } from "./helpers.js";
+import { createBundledSourceFile, transformBundledSource } from "./helpers.js";
 
-let properties: string[] = [];
+const properties: string[] = [];
+const propertiesSet = new Set<string>();
 const typeObj: TypeObj = {};
-const typesNames: string[] = [];
-
-/**
- * Finds all the properties accessed in the given node.
- * @param {ts6.Node} node - The node to search through.
- * @returns {string[]} - An array of all the properties accessed.
- */
-function findProperty(node: ts6.Node): string[] {
-	const properties: string[] = [];
-	if (
-		ts6.isPropertyAccessExpression(node) &&
-		ts6.isIdentifier(node.expression)
-	) {
-		properties.push(node.expression.text);
-	}
-
-	node.forEachChild((n) => findProperty(n));
-	return properties;
-}
+const typesNames = new Set<string>();
 
 function esmExportRemoveHandler(
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
 			const visitor = (node: ts6.Node): ts6.Node => {
@@ -142,10 +120,10 @@ function esmExportRemoveHandler(
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		};
 		/* --------------------Returns for main handler function--------------------------------- */
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, ...rest };
 	};
@@ -155,12 +133,8 @@ function importAllRemoveHandler(
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
+		const isCommonJsFile = utils.checks.moduleType(content, file).isCommonJs;
 
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			// Pre-scan: collect names of type-only import-equals (these are namespace-type aliases)
@@ -179,7 +153,13 @@ function importAllRemoveHandler(
 			}
 			const { factory } = context;
 			const visitor = (node: ts6.Node): ts6.Node => {
-				properties = [...properties, ...findProperty(node)];
+				if (
+					ts6.isPropertyAccessExpression(node) &&
+					ts6.isIdentifier(node.expression)
+				) {
+					properties.push(node.expression.text);
+					propertiesSet.add(node.expression.text);
+				}
 				const obj: RequireImportObject = {
 					isNamespace: false,
 					isTypeOnly: false,
@@ -198,7 +178,7 @@ function importAllRemoveHandler(
 				) {
 					const left = node.typeName.left.text;
 					const right = node.typeName.right.text;
-					typesNames.push(left);
+					typesNames.add(left);
 					if (left in typeObj) {
 						typeObj[left]?.push(right);
 					} else {
@@ -208,7 +188,7 @@ function importAllRemoveHandler(
 					// If this qualified name refers to a type-only import-equals alias, DO NOT rewrite.
 					// Rewriting (Foo.Bar -> Bar) was intended to support converting to named imports,
 					// but for type-only namespace imports we will emit `import type * as Foo from "..."`.
-					if (utils.checks.moduleType(content, file).isCommonJs) {
+					if (isCommonJsFile) {
 						if (left !== "ts" && !typeOnlyImportEquals.has(left)) {
 							return factory.updateTypeReferenceNode(
 								node,
@@ -236,7 +216,7 @@ function importAllRemoveHandler(
 					}
 					obj.importedString = name;
 					if (!obj.isTypeOnly) {
-						if (properties.includes(name)) {
+						if (propertiesSet.has(name)) {
 							obj.isNamespace = true;
 						}
 					}
@@ -255,7 +235,7 @@ function importAllRemoveHandler(
 								t = `import type * as ${obj.importedString} from "${obj.source}";`;
 							} else {
 								// otherwise try to emit a named/default type import (existing behavior)
-								if (typesNames.includes(obj.importedString)) {
+								if (typesNames.has(obj.importedString)) {
 									t = `import type { ${typeObj[obj.importedString]?.join(",")} } from "${obj.source}";`;
 								} else {
 									t = `import type ${obj.importedString} from "${obj.source}";`;
@@ -302,7 +282,7 @@ function importAllRemoveHandler(
 							if (ts6.isIdentifier(decl.name)) {
 								const _n = decl.name.text;
 								obj.importedString = _n;
-								if (properties.includes(_n)) {
+								if (propertiesSet.has(_n)) {
 									obj.isNamespace = true;
 								}
 							} else if (ts6.isObjectBindingPattern(decl.name)) {
@@ -341,10 +321,10 @@ function importAllRemoveHandler(
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		};
 		/* --------------------Returns for main handler function--------------------------------- */
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, ...rest };
 	};

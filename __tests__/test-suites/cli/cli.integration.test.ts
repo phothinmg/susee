@@ -277,6 +277,21 @@ describe("CLI integration", () => {
 		assert.strictEqual(result.stderr.trim(), "");
 	});
 
+	it("build command prints profile timings when --profile is passed", async () => {
+		const cwd = await setupTempDir("cli-build-profile");
+		await writeEntryFile(cwd);
+
+		const result = await runCli(
+			["build", "src/index.ts", "--format", "esm", "--profile"],
+			cwd,
+		);
+
+		assert.strictEqual(result.code, 0);
+		assert.match(result.stdout, /\[SUSEE_PROFILE\]\[bundler:/);
+		assert.match(result.stdout, /\[SUSEE_PROFILE\]\[compiler:esm:/);
+		assert.strictEqual(result.stderr.trim(), "");
+	});
+
 	it("default invocation builds from susee.config.js", async () => {
 		const cwd = await setupTempDir("cli-default-build");
 		await writeEntryFile(cwd);
@@ -306,6 +321,32 @@ describe("CLI integration", () => {
 			await fileExists(path.join(cwd, "dist", "index.cjs")),
 			true,
 		);
+		assert.strictEqual(result.stderr.trim(), "");
+	});
+
+	it("default invocation prints profile timings when --profile is passed", async () => {
+		const cwd = await setupTempDir("cli-default-build-profile");
+		await writeEntryFile(cwd);
+		await fs.writeFile(
+			path.join(cwd, "susee.config.js"),
+			`export default {
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: ["esm"],
+    },
+  ],
+};
+`,
+			"utf8",
+		);
+
+		const result = await runCli(["--profile"], cwd);
+
+		assert.strictEqual(result.code, 0);
+		assert.match(result.stdout, /\[SUSEE_PROFILE\]\[bundler:/);
+		assert.match(result.stdout, /\[SUSEE_PROFILE\]\[compiler:esm:/);
 		assert.strictEqual(result.stderr.trim(), "");
 	});
 

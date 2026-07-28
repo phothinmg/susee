@@ -2,7 +2,7 @@ import path from "node:path";
 import ts6 from "@typescript/typescript6";
 import type { BundledHandler, DepsFile, NamesSets } from "../../../types.js";
 import { utils } from "../../utilities.js";
-import { jsonExtToTs } from "./helpers.js";
+import { createBundledSourceFile, transformBundledSource } from "./helpers.js";
 import { uniqueName } from "./uniqueName.js";
 
 const anonymousExportNameMap: NamesSets = [];
@@ -22,12 +22,7 @@ function anonymousCallExpressionHandler(
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
 			function visitor(node: ts6.Node): ts6.Node {
@@ -97,10 +92,10 @@ function anonymousCallExpressionHandler(
 			}
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		};
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, ...rest };
 	};
@@ -110,12 +105,7 @@ function anonymousExportHandler(
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		/**
 		 * A transformer that handles anonymous default exports by assigning them a name
 		 *
@@ -393,10 +383,10 @@ function anonymousExportHandler(
 			}
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		};
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, ...rest };
 	};
@@ -406,12 +396,7 @@ function anonymousImportHandler(
 	compilerOptions: ts6.CompilerOptions,
 ): BundledHandler {
 	return ({ file, content, ...rest }: DepsFile): DepsFile => {
-		const sourceFile = ts6.createSourceFile(
-			jsonExtToTs(file),
-			content,
-			ts6.ScriptTarget.Latest,
-			true,
-		);
+		const sourceFile = createBundledSourceFile(file, content);
 		const transformer: ts6.TransformerFactory<ts6.SourceFile> = (context) => {
 			const { factory } = context;
 			function visitor(node: ts6.Node): ts6.Node {
@@ -456,10 +441,10 @@ function anonymousImportHandler(
 			}
 			return (rootNode) => ts6.visitNode(rootNode, visitor) as ts6.SourceFile;
 		};
-		const _content = utils.gen.transformFunction(
-			transformer,
+		const _content = transformBundledSource(
 			sourceFile,
 			compilerOptions,
+			transformer,
 		);
 		return { file, content: _content, ...rest };
 	};

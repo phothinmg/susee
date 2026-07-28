@@ -1,10 +1,20 @@
 import { suseeTerser } from "@suseejs/terser-plugin";
 import { bundler } from "../lib/bundler/index.js";
 import { files } from "../lib/files.js";
+import { logProfilePhase } from "../lib/profile.js";
 import { suseeCompiler } from "../lib/suseeCompiler.js";
 import { getCompilerOptions } from "../lib/tsoptions.js";
 import { utils } from "../lib/utilities.js";
 import type { CliBuildOptions } from "./lib/parse_argv.js";
+
+const logCliCompilerPhase = (
+	entry: string,
+	format: "esm" | "commonjs",
+	phase: string,
+	start: bigint,
+) => {
+	logProfilePhase(`compiler:${format}:${entry}`, phase, start);
+};
 
 class CliCompiler {
 	private _files: files.OutFiles;
@@ -25,19 +35,23 @@ class CliCompiler {
 		this._update = opts.allowUpdate;
 		const _opts = getCompilerOptions(opts.tsconfig);
 		const compilerOptions = _opts.commonjs(opts.outDir);
+		let phaseStart = process.hrtime.bigint();
 		const bundledCode = await bundler(
 			opts.entry,
 			opts.plugins,
 			opts.warning,
 			opts.rename,
 		);
+		logCliCompilerPhase(opts.entry, "commonjs", "bundle", phaseStart);
 		const is_jsx = utils.checks.isJsxContent(bundledCode);
+		phaseStart = process.hrtime.bigint();
 		const compiled = suseeCompiler({
 			sourceCode: bundledCode,
 			fileName: opts.entry,
 			compilerOptions,
 			isJsx: is_jsx,
 		});
+		logCliCompilerPhase(opts.entry, "commonjs", "typescriptEmit", phaseStart);
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
 			compiled.out_dir,
@@ -65,11 +79,18 @@ class CliCompiler {
 			for (const plugin of opts.plugins) {
 				const _plugin = typeof plugin === "function" ? plugin() : plugin;
 				if (_plugin.type === "post-process") {
+					phaseStart = process.hrtime.bigint();
 					if (_plugin.async) {
 						compiledCode = await _plugin.func(compiledCode, opts.entry);
 					} else {
 						compiledCode = _plugin.func(compiledCode, opts.entry);
 					}
+					logCliCompilerPhase(
+						opts.entry,
+						"commonjs",
+						`postProcessPlugin:${_plugin.name ?? "anonymous"}`,
+						phaseStart,
+					);
 				}
 			}
 		} //-----------
@@ -84,28 +105,34 @@ class CliCompiler {
 					this._files.types = this._files.commonjsTypes;
 			}
 		} //update
+		phaseStart = process.hrtime.bigint();
 		await files.writeFile(mainFilePath, compiledCode);
 		if (compiled.dts) await files.writeFile(dtsFilePath, compiled.dts);
 		if (compiled.map) await files.writeFile(mapFilePath, compiled.map);
+		logCliCompilerPhase(opts.entry, "commonjs", "writeFiles", phaseStart);
 	}
 	//-----------------------------------------------------------------//
 	private async _esm(opts: CliBuildOptions) {
 		this._update = opts.allowUpdate;
 		const _opts = getCompilerOptions(opts.tsconfig);
 		const compilerOptions = _opts.esm(opts.outDir);
+		let phaseStart = process.hrtime.bigint();
 		const bundledCode = await bundler(
 			opts.entry,
 			opts.plugins,
 			opts.warning,
 			opts.rename,
 		);
+		logCliCompilerPhase(opts.entry, "esm", "bundle", phaseStart);
 		const is_jsx = utils.checks.isJsxContent(bundledCode);
+		phaseStart = process.hrtime.bigint();
 		const compiled = suseeCompiler({
 			sourceCode: bundledCode,
 			fileName: opts.entry,
 			compilerOptions,
 			isJsx: is_jsx,
 		});
+		logCliCompilerPhase(opts.entry, "esm", "typescriptEmit", phaseStart);
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
 			compiled.out_dir,
@@ -132,11 +159,18 @@ class CliCompiler {
 			for (const plugin of opts.plugins) {
 				const _plugin = typeof plugin === "function" ? plugin() : plugin;
 				if (_plugin.type === "post-process") {
+					phaseStart = process.hrtime.bigint();
 					if (_plugin.async) {
 						compiledCode = await _plugin.func(compiledCode, opts.entry);
 					} else {
 						compiledCode = _plugin.func(compiledCode, opts.entry);
 					}
+					logCliCompilerPhase(
+						opts.entry,
+						"esm",
+						`postProcessPlugin:${_plugin.name ?? "anonymous"}`,
+						phaseStart,
+					);
 				}
 			}
 		} //-----------
@@ -149,9 +183,11 @@ class CliCompiler {
 				this._files.module = this._files.esm;
 			}
 		} //update
+		phaseStart = process.hrtime.bigint();
 		await files.writeFile(mainFilePath, compiledCode);
 		if (compiled.dts) await files.writeFile(dtsFilePath, compiled.dts);
 		if (compiled.map) await files.writeFile(mapFilePath, compiled.map);
+		logCliCompilerPhase(opts.entry, "esm", "writeFiles", phaseStart);
 	}
 	//--
 	async compile(opts: CliBuildOptions) {
@@ -160,13 +196,13 @@ class CliCompiler {
 			case "commonjs":
 				await this._commonjs(opts);
 				if (this._update) {
-					files.writePackageJson(this._files, ".");
+					await files.writePackageJson(this._files, ".");
 				}
 				break;
 			case "esm":
 				await this._esm(opts);
 				if (this._update) {
-					files.writePackageJson(this._files, ".");
+					await files.writePackageJson(this._files, ".");
 				}
 				break;
 		}

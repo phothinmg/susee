@@ -11,6 +11,7 @@ interface CliOptions {
 	allowUpdate?: boolean | undefined;
 	minify?: boolean | undefined;
 	warning?: boolean | undefined;
+	profile?: boolean | undefined;
 }
 
 export function isFile(entry: string) {
@@ -122,6 +123,16 @@ export function parseArgs(argv: any[]) {
 					opts.warning = true;
 				}
 				break;
+			case "--profile":
+				if (inlineValue !== undefined) {
+					opts.profile = parseBooleanFlag("profile", inlineValue);
+				} else if (nextValue === "true" || nextValue === "false") {
+					opts.profile = parseBooleanFlag("profile", nextValue);
+					index += 1;
+				} else {
+					opts.profile = true;
+				}
+				break;
 		}
 	}
 	if (isEmptyObject(opts) || opts.entry === "") {
@@ -138,6 +149,7 @@ export interface CliBuildOptions {
 	allowUpdate: boolean;
 	minify: boolean;
 	warning: boolean;
+	profile: boolean;
 	plugins: (SuseePlugin | SuseePluginFunction)[];
 }
 
@@ -150,6 +162,7 @@ export function getDefaultOptions(args: CliOptions): CliBuildOptions {
 	const allowUpdate = args.allowUpdate ?? false;
 	const minify = args.minify ?? false;
 	const warning = args.warning ?? false;
+	const profile = args.profile ?? false;
 	return {
 		entry,
 		outDir,
@@ -159,6 +172,7 @@ export function getDefaultOptions(args: CliOptions): CliBuildOptions {
 		allowUpdate,
 		minify,
 		warning,
+		profile,
 		plugins: [],
 	};
 }
