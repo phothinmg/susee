@@ -1,6 +1,9 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { suseeCompiler } from "../../src/lib/suseeCompiler.js";
+import {
+	suseeCompiler,
+	typeCheckSuseeCompiler,
+} from "../../src/lib/suseeCompiler.js";
 import suseeTs from "../../src/suseeTs.js";
 
 describe("SuseeCompilers", () => {
@@ -146,6 +149,38 @@ describe("SuseeCompilers", () => {
 			);
 			assert.strictEqual(exitCode, 1);
 			assert.match(loggedError, /\[jsx-runtime-mismatch-error\]/);
+		} finally {
+			process.exit = originalExit;
+			console.error = originalError;
+		}
+	});
+
+	it("fails type checking before emit when bundled source has errors", () => {
+		let exitCode: number | undefined;
+		let loggedError = "";
+		const originalExit = process.exit;
+		const originalError = console.error;
+
+		try {
+			process.exit = ((code?: number): never => {
+				exitCode = code;
+				throw new Error("process.exit called");
+			}) as typeof process.exit;
+			console.error = ((message?: unknown) => {
+				loggedError = String(message);
+			}) as typeof console.error;
+
+			assert.throws(
+				() =>
+					typeCheckSuseeCompiler({
+						sourceCode: "const value: string = 1;",
+						fileName: "broken.ts",
+						compilerOptions: { module: suseeTs.ModuleKind.ES2020 },
+					}),
+				/process\.exit called/,
+			);
+			assert.strictEqual(exitCode, 1);
+			assert.match(loggedError, /Type 'number' is not assignable to type 'string'/);
 		} finally {
 			process.exit = originalExit;
 			console.error = originalError;
