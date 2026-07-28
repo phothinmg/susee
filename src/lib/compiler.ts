@@ -38,7 +38,9 @@ class Compiler {
 	private _update() {
 		return this._object.updatePackage;
 	}
-	private async _prepareBundle(point: BuildEntryPoint): Promise<PreparedBundle> {
+	private async _prepareBundle(
+		point: BuildEntryPoint,
+	): Promise<PreparedBundle> {
 		const bundledCode = await bundler(
 			point.entry,
 			point.plugins,
@@ -185,13 +187,13 @@ class Compiler {
 					case "commonjs":
 						await this._commonjs(point, prepared);
 						if (this._update()) {
-							files.writePackageJson(this._files, point.exportPath);
+							await files.writePackageJson(this._files, point.exportPath);
 						}
 						break;
 					case "esm":
 						await this._esm(point, prepared);
 						if (this._update()) {
-							files.writePackageJson(this._files, point.exportPath);
+							await files.writePackageJson(this._files, point.exportPath);
 						}
 						break;
 				}

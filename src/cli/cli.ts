@@ -27,7 +27,9 @@ class CliCompiler {
 		};
 		this._update = false;
 	}
-	private async _prepareBundle(opts: CliBuildOptions): Promise<PreparedCliBundle> {
+	private async _prepareBundle(
+		opts: CliBuildOptions,
+	): Promise<PreparedCliBundle> {
 		const compilerOptions = getCompilerOptions(opts.tsconfig);
 		const bundledCode = await bundler(
 			opts.entry,
@@ -172,13 +174,13 @@ class CliCompiler {
 			case "commonjs":
 				await this._commonjs(opts, prepared);
 				if (this._update) {
-					files.writePackageJson(this._files, ".");
+					await files.writePackageJson(this._files, ".");
 				}
 				break;
 			case "esm":
 				await this._esm(opts, prepared);
 				if (this._update) {
-					files.writePackageJson(this._files, ".");
+					await files.writePackageJson(this._files, ".");
 				}
 				break;
 		}

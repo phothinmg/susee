@@ -53,7 +53,7 @@ function jsxCompilerOptions(
 	const { jsx, lib, ...rest } = compilerOptions;
 	const _jsx = jsx ?? ts6.JsxEmit.ReactJSX;
 	return {
-		lib: ["dom", "dom.iterable", "esnext"],
+		lib: ["lib.dom.d.ts", "lib.dom.iterable.d.ts", "lib.esnext.d.ts"],
 		jsx: _jsx,
 		...rest,
 	} as ts6.CompilerOptions;
@@ -113,6 +113,8 @@ function compilerHost(): ts6.FormatDiagnosticsHost {
 	};
 }
 
+const ignoredTypeCheckCodes = new Set([2307, 7016, 7026]);
+
 function typeCheckSuseeCompiler({
 	sourceCode,
 	fileName,
@@ -127,15 +129,25 @@ function typeCheckSuseeCompiler({
 	const { host } = createHost(sourceCode, fileName, {
 		...normalizedOptions,
 		noEmit: true,
+		noResolve: true,
+		skipLibCheck: true,
 	});
 	const program = ts6.createProgram(
 		[fileName],
-		{ ...normalizedOptions, noEmit: true },
+		{ ...normalizedOptions, noEmit: true, noResolve: true, skipLibCheck: true },
 		host,
 	);
 	const diagnostics = ts6
 		.getPreEmitDiagnostics(program)
-		.filter((diagnostic) => diagnostic.category === ts6.DiagnosticCategory.Error);
+		.filter(
+			(diagnostic) => diagnostic.category === ts6.DiagnosticCategory.Error,
+		)
+		.filter((diagnostic) => {
+			if (diagnostic.file && diagnostic.file.fileName !== fileName) {
+				return false;
+			}
+			return !ignoredTypeCheckCodes.has(diagnostic.code);
+		});
 	if (diagnostics.length > 0) {
 		console.error(
 			ts6.formatDiagnosticsWithColorAndContext(diagnostics, compilerHost()),
