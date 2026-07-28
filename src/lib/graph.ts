@@ -178,8 +178,9 @@ function resolveExtension(filePath: string) {
 				result = filePath;
 				ext = match.ext;
 			} else {
+				const safeExtName = extName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 				result = filePath.replace(
-					new RegExp(`\\.${extName}$`),
+					new RegExp(`\\.${safeExtName}$`),
 					`.${match.ext}`,
 				);
 				ext = match.ext;
