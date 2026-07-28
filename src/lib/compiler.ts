@@ -1,15 +1,9 @@
 import { bundler } from "./bundler/index.js";
 import { files } from "./files.js";
-import { suseeCompiler, typeCheckSuseeCompiler } from "./suseeCompiler.js";
+import { suseeCompiler } from "./suseeCompiler.js";
 import type { BuildEntryPoint, BuildOptions } from "./suseeConfig.js";
 import { getCompilerOptions } from "./tsoptions.js";
 import { utils } from "./utilities.js";
-
-type PreparedBundle = {
-	bundledCode: string;
-	isJsx: boolean;
-	compilerOptions: ReturnType<typeof getCompilerOptions>;
-};
 
 /**
  * Compiler for the JavaScript API.
@@ -38,38 +32,22 @@ class Compiler {
 	private _update() {
 		return this._object.updatePackage;
 	}
-	private async _prepareBundle(
-		point: BuildEntryPoint,
-	): Promise<PreparedBundle> {
+	private async _commonjs(point: BuildEntryPoint) {
+		const isMain = point.exportPath === ".";
+		const opts = getCompilerOptions(point.tsconfigFilePath);
+		const compilerOptions = opts.commonjs(point.outputDirectoryPath);
 		const bundledCode = await bundler(
 			point.entry,
 			point.plugins,
 			point.warning,
 			point.rename,
 		);
-		const compilerOptions = getCompilerOptions(point.tsconfigFilePath);
-		const isJsx = utils.checks.isJsxContent(bundledCode);
-		const typeCheckOptions = point.format.includes("esm")
-			? compilerOptions.esm(point.outputDirectoryPath)
-			: compilerOptions.commonjs(point.outputDirectoryPath);
-		typeCheckSuseeCompiler({
+		const is_jsx = utils.checks.isJsxContent(bundledCode);
+		const compiled = suseeCompiler({
 			sourceCode: bundledCode,
 			fileName: point.entry,
-			compilerOptions: typeCheckOptions,
-			isJsx,
-		});
-		return { bundledCode, isJsx, compilerOptions };
-	}
-	private async _commonjs(point: BuildEntryPoint, prepared: PreparedBundle) {
-		const isMain = point.exportPath === ".";
-		const compilerOptions = prepared.compilerOptions.commonjs(
-			point.outputDirectoryPath,
-		);
-		const compiled = suseeCompiler({
-			sourceCode: prepared.bundledCode,
-			fileName: point.entry,
 			compilerOptions,
-			isJsx: prepared.isJsx,
+			isJsx: is_jsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
@@ -118,16 +96,22 @@ class Compiler {
 		if (compiled.dts) await files.writeFile(dtsFilePath, compiled.dts);
 		if (compiled.map) await files.writeFile(mapFilePath, compiled.map);
 	}
-	private async _esm(point: BuildEntryPoint, prepared: PreparedBundle) {
+	private async _esm(point: BuildEntryPoint) {
 		const isMain = point.exportPath === ".";
-		const compilerOptions = prepared.compilerOptions.esm(
-			point.outputDirectoryPath,
+		const opts = getCompilerOptions(point.tsconfigFilePath);
+		const compilerOptions = opts.esm(point.outputDirectoryPath);
+		const bundledCode = await bundler(
+			point.entry,
+			point.plugins,
+			point.warning,
+			point.rename,
 		);
+		const is_jsx = utils.checks.isJsxContent(bundledCode);
 		const compiled = suseeCompiler({
-			sourceCode: prepared.bundledCode,
+			sourceCode: bundledCode,
 			fileName: point.entry,
 			compilerOptions,
-			isJsx: prepared.isJsx,
+			isJsx: is_jsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
@@ -181,19 +165,18 @@ class Compiler {
 	async compile(): Promise<void> {
 		await files.clearFolder(this._object.outDir);
 		for (const point of this._object.buildEntryPoints) {
-			const prepared = await this._prepareBundle(point);
 			for (const format of point.format) {
 				switch (format) {
 					case "commonjs":
-						await this._commonjs(point, prepared);
+						await this._commonjs(point);
 						if (this._update()) {
-							await files.writePackageJson(this._files, point.exportPath);
+							files.writePackageJson(this._files, point.exportPath);
 						}
 						break;
 					case "esm":
-						await this._esm(point, prepared);
+						await this._esm(point);
 						if (this._update()) {
-							await files.writePackageJson(this._files, point.exportPath);
+							files.writePackageJson(this._files, point.exportPath);
 						}
 						break;
 				}
