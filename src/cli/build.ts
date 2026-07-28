@@ -1,7 +1,7 @@
 import tcolor from "@suseejs/color";
 import ts from "typescript";
 import { Compiler } from "../lib/compiler.js";
-import { type BuildOptions, finalSuseeConfig } from "../lib/suseeConfig.js";
+import { type BuildOptions, finalSuseeConfig } from "../suseeConfig.js";
 
 async function cliBuild() {
 	console.time(tcolor.cyan("[Build] "));

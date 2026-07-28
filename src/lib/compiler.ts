@@ -3,7 +3,7 @@ import { suseeCompiler } from "@suseejs/compiler";
 import { files } from "@suseejs/files";
 import { getCompilerOptions } from "@suseejs/tsoptions";
 import { utils } from "@suseejs/utilities";
-import type { BuildEntryPoint, BuildOptions } from "./suseeConfig.js";
+import type { BuildEntryPoint, BuildOptions } from "../suseeConfig.js";
 
 /**
  * Compiler for the JavaScript API.

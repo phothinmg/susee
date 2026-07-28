@@ -1,3 +1,3 @@
-import { finalSuseeConfig } from "../../../../../../src/lib/suseeConfig.js";
+import { finalSuseeConfig } from "../../../../../../src/suseeConfig.js";
 
 await finalSuseeConfig();

@@ -1,4 +1,4 @@
-import type { SuSeeConfig } from "../../../../../src/lib/suseeConfig.js";
+import type { SuSeeConfig } from "../../../../../src/suseeConfig.js";
 
 export default {
 	entryPoints: [

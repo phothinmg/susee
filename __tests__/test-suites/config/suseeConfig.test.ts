@@ -1,17 +1,17 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import ts from "typescript";
+import suseeTs from "../../../src/suseeTs.js";
 import {
 	finalSuseeConfig,
 	type BuildEntryPoint,
-} from "../../../src/lib/suseeConfig.js";
+} from "../../../src/suseeConfig.js";
 import { exitWithCodeOneAndMessage, sortObject } from "../test_helpers.js";
 
 describe("finalSuseeConfig", async () => {
 	it("If duplicate path found in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
 		const filePath = "lib/get_config.ts";
 		const cwd = process.cwd();
-		const temp = ts.sys.resolvePath(
+		const temp = suseeTs.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/duplicate",
 		);
 		process.chdir(temp);
@@ -27,7 +27,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If empty entries in susee.config return exit with 0 and warn message if it is provide ", (_t, done) => {
-		const temp = ts.sys.resolvePath(
+		const temp = suseeTs.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/empty_entries",
 		);
 		const filePath = "lib/get_config.ts";
@@ -45,7 +45,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If no susee.config file found, return undefined ", async () => {
-		const temp = ts.sys.resolvePath(
+		const temp = suseeTs.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/not_found",
 		);
 		const cwd = process.cwd();
@@ -59,7 +59,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	// ===
 	it("If one of entry file in susee.config file dose exits , return exit with 0 and warn message if it is provide ", (_t, done) => {
-		const temp = ts.sys.resolvePath(
+		const temp = suseeTs.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/entry_not_found",
 		);
 		const filePath = "lib/get_config.ts";
@@ -77,7 +77,7 @@ describe("finalSuseeConfig", async () => {
 	});
 	//==
 	it("If no error", async () => {
-		const temp = ts.sys.resolvePath(
+		const temp = suseeTs.sys.resolvePath(
 			"__tests__/test-suites/config/get_config/ok",
 		);
 		const cwd = process.cwd();
@@ -96,8 +96,10 @@ describe("finalSuseeConfig", async () => {
 					outputDirectoryPath: "dist",
 					plugins: [],
 					rename: true,
-					tsconfigFilePath: undefined,
 					warning: false,
+					declaration: true,
+					declarationMap: true,
+					sourceMap: true,
 				}),
 			);
 

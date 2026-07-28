@@ -5,7 +5,7 @@ import {
 	finalSuseeConfig,
 	generateBuildOptions,
 	type SuSeeConfig,
-} from "./lib/suseeConfig.js";
+} from "./suseeConfig.js";
 
 /**
  * Run a Susee build.
