@@ -1,10 +1,16 @@
 import { suseeTerser } from "@suseejs/terser-plugin";
 import { bundler } from "../lib/bundler/index.js";
 import { files } from "../lib/files.js";
-import { suseeCompiler } from "../lib/suseeCompiler.js";
+import { suseeCompiler, typeCheckSuseeCompiler } from "../lib/suseeCompiler.js";
 import { getCompilerOptions } from "../lib/tsoptions.js";
 import { utils } from "../lib/utilities.js";
 import type { CliBuildOptions } from "./lib/parse_argv.js";
+
+type PreparedCliBundle = {
+	bundledCode: string;
+	isJsx: boolean;
+	compilerOptions: ReturnType<typeof getCompilerOptions>;
+};
 
 class CliCompiler {
 	private _files: files.OutFiles;
@@ -21,22 +27,37 @@ class CliCompiler {
 		};
 		this._update = false;
 	}
-	private async _commonjs(opts: CliBuildOptions) {
-		this._update = opts.allowUpdate;
-		const _opts = getCompilerOptions(opts.tsconfig);
-		const compilerOptions = _opts.commonjs(opts.outDir);
+	private async _prepareBundle(
+		opts: CliBuildOptions,
+	): Promise<PreparedCliBundle> {
+		const compilerOptions = getCompilerOptions(opts.tsconfig);
 		const bundledCode = await bundler(
 			opts.entry,
 			opts.plugins,
 			opts.warning,
 			opts.rename,
 		);
-		const is_jsx = utils.checks.isJsxContent(bundledCode);
-		const compiled = suseeCompiler({
+		const isJsx = utils.checks.isJsxContent(bundledCode);
+		const typeCheckOptions =
+			opts.format === "esm"
+				? compilerOptions.esm(opts.outDir)
+				: compilerOptions.commonjs(opts.outDir);
+		typeCheckSuseeCompiler({
 			sourceCode: bundledCode,
 			fileName: opts.entry,
+			compilerOptions: typeCheckOptions,
+			isJsx,
+		});
+		return { bundledCode, isJsx, compilerOptions };
+	}
+	private async _commonjs(opts: CliBuildOptions, prepared: PreparedCliBundle) {
+		this._update = opts.allowUpdate;
+		const compilerOptions = prepared.compilerOptions.commonjs(opts.outDir);
+		const compiled = suseeCompiler({
+			sourceCode: prepared.bundledCode,
+			fileName: opts.entry,
 			compilerOptions,
-			isJsx: is_jsx,
+			isJsx: prepared.isJsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
@@ -89,22 +110,14 @@ class CliCompiler {
 		if (compiled.map) await files.writeFile(mapFilePath, compiled.map);
 	}
 	//-----------------------------------------------------------------//
-	private async _esm(opts: CliBuildOptions) {
+	private async _esm(opts: CliBuildOptions, prepared: PreparedCliBundle) {
 		this._update = opts.allowUpdate;
-		const _opts = getCompilerOptions(opts.tsconfig);
-		const compilerOptions = _opts.esm(opts.outDir);
-		const bundledCode = await bundler(
-			opts.entry,
-			opts.plugins,
-			opts.warning,
-			opts.rename,
-		);
-		const is_jsx = utils.checks.isJsxContent(bundledCode);
+		const compilerOptions = prepared.compilerOptions.esm(opts.outDir);
 		const compiled = suseeCompiler({
-			sourceCode: bundledCode,
+			sourceCode: prepared.bundledCode,
 			fileName: opts.entry,
 			compilerOptions,
-			isJsx: is_jsx,
+			isJsx: prepared.isJsx,
 		});
 		let compiledCode = compiled.code;
 		const mainFilePath = files.joinPath(
@@ -156,17 +169,18 @@ class CliCompiler {
 	//--
 	async compile(opts: CliBuildOptions) {
 		await files.clearFolder(opts.outDir);
+		const prepared = await this._prepareBundle(opts);
 		switch (opts.format) {
 			case "commonjs":
-				await this._commonjs(opts);
+				await this._commonjs(opts, prepared);
 				if (this._update) {
-					files.writePackageJson(this._files, ".");
+					await files.writePackageJson(this._files, ".");
 				}
 				break;
 			case "esm":
-				await this._esm(opts);
+				await this._esm(opts, prepared);
 				if (this._update) {
-					files.writePackageJson(this._files, ".");
+					await files.writePackageJson(this._files, ".");
 				}
 				break;
 		}
