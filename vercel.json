@@ -1,0 +1,15 @@
+{
+	"cleanUrls": true,
+	"redirects": [],
+	"headers": [
+		{
+			"source": "/(css|js|images|pagefind|node|favicon)/:path*",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "max-age=31536000, immutable"
+				}
+			]
+		}
+	]
+}

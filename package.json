@@ -32,7 +32,15 @@
 		"commit": "bash scripts/commit.sh",
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
-		"v:major": "npm version major --no-git-tag-version"
+		"v:major": "npm version major --no-git-tag-version",
+		"vercel:install": "npm i mmcov shiki && bundle install",
+		"jekyll:build": "JEKYLL_ENV=production bundle exec jekyll build",
+		"mmcov:build": "bash scripts/mmcov.sh",
+		"pre:cache": "mkdir -p docs/.jekyll-cache && cp -r node_modules/.jekyll-cache-backup/. docs/.jekyll-cache/ 2>/dev/null || true ",
+		"vercel:build": "npm run pre:cache && npm run jekyll:build && npm run mmcov:build",
+		"postbuild": "mkdir -p node_modules/.jekyll-cache-backup && cp -r docs/.jekyll-cache/. node_modules/.jekyll-cache-backup/",
+		"docs:dev": "bundle exec jekyll serve --profile",
+		"docs:init": "bash scripts/setup.sh"
 	},
 	"keywords": [
 		"bundler",
@@ -66,7 +74,9 @@
 	},
 	"dependencies": {
 		"@suseejs/terser-plugin": "^0.0.7",
-		"@typescript/typescript6": "^6.0.2"
+		"@typescript/typescript6": "^6.0.2",
+		"mmcov": "^0.0.8",
+		"shiki": "^4.3.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",

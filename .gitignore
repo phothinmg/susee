@@ -21,8 +21,4 @@ _site
 # add bundle config
 .bundle/
 # add bundle source
-vendor/bundle/
-
-# Vitepress
-docs/.vitepress/dist
-docs/.vitepress/cache
+vendor

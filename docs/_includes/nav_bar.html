@@ -1,0 +1,116 @@
+<header class="header" role="banner">
+  <nav role="navigation">
+    <a href="{{'/'|relative_url}}" class="nav_logo">{{ site.title }}</a>
+    <div class="nav_menu" id="nav-menu">
+      {% assign nav_links = '' | split: '' %} {% assign docs_sections = site.mmdocs.docs | default: empty %} {% assign posts_sections = site.mmdocs.posts | default: empty %}
+      {% for section in docs_sections %}
+        {% if section.nav == true %}
+          {% assign nav_links = nav_links | push: section %}
+        {% endif %}
+      {% endfor %}
+      {% for section in posts_sections %}
+        {%
+          if section.nav == true %}
+          {% assign nav_links = nav_links | push: section
+          %}
+        {% endif %}
+      {% endfor %}
+      {% if nav_links.size > 0 or site.mmdocs.nav_items.size > 0 %}
+        <ul class="nav_list">
+          {% if site.mmdocs.nav_items.size > 0 %}
+            <li class="nav_item dropdown">
+              <button type="button" class="drop">Pages</button>
+              <ul class="drop-content">
+                {% for item in site.mmdocs.nav_items %}
+                  <li>
+                    <a href="{{ item.link | contents_url }}">{{ item.text }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+          {% endif %}
+          {% if nav_links.size > 0 %}
+            {% for item in nav_links %}
+              <li class="nav_item">
+                <a
+                  href="{{ item.link | contents_url }}"
+                  class="nav_link"
+                  id="{{ item.text | default: item.label | downcase }}">{{ item.text | default: item.label }}</a>
+              </li>
+            {% endfor %}
+          {% endif %}
+        </ul>
+      {% endif %}
+
+      <div class="nav_menu_tools">
+        <button
+          class="nav_theme nav_theme-mobile"
+          data-theme-toggle
+          type="button"
+          aria-label="Switch to dark mode"
+          title="Switch to dark mode">
+          {% tabler ti-sun %}
+          {% tabler ti-moon %}
+          <span>Dark mode</span>
+        </button>
+      </div>
+      <!-- Close button -->
+      <button
+        class="nav_close"
+        id="nav-close"
+        type="button"
+        aria-label="Close menu">
+        {% tabler ti-x %}
+      </button>
+    </div>
+    <div class="nav_actions">
+      <!-- <a href="#" class="nav_cta">Start Project</a> -->
+
+      <button
+        class="nav_theme"
+        data-theme-toggle
+        type="button"
+        aria-label="Switch to dark mode"
+        title="Switch to dark mode">
+        {% tabler ti-sun %}
+        {% tabler ti-moon %}
+      </button>
+
+      <!-- Search button -->
+      <button
+        class="nav_search"
+        id="search-btn"
+        type="button"
+        aria-label="Open search">
+        {% tabler ti-search %}
+      </button>
+
+      <button
+        class="nav_toggle"
+        id="nav-toggle"
+        type="button"
+        aria-label="Open menu">
+        {% tabler ti-menu-2 %}
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- ==================== SEARCH ==================== -->
+<div
+  class="search"
+  id="search"
+  role="search">
+  <div
+    id="pf-search"
+    class="search_form"
+    role="searchbox">
+    <pagefind-searchbox></pagefind-searchbox>
+  </div>
+  <button
+    class="search_close"
+    id="search-close"
+    type="button"
+    aria-label="Close search">
+    {% tabler ti-x %}
+  </button>
+</div>

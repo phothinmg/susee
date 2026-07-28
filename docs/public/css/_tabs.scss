@@ -1,0 +1,69 @@
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  background: linear-gradient(
+    0deg,
+    var(--color-bg-1) 1rem,
+    var(--color-bg-3) 0%
+  );
+  border: var(--color-border-3);
+  border-radius: 5px;
+  padding-bottom: 0.5em;
+}
+.tabs label {
+  order: 1; /*Put the labels first*/
+  display: block;
+  cursor: pointer;
+  padding: 0.5rem 0.8rem;
+  margin: 0.5rem 0 -1px;
+  border-radius: 5px 5px 0 0;
+  color: var(--color-link);
+  background: var(--color-bg-3);
+}
+.tabs label:first-of-type {
+  margin-left: 1rem;
+}
+.tabs .tab {
+  order: 99; /*Put the tabs last*/
+  flex-grow: 1;
+  width: 100%;
+  display: none;
+  z-index: 10;
+  padding: 0 1rem;
+  background: var(--color-bg-1);
+  border-top: var(--color-border-3);
+}
+.tabs input[type="radio"]:not(:checked) + label:hover {
+  filter: brightness(90%);
+}
+.tabs input[type="radio"] {
+  display: none;
+}
+.tabs input[type="radio"]:checked + label {
+  border: var(--color-border-3);
+  border-bottom: 0px;
+  background: var(--color-bg-1);
+  z-index: 11;
+}
+.tabs input[type="radio"]:checked + label + .tab {
+  display: block;
+}
+
+@media (max-width: 45em) {
+  .tabs .tab,
+  .tabs label {
+    order: initial;
+  }
+  .tabs label {
+    width: 100%;
+    margin: 0 0 -1px !important;
+  }
+}
+@media print {
+  .tabs label + .tab {
+    display: block;
+  }
+  .tabs label {
+    display: none;
+  }
+}

@@ -1,0 +1,23 @@
+<div class="nav_panel_container">
+  {% assign sidebar_sections = include.sidebar %}
+  <div>
+    {% if sidebar_sections and sidebar_sections.size > 0 %}
+      {% for bar in sidebar_sections %}
+        <div>
+          {% if bar.items and bar.items.size > 0 %}
+            <p>{{ bar.sidebar_label }}</p>
+            <ul>
+              {% for item in bar.items %}
+                <li>
+                  <a href="{{ item.link | contents_url }}" id="{{ item.text | downcase }}">
+                    <span>{{ item.text }}</span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>

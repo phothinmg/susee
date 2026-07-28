@@ -1,0 +1,51 @@
+{% assign current_url = page.url | replace: '/index.html', '/' | replace: '.html', '' %}
+{% assign prev_page = nil %} {% assign next_page = nil %}
+{% assign prev_candidate = nil %}
+{% assign found_current = false %}
+{% assign sidebar_sections = include.sidebar | default: site.mmdocs.sidebar %}
+{% for section in sidebar_sections %}
+  {% for item in section.items %}
+    {% assign item_url = item.link | replace: '.html', '' %}
+    {% assign item_html_url = item.link | append: '.html' %} {% assign current_matches = false %}
+    {% if current_url == item_url or page.url == item.link or page.url == item_html_url %}
+      {% assign current_matches = true %}
+    {% endif %}
+    {% if found_current and next_page == nil %}
+      {% assign next_page = item %}
+    {% endif %}
+    {% if current_matches %}
+      {% assign prev_page = prev_candidate %}
+      {% assign found_current = true %}
+    {% endif %}
+    {% if found_current == false %}
+      {% assign prev_candidate = item %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+{% if prev_page or next_page %}
+  <nav class="paginate_container" aria-label="Page navigation">
+    {% if prev_page %}
+      <div class="paginate_card prev">
+        <p>Previous page</p>
+        <a href="{{ prev_page.link | contents_url }}">{{ prev_page.text }}</a>
+      </div>
+      <a
+        href="{{ prev_page.link | contents_url }}"
+        class="paginate_card_mobile"
+        title="{{ prev_page.text }}">
+        {% tabler ti-chevron-left %}
+        prev
+      </a>
+    {% endif %}
+    {% if next_page %}
+      <div class="paginate_card next">
+        <p>Next page</p>
+        <a href="{{ next_page.link | contents_url }}">{{ next_page.text }}</a>
+      </div>
+      <a href="{{ next_page.link | contents_url }}" class="paginate_card_mobile">
+        next
+        {% tabler ti-chevron-right %}
+      </a>
+    {% endif %}
+  </nav>
+{% endif %}
