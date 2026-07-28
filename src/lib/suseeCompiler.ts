@@ -1,5 +1,4 @@
 import path from "node:path";
-import process from "node:process";
 import ts6 from "@typescript/typescript6";
 export interface CompilerPrams {
 	sourceCode: string;
@@ -53,7 +52,7 @@ function jsxCompilerOptions(
 	const { jsx, lib, ...rest } = compilerOptions;
 	const _jsx = jsx ?? ts6.JsxEmit.ReactJSX;
 	return {
-		lib: ["lib.dom.d.ts", "lib.dom.iterable.d.ts", "lib.esnext.d.ts"],
+		lib: ["dom", "dom.iterable", "esnext"],
 		jsx: _jsx,
 		...rest,
 	} as ts6.CompilerOptions;
@@ -70,90 +69,31 @@ function jsxCompilerOptions(
 function createHost(
 	sourceCode: string,
 	fileName: string,
-	compilerOptions: ts6.CompilerOptions,
 ): {
 	createdFiles: Record<string, string>;
 	host: ts6.CompilerHost;
 } {
 	const createdFiles: Record<string, string> = {};
-	const host = ts6.createCompilerHost(compilerOptions, true);
-	const originalGetSourceFile = host.getSourceFile.bind(host);
-	const originalReadFile = host.readFile.bind(host);
-	const originalFileExists = host.fileExists.bind(host);
-	host.getSourceFile = (file, languageVersion, onError) => {
-		if (file === fileName) {
-			return ts6.createSourceFile(file, sourceCode, languageVersion, true);
-		}
-		return originalGetSourceFile(file, languageVersion, onError);
-	};
-	host.writeFile = (outputFileName, contents) => {
-		createdFiles[outputFileName] = contents;
-	};
-	host.getCurrentDirectory = () => process.cwd();
-	host.readFile = (file) => {
-		if (file === fileName) {
-			return sourceCode;
-		}
-		return originalReadFile(file);
-	};
-	host.fileExists = (file) => {
-		if (file === fileName) {
-			return true;
-		}
-		return originalFileExists(file);
-	};
-	return { createdFiles, host };
-}
-
-function compilerHost(): ts6.FormatDiagnosticsHost {
-	return {
+	const host: ts6.CompilerHost = {
+		getSourceFile: (file, languageVersion) => {
+			if (file === fileName) {
+				return ts6.createSourceFile(file, sourceCode, languageVersion);
+			}
+			return undefined;
+		},
+		writeFile: (fileName, contents) => {
+			createdFiles[fileName] = contents;
+		},
+		getDefaultLibFileName: (options) => ts6.getDefaultLibFilePath(options),
+		getCurrentDirectory: () => "",
+		getDirectories: () => [],
+		fileExists: (file) => file === fileName,
+		readFile: (file) => (file === fileName ? sourceCode : undefined),
 		getCanonicalFileName: (file) => file,
-		getCurrentDirectory: () => process.cwd(),
+		useCaseSensitiveFileNames: () => true,
 		getNewLine: () => "\n",
 	};
-}
-
-const ignoredTypeCheckCodes = new Set([2307, 7016, 7026]);
-
-function typeCheckSuseeCompiler({
-	sourceCode,
-	fileName,
-	compilerOptions,
-	isJsx = false,
-}: CompilerPrams) {
-	const normalizedOptions = jsxCompilerOptions(
-		sourceCode,
-		compilerOptions,
-		isJsx,
-	);
-	const { host } = createHost(sourceCode, fileName, {
-		...normalizedOptions,
-		noEmit: true,
-		noResolve: true,
-		skipLibCheck: true,
-	});
-	const program = ts6.createProgram(
-		[fileName],
-		{ ...normalizedOptions, noEmit: true, noResolve: true, skipLibCheck: true },
-		host,
-	);
-	const diagnostics = ts6
-		.getPreEmitDiagnostics(program)
-		.filter(
-			(diagnostic) => diagnostic.category === ts6.DiagnosticCategory.Error,
-		)
-		.filter((diagnostic) => {
-			if (diagnostic.file && diagnostic.file.fileName !== fileName) {
-				return false;
-			}
-			return !ignoredTypeCheckCodes.has(diagnostic.code);
-		});
-	if (diagnostics.length > 0) {
-		console.error(
-			ts6.formatDiagnosticsWithColorAndContext(diagnostics, compilerHost()),
-		);
-		process.exit(1);
-	}
+	return { createdFiles, host };
 }
 
 function suseeCompiler({
@@ -162,12 +102,9 @@ function suseeCompiler({
 	compilerOptions,
 	isJsx = false,
 }: CompilerPrams) {
-	compilerOptions = {
-		...jsxCompilerOptions(sourceCode, compilerOptions, isJsx),
-		noCheck: true,
-	};
+	compilerOptions = jsxCompilerOptions(sourceCode, compilerOptions, isJsx);
 	// create host
-	const _host = createHost(sourceCode, fileName, compilerOptions);
+	const _host = createHost(sourceCode, fileName);
 	const createdFiles: Record<string, string> = _host.createdFiles;
 	const host = _host.host;
 	const program = ts6.createProgram([fileName], compilerOptions, host);
@@ -187,4 +124,4 @@ function suseeCompiler({
 	return { code, file_name, out_dir, dts, map };
 }
 
-export { suseeCompiler, typeCheckSuseeCompiler };
+export { suseeCompiler };

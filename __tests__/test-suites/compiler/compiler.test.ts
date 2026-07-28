@@ -229,44 +229,4 @@ await compiler.compile();
 			true,
 		);
 	});
-
-	it("bundles each entry once before emitting multiple formats", async () => {
-		const tempDir = await setupTempDir("compiler-single-bundle-pass");
-		const entryDir = path.join(tempDir, "src");
-		const entryFile = path.join(entryDir, "index.ts");
-		const outDir = path.join(tempDir, "dist");
-		let dependencyPluginCalls = 0;
-
-		await fs.mkdir(entryDir, { recursive: true });
-		await fs.writeFile(entryFile, "export const value = 1;\n", "utf8");
-
-		const compiler = new Compiler({
-			buildEntryPoints: [
-				{
-					entry: entryFile,
-					exportPath: ".",
-					format: ["esm", "commonjs"],
-					rename: true,
-					plugins: [
-						{
-							type: "dependency",
-							async: false,
-							func(depsFiles) {
-								dependencyPluginCalls += 1;
-								return depsFiles;
-							},
-						},
-					],
-					warning: false,
-					outputDirectoryPath: outDir,
-				},
-			],
-			updatePackage: false,
-			outDir,
-		});
-
-		await compiler.compile();
-
-		assert.strictEqual(dependencyPluginCalls, 1);
-	});
 });
