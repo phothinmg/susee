@@ -1,4 +1,4 @@
-import type ts6 from "@typescript/typescript6";
+import type ts6 from "@suseejs/ts6";
 
 export const pkgName = "SUSEEJS";
 // 1. Bundler

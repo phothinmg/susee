@@ -1,5 +1,5 @@
 import path from "node:path";
-import ts6 from "@typescript/typescript6";
+import ts6 from "@suseejs/ts6";
 export interface CompilerPrams {
 	sourceCode: string;
 	fileName: string;
@@ -23,7 +23,7 @@ function jsxCompilerOptions(
 	sourceCode: string,
 	compilerOptions: ts6.CompilerOptions,
 	isJsx: boolean,
-) {
+): ts6.CompilerOptions {
 	if (!isJsx) {
 		return compilerOptions;
 	}

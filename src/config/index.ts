@@ -1,6 +1,6 @@
-import ts6 from "@typescript/typescript6";
-import type { SuseePlugin, SuseePluginFunction } from "../types.js";
-import tcolor from "./tcolor.js";
+import tcolor from "@suseejs/color";
+import ts6 from "@suseejs/ts6";
+import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
 
 export type OutputFormat = ("commonjs" | "esm")[];
 export interface EntryPoint {
@@ -39,12 +39,6 @@ export interface EntryPoint {
 	 *
 	 */
 	tsconfigFilePath?: string | undefined;
-	/**
-	 * When bundling , if there are duplicate declared names , susee will auto rename , if renameDuplicates = false exist with code 1.
-	 *
-	 * default - true
-	 */
-	renameDuplicates?: boolean;
 	/**
 	 * Array of susee plugins
 	 *
@@ -90,7 +84,7 @@ export interface SuSeeConfig {
  * The first file found is returned.
  * @returns {string | undefined} - path to the susee.config file or undefined if it does not exist.
  */
-const getConfigPath = (): string | undefined => {
+const getSuseeConfigPath = (): string | undefined => {
 	const fileNames = ["susee.config.ts", "susee.config.js", "susee.config.mjs"];
 	let configFile: string | undefined;
 	for (const file of fileNames) {
@@ -152,7 +146,6 @@ export type BuildEntryPoint = {
 	entry: string;
 	exportPath: "." | `./${string}`;
 	format: OutputFormat;
-	rename: boolean;
 	plugins: (SuseePlugin | SuseePluginFunction)[];
 	outputDirectoryPath: string;
 	warning: boolean;
@@ -182,7 +175,6 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
 			? [...new Set(ent.format)]
 			: ["esm"];
 		const warning = ent.warning ?? false;
-		const rename = ent.renameDuplicates ?? true;
 		const plugins = ent.plugins ?? [];
 		const tsconfigFilePath = ent.tsconfigFilePath ?? undefined;
 		const outputDirectoryPath =
@@ -191,7 +183,6 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
 			entry,
 			exportPath,
 			format,
-			rename,
 			plugins,
 			warning,
 			outputDirectoryPath,
@@ -211,7 +202,7 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
  * @returns {Promise<BuildOptions | undefined>} normalized build options or undefined when no config file exists.
  */
 async function finalSuseeConfig(): Promise<BuildOptions | undefined> {
-	const configPath = getConfigPath();
+	const configPath = getSuseeConfigPath();
 	if (configPath) {
 		const _default: { default: SuSeeConfig } = await import(
 			configPath as string

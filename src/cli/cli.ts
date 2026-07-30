@@ -1,10 +1,10 @@
 import { suseeTerser } from "@suseejs/terser-plugin";
-import { bundler } from "../lib/bundler/index.js";
-import { files } from "../lib/files.js";
-import { logProfilePhase } from "../lib/profile.js";
-import { suseeCompiler } from "../lib/suseeCompiler.js";
-import { getCompilerOptions } from "../lib/tsoptions.js";
-import { utils } from "../lib/utilities.js";
+import { bundler } from "../bundler/index.js";
+import { suseeCompiler } from "../compiler/suseeCompiler.js";
+import { getCompilerOptions } from "../compiler/tsoptions.js";
+import { files } from "../helpers/files.js";
+import { logProfilePhase } from "../helpers/profile.js";
+import { utils } from "../helpers/utilities.js";
 import type { CliBuildOptions } from "./lib/parse_argv.js";
 
 const logCliCompilerPhase = (
@@ -36,12 +36,7 @@ class CliCompiler {
 		const _opts = getCompilerOptions(opts.tsconfig);
 		const compilerOptions = _opts.commonjs(opts.outDir);
 		let phaseStart = process.hrtime.bigint();
-		const bundledCode = await bundler(
-			opts.entry,
-			opts.plugins,
-			opts.warning,
-			opts.rename,
-		);
+		const bundledCode = await bundler(opts.entry, opts.plugins, opts.warning);
 		logCliCompilerPhase(opts.entry, "commonjs", "bundle", phaseStart);
 		const is_jsx = utils.checks.isJsxContent(bundledCode);
 		phaseStart = process.hrtime.bigint();
@@ -117,12 +112,7 @@ class CliCompiler {
 		const _opts = getCompilerOptions(opts.tsconfig);
 		const compilerOptions = _opts.esm(opts.outDir);
 		let phaseStart = process.hrtime.bigint();
-		const bundledCode = await bundler(
-			opts.entry,
-			opts.plugins,
-			opts.warning,
-			opts.rename,
-		);
+		const bundledCode = await bundler(opts.entry, opts.plugins, opts.warning);
 		logCliCompilerPhase(opts.entry, "esm", "bundle", phaseStart);
 		const is_jsx = utils.checks.isJsxContent(bundledCode);
 		phaseStart = process.hrtime.bigint();

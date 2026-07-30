@@ -1,5 +1,5 @@
-import ts6 from "@typescript/typescript6";
-import type { BundledHandler, DepsFile, NamesSets } from "../../../types.js";
+import ts6 from "@suseejs/ts6";
+import type { BundledHandler, DepsFile, NamesSets } from "@suseejs/type";
 import {
 	createBundledSourceFile,
 	getFileKey,

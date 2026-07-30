@@ -1,6 +1,6 @@
 import path from "node:path";
-import ts6 from "@typescript/typescript6";
-import tcolor from "../lib/tcolor.js";
+import tcolor from "@suseejs/color";
+import ts6 from "@suseejs/ts6";
 
 /**
  * Get the path of the configuration file.
@@ -9,7 +9,7 @@ import tcolor from "../lib/tcolor.js";
  * @param {string | undefined} customConfigPath path of the custom configuration file.
  * @returns {string | undefined} path of the configuration file or undefined if customConfigPath does not exist.
  */
-function getConfigPath(
+function getTsConfigPath(
 	customConfigPath?: string | undefined,
 ): string | undefined {
 	let config_path: string | undefined;
@@ -41,7 +41,7 @@ function getCompilerOptions(customConfigPath?: string | undefined): {
 	defaultOptions: () => ts6.CompilerOptions;
 } {
 	let tsconfig_opts: ts6.CompilerOptions | undefined;
-	const config_path = getConfigPath(customConfigPath);
+	const config_path = getTsConfigPath(customConfigPath);
 	if (config_path) {
 		const config = ts6.readConfigFile(config_path, ts6.sys.readFile);
 		const basePath = path.dirname(config_path);

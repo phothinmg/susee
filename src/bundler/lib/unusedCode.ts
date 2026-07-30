@@ -1,4 +1,4 @@
-import ts6 from "@typescript/typescript6";
+import ts6 from "@suseejs/ts6";
 import { createBundledSourceFile, transformBundledSource } from "./helpers.js";
 
 export interface ClearUnusedOptions {

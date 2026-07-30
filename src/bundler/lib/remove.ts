@@ -1,11 +1,11 @@
-import ts6 from "@typescript/typescript6";
+import ts6 from "@suseejs/ts6";
 import type {
 	BundledHandler,
 	DepsFile,
 	RequireImportObject,
 	TypeObj,
-} from "../../../types.js";
-import { utils } from "../../utilities.js";
+} from "@suseejs/type";
+import { utils } from "../../helpers/utilities.js";
 import { createBundledSourceFile, transformBundledSource } from "./helpers.js";
 
 const properties: string[] = [];

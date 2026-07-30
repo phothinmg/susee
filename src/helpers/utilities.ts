@@ -2,8 +2,8 @@ import fs from "node:fs";
 import module from "node:module";
 import path from "node:path";
 import process from "node:process";
-import ts6 from "@typescript/typescript6";
-import tcolor from "./tcolor.js";
+import tcolor from "@suseejs/color";
+import ts6 from "@suseejs/ts6";
 
 namespace utils {
 	export namespace checks {

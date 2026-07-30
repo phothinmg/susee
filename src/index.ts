@@ -1,11 +1,13 @@
-import { Compiler } from "./lib/compiler.js";
+import tcolor from "@suseejs/color";
+import { bundle } from "./bundler/index.js";
+import { suseeCliBuild } from "./cli/index.js";
+import { Compiler } from "./compiler/index.js";
 import {
 	type BuildOptions,
 	finalSuseeConfig,
 	generateBuildOptions,
 	type SuSeeConfig,
-} from "./lib/suseeConfig.js";
-import tcolor from "./lib/tcolor.js";
+} from "./config/index.js";
 
 /**
  * Run a Susee build.
@@ -37,4 +39,4 @@ async function build(options?: SuSeeConfig) {
 }
 
 export type { SuSeeConfig };
-export { build };
+export { build, bundle as suseeBundler, suseeCliBuild };

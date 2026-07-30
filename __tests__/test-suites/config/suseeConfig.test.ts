@@ -1,10 +1,10 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import ts6 from "@typescript/typescript6";
+import ts6 from "@suseejs/ts6";
 import {
 	finalSuseeConfig,
 	type BuildEntryPoint,
-} from "../../../src/lib/suseeConfig.js";
+} from "../../../src/config/index.js";
 import { exitWithCodeOneAndMessage, sortObject } from "../test_helpers.js";
 
 describe("finalSuseeConfig", async () => {

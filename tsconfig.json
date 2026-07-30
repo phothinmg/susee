@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		// File Layout
 		"rootDir": ".",
-		"outDir": "./dist",
+		"outDir": "./out",
 
 		// Environment Settings
 		// See also https://aka.ms/tsconfig/module
@@ -46,12 +46,5 @@
 		"skipLibCheck": true,
 		"allowJs": true
 	},
-	"include": [
-		"src/**/*",
-		"build.ts",
-		"__tests__/**/*",
-		"a.ts", // for local test run
-		"scripts/**/*",
-		"sr/**/*"
-	]
+	"include": ["src/bundler/**/*"]
 }

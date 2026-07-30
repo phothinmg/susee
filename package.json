@@ -34,11 +34,7 @@
 		"v:minor": "npm version minor --no-git-tag-version",
 		"v:major": "npm version major --no-git-tag-version",
 		"vercel:install": "npm i mmcov shiki && bundle install",
-		"jekyll:build": "JEKYLL_ENV=production bundle exec jekyll build",
-		"mmcov:build": "bash scripts/mmcov.sh",
-		"pre:cache": "mkdir -p docs/.jekyll-cache && cp -r node_modules/.jekyll-cache-backup/. docs/.jekyll-cache/ 2>/dev/null || true ",
-		"vercel:build": "npm run pre:cache && npm run jekyll:build && npm run mmcov:build",
-		"postbuild": "mkdir -p node_modules/.jekyll-cache-backup && cp -r docs/.jekyll-cache/. node_modules/.jekyll-cache-backup/",
+		"vercel:build": "bash scripts/vercel_build.sh",
 		"docs:dev": "bundle exec jekyll serve --profile",
 		"docs:init": "bash scripts/setup.sh"
 	},
@@ -73,16 +69,19 @@
 		"url": "https://github.com/phothinmg/susee/issues"
 	},
 	"dependencies": {
-		"@suseejs/terser-plugin": "^0.0.7",
-		"@typescript/typescript6": "^6.0.2",
+		"@suseejs/color": "^0.0.7",
+		"@suseejs/ts6": "^1.0.0",
 		"mmcov": "^0.0.8",
 		"shiki": "^4.3.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
 		"@suseejs/banner-text-plugin": "^0.0.7",
+		"@suseejs/terser-plugin": "^0.0.7",
+		"@suseejs/type": "^0.0.7",
 		"@types/node": "^25.6.0",
-		"tsx": "^4.21.0"
+		"tsx": "^4.21.0",
+		"typescript": "^7.0.2"
 	},
 	"allowScripts": {
 		"esbuild@0.28.1": true

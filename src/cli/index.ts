@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import readline from "node:readline/promises";
+import tcolor from "@suseejs/color";
 import pkg from "../../package.json" with { type: "json" };
-import { setProfileEnabled } from "../lib/profile.js";
-import tcolor from "../lib/tcolor.js";
+import { setProfileEnabled } from "../helpers/profile.js";
 import { cliBuild } from "./build.js";
 import { cliCompiler } from "./cli.js";
 import {
@@ -168,11 +168,11 @@ function extractProfileFlag(args: string[]) {
 
 		const nextValue = args[index + 1] as string | undefined;
 		if (inlineValue !== undefined) {
-			profile = parseBooleanFlag("profile", inlineValue);
+			profile = parseBooleanFlag("profile", inlineValue) as boolean;
 			continue;
 		}
 		if (nextValue === "true" || nextValue === "false") {
-			profile = parseBooleanFlag("profile", nextValue);
+			profile = parseBooleanFlag("profile", nextValue) as boolean;
 			index += 1;
 			continue;
 		}
@@ -219,7 +219,4 @@ async function suseeCliBuild() {
 	}
 }
 
-void suseeCliBuild().catch((error) => {
-	console.error(error);
-	process.exit(1);
-});
+export { suseeCliBuild };

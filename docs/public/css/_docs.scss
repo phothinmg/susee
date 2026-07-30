@@ -241,7 +241,10 @@
             padding: 3px 0 3px 10px;
             color: var(--color-text-1);
             border-left: 1.5px solid transparent;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
             transition:
+              background var(--transition),
               color var(--transition),
               border-color var(--transition);
             font-size: 0.8rem;
@@ -251,12 +254,15 @@
             // white-space: nowrap;
 
             &:hover {
+              background: var(--color-bg-2);
               color: var(--color-link-hover);
             }
 
             &.is-active {
+              background: var(--color-bg-2);
               color: var(--color-link);
               border-left-color: var(--color-link);
+              font-weight: 500;
             }
           }
         }

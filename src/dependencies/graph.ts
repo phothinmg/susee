@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import module from "node:module";
 import path from "node:path";
-import ts6 from "@typescript/typescript6";
+import ts6 from "@suseejs/ts6";
+import { utils } from "../helpers/utilities.js";
 
 // ----------------------------------------------------Handlers------------------------------------------------------//
 
@@ -342,10 +343,7 @@ function topoSort(tree: Record<string, string[]>): string[] {
 	Object.keys(tree).forEach(visit);
 	return sorted; // reverse for correct order
 }
-// Merge an array of string arrays into a single string array
-const mergeStringArr = (input: string[][]): string[] => {
-	return input.reduce((prev, curr) => prev.concat(curr), []);
-};
+
 //  Create a dependency graph from a list of collected dependencies
 const createGraph = (deps: CollectedObject[]): Record<string, string[]> => {
 	const graph: Record<string, string[]> = {};
@@ -377,9 +375,13 @@ function generateGraph(entry: string): GraphObject {
 	const collectedDependencies = getPackageJson();
 	const collectedData = collectDependencies(entry, collectedDependencies, root);
 	const graphObj = collectedData.dependencies;
-	const npmModules = mergeStringArr(collectedData.collectedNpmModules);
-	const nodeModules = mergeStringArr(collectedData.collectedNodeModules);
-	const warning = mergeStringArr(collectedData.collectedWarning);
+	const npmModules = utils.gen.mergeStringArr(
+		collectedData.collectedNpmModules,
+	);
+	const nodeModules = utils.gen.mergeStringArr(
+		collectedData.collectedNodeModules,
+	);
+	const warning = utils.gen.mergeStringArr(collectedData.collectedWarning);
 	const depsObj = createGraph(graphObj);
 	const sortedGraph = topoSort(depsObj);
 	return {

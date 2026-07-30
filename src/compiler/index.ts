@@ -1,10 +1,10 @@
-import { bundler } from "./bundler/index.js";
-import { files } from "./files.js";
-import { logProfilePhase } from "./profile.js";
+import { bundler } from "../bundler/index.js";
+import type { BuildEntryPoint, BuildOptions } from "../config/index.js";
+import { files } from "../helpers/files.js";
+import { logProfilePhase } from "../helpers/profile.js";
+import { utils } from "../helpers/utilities.js";
 import { suseeCompiler } from "./suseeCompiler.js";
-import type { BuildEntryPoint, BuildOptions } from "./suseeConfig.js";
 import { getCompilerOptions } from "./tsoptions.js";
-import { utils } from "./utilities.js";
 
 const logCompilerPhase = (
 	entry: string,

@@ -349,8 +349,6 @@ Violations print an error and exit with code `1`.
 
 <!--  -->
 
-[codecov_img]: https://codecov.io/gh/phothinmg/susee/graph/badge.svg?token=6240Y3L0V1
-[codecov_url]: https://codecov.io/gh/phothinmg/susee
 [nodei_img]: https://nodei.co/npm/susee.svg?color=red
 [nodei_url]: https://nodei.co/npm/susee/
 [npm_v_img]: https://img.shields.io/npm/v/susee
@@ -360,5 +358,5 @@ Violations print an error and exit with code `1`.
 [publish_npm_svg]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml/badge.svg?event=release
 [code_ql]: https://github.com/phothinmg/susee/actions/workflows/codeql.yml
 [code_ql_svg]: https://github.com/phothinmg/susee/actions/workflows/codeql.yml/badge.svg
-[mmcov_svg]: https://img.shields.io/badge/mmcov-92.42%25-green?style=flat&labelColor=%232c3e50
+[mmcov_svg]: https://img.shields.io/badge/mmcov-85.01%25-green?style=flat&labelColor=%232c3e50
 [mmcov_url]: https://suseejs.org/coverage

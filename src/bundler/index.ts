@@ -1,14 +1,13 @@
 import path from "node:path";
 import process from "node:process";
-import ts6 from "@typescript/typescript6";
-import type { SuseePlugins } from "../../types.js";
-import { logProfilePhase } from "../profile.js";
-import { utils } from "../utilities.js";
+import ts6 from "@suseejs/ts6";
+import { generateDependencies } from "../dependencies/index.js";
+import { logProfilePhase } from "../helpers/profile.js";
+import { utils } from "../helpers/utilities.js";
+import type { SuseePlugins } from "../types.js";
 import { anonymousHandler } from "./lib/anonymous.js";
-import { generateDependencies } from "./lib/dependency.js";
-import { duplicateHandlers } from "./lib/duplicate.js";
 import { exportDefaultHandler } from "./lib/exportDefault.js";
-import { isJSON } from "./lib/helpers.js";
+import { createBundledSourceFile, isJSON } from "./lib/helpers.js";
 import { removeHandlers } from "./lib/remove.js";
 import { jsonModuleHandlers } from "./lib/resolveJSON.js";
 import cleanUnusedCode from "./lib/unusedCode.js";
@@ -21,13 +20,12 @@ async function bundler(
 	entry: string,
 	plugins: SuseePlugins = [],
 	warning: boolean = false,
-	reName: boolean = true,
 ): Promise<string> {
 	const bundlerStart = process.hrtime.bigint();
 	let removedStatements: string[] = [];
 	const compilerOptions = ts6.getDefaultCompilerOptions();
 	let phaseStart = process.hrtime.bigint();
-	const tree = await generateDependencies(entry);
+	const tree = await generateDependencies(entry, createBundledSourceFile);
 	logBundlerPhase(entry, "generateDependencies", phaseStart);
 	// check for warning from generated dependencies graph
 	if (warning && tree.warns.length > 0) {
@@ -78,17 +76,17 @@ async function bundler(
 	logBundlerPhase(entry, "anonymous", phaseStart);
 	// 6. Handling Duplicated Declarations
 	// 6.1 options.reName
-	if (reName) {
-		phaseStart = process.hrtime.bigint();
-		depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
-		logBundlerPhase(entry, "duplicate:renamed", phaseStart);
-	}
-	// 6.2 !options.reName, for who want to rename manually
-	else {
-		phaseStart = process.hrtime.bigint();
-		depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
-		logBundlerPhase(entry, "duplicate:notRenamed", phaseStart);
-	}
+	// if (reName) {
+	// 	phaseStart = process.hrtime.bigint();
+	// 	depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
+	// 	logBundlerPhase(entry, "duplicate:renamed", phaseStart);
+	// }
+	// // 6.2 !options.reName, for who want to rename manually
+	// else {
+	// 	phaseStart = process.hrtime.bigint();
+	// 	depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
+	// 	logBundlerPhase(entry, "duplicate:notRenamed", phaseStart);
+	// }
 	// 7. Handling  Remove Imports/Exports
 	phaseStart = process.hrtime.bigint();
 	const removed = await removeHandlers(removedStatements, compilerOptions);

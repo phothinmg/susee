@@ -1,7 +1,7 @@
 import path from "node:path";
-import ts6 from "@typescript/typescript6";
-import type { DependenciesTree } from "../../../types.js";
-import { utils } from "../../utilities.js";
+import ts6 from "@suseejs/ts6";
+import type { DependenciesTree } from "@suseejs/type";
+import { utils } from "../../helpers/utilities.js";
 
 export const isJSON = (tree: DependenciesTree): boolean => {
 	const json = tree.depFiles.find(

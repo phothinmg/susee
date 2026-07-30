@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
 import { promisify } from "node:util";
-import { Compiler } from "../../../src/lib/compiler.js";
+import { Compiler } from "../../../src/compiler/index.js";
 import { fileExists, readJson, setupTempDir } from "../test_helpers.js";
 
 const execFileAsync = promisify(execFile);
@@ -29,9 +29,7 @@ describe("Compiler", () => {
 					plugins: [],
 					warning: false,
 					outputDirectoryPath: outDir,
-					declaration: true,
-					sourceMap: true,
-					declarationMap: true,
+					tsconfigFilePath: undefined,
 				},
 			],
 			updatePackage: false,
@@ -106,9 +104,7 @@ describe("Compiler", () => {
 					],
 					warning: false,
 					outputDirectoryPath: outDir,
-					declaration: true,
-					sourceMap: true,
-					declarationMap: true,
+					tsconfigFilePath: undefined,
 				},
 			],
 			updatePackage: false,
@@ -201,9 +197,7 @@ await compiler.compile();
 					plugins: [],
 					warning: false,
 					outputDirectoryPath: subpathOutDir,
-					declaration: true,
-					sourceMap: true,
-					declarationMap: true,
+					tsconfigFilePath: undefined,
 				},
 			],
 			updatePackage: false,

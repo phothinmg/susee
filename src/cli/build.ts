@@ -1,7 +1,7 @@
-import ts6 from "@typescript/typescript6";
-import { Compiler } from "../lib/compiler.js";
-import { type BuildOptions, finalSuseeConfig } from "../lib/suseeConfig.js";
-import tcolor from "../lib/tcolor.js";
+import tcolor from "@suseejs/color";
+import ts6 from "@suseejs/ts6";
+import { Compiler } from "../compiler/index.js";
+import { type BuildOptions, finalSuseeConfig } from "../config/index.js";
 
 async function cliBuild() {
 	console.time(tcolor.cyan("[Build] "));

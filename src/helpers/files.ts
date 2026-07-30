@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import tcolor from "./tcolor.js";
+import tcolor from "@suseejs/color";
 
 namespace files {
 	const root = process.cwd();

@@ -2,7 +2,7 @@ import { exec } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { build } from "./src/index.js";
-import { files } from "./src/lib/files.js";
+import { files } from "./src/helpers/files.js";
 import { suseeTerser } from "@suseejs/terser-plugin";
 import { suseeBannerText } from "@suseejs/banner-text-plugin";
 
@@ -22,7 +22,7 @@ async function grantCli() {
 }
 
 async function writeBinary() {
-	const content = `#!/usr/bin/env node\n\nimport("../dist/bin/index.mjs");`;
+	const content = `#!/usr/bin/env node\n\nimport {suseeCliBuild} from "../dist/index.mjs";\nsuseeCliBuild()`;
 	await files.writeFile(bf, content);
 }
 
@@ -46,24 +46,11 @@ await build({
 	allowUpdatePackageJson: true,
 	outDir: "dist",
 });
-const cliCommand =
-	"npx tsx src/cli/index.ts build src/cli/index.ts --format esm --outdir dist/bin --minify";
-
-await new Promise<void>((resolve, reject) => {
-	exec(cliCommand, async (error) => {
-		if (error) {
-			reject(error);
-			return;
-		}
-
-		try {
-			await grantCli();
-			await fs.promises.chmod(path.resolve(process.cwd(), ef), 0o755);
-			await writeBinary();
-			await fs.promises.chmod(path.resolve(process.cwd(), bf), 0o755);
-			resolve();
-		} catch (chmodOrGrantError) {
-			reject(chmodOrGrantError);
-		}
-	});
-});
+try {
+	//   await grantCli();
+	//   await fs.promises.chmod(path.resolve(process.cwd(), ef), 0o755);
+	await writeBinary();
+	await fs.promises.chmod(path.resolve(process.cwd(), bf), 0o755);
+} catch (chmodOrGrantError) {
+	console.log(chmodOrGrantError);
+}

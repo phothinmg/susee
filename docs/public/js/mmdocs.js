@@ -352,6 +352,8 @@ function tocToggle() {
 
   let scheduled = false;
   let activeId = "";
+  let lockedActiveId = "";
+  let activeLockTimeout = 0;
 
   const getScrollOffset = () => {
     const docsMain = document.querySelector(".docs_main");
@@ -373,20 +375,57 @@ function tocToggle() {
     });
   };
 
+  const findHeadingEntry = (id) =>
+    headingEntries.find((headingEntry) => headingEntry.id === id);
+
+  const releaseActiveLinkLock = () => {
+    if (activeLockTimeout) {
+      clearTimeout(activeLockTimeout);
+      activeLockTimeout = 0;
+    }
+
+    if (!lockedActiveId) return;
+
+    lockedActiveId = "";
+    queueSync();
+  };
+
+  const scheduleActiveLinkUnlock = () => {
+    if (!lockedActiveId) return;
+
+    if (activeLockTimeout) {
+      clearTimeout(activeLockTimeout);
+    }
+
+    activeLockTimeout = window.setTimeout(() => {
+      activeLockTimeout = 0;
+      releaseActiveLinkLock();
+    }, 120);
+  };
+
+  const lockActiveLink = (id) => {
+    if (!findHeadingEntry(id)) return;
+
+    lockedActiveId = id;
+    setActiveLink(id);
+    scheduleActiveLinkUnlock();
+  };
+
   const scrollToHeading = (id) => {
-    const entry = headingEntries.find((headingEntry) => headingEntry.id === id);
+    const entry = findHeadingEntry(id);
 
     if (!entry) return false;
 
     const headingTop =
       entry.heading.getBoundingClientRect().top + scrollY - getScrollOffset();
 
+    lockActiveLink(id);
+
     scrollTo({
       top: Math.max(headingTop, 0),
       behavior: "smooth",
     });
 
-    setActiveLink(id);
     history.replaceState(null, "", `#${encodeURIComponent(id)}`);
 
     return true;
@@ -394,6 +433,11 @@ function tocToggle() {
 
   const syncActiveHeading = () => {
     scheduled = false;
+
+    if (lockedActiveId) {
+      setActiveLink(lockedActiveId);
+      return;
+    }
 
     const threshold = getScrollOffset();
     let currentEntry = headingEntries[0];
@@ -416,7 +460,16 @@ function tocToggle() {
 
   addEventListener("scroll", queueSync, { passive: true });
   addEventListener("resize", queueSync);
-  addEventListener("hashchange", queueSync);
+  addEventListener("scroll", scheduleActiveLinkUnlock, { passive: true });
+  addEventListener("hashchange", () => {
+    const hashId = decodeURIComponent(location.hash.slice(1));
+
+    if (hashId) {
+      lockActiveLink(hashId);
+    }
+
+    queueSync();
+  });
 
   headingEntries.forEach(({ id, link }) => {
     link.addEventListener("click", (event) => {
@@ -431,7 +484,7 @@ function tocToggle() {
     const initialId = decodeURIComponent(location.hash.slice(1));
 
     if (initialId) {
-      setActiveLink(initialId);
+      lockActiveLink(initialId);
     }
   }
 

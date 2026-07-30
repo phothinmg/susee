@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { SuseePlugin, SuseePluginFunction } from "../../types.js";
+import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
 import { fail } from "./fail.js";
 
 interface CliOptions {

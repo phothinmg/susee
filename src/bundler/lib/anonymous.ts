@@ -1,7 +1,7 @@
 import path from "node:path";
-import ts6 from "@typescript/typescript6";
-import type { BundledHandler, DepsFile, NamesSets } from "../../../types.js";
-import { utils } from "../../utilities.js";
+import ts6 from "@suseejs/ts6";
+import type { BundledHandler, DepsFile, NamesSets } from "@suseejs/type";
+import { utils } from "../../helpers/utilities.js";
 import { createBundledSourceFile, transformBundledSource } from "./helpers.js";
 import { uniqueName } from "./uniqueName.js";
 
