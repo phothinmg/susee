@@ -69,16 +69,16 @@
 		"url": "https://github.com/phothinmg/susee/issues"
 	},
 	"dependencies": {
-		"@suseejs/color": "^0.0.7",
+		"@suseejs/color": "^0.0.8",
 		"@suseejs/ts6": "^1.0.0",
 		"mmcov": "^0.0.8",
 		"shiki": "^4.3.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
-		"@suseejs/banner-text-plugin": "^0.0.7",
-		"@suseejs/terser-plugin": "^0.0.7",
-		"@suseejs/type": "^0.0.7",
+		"@suseejs/banner-text-plugin": "^0.0.8",
+		"@suseejs/terser-plugin": "^0.0.8",
+		"@suseejs/type": "^0.0.8",
 		"@types/node": "^25.6.0",
 		"tsx": "^4.21.0",
 		"typescript": "^7.0.2"

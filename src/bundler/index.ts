@@ -1,10 +1,10 @@
 import path from "node:path";
 import process from "node:process";
 import ts6 from "@suseejs/ts6";
+import type { SuseePlugins } from "@suseejs/type";
 import { generateDependencies } from "../dependencies/index.js";
 import { logProfilePhase } from "../helpers/profile.js";
 import { utils } from "../helpers/utilities.js";
-import type { SuseePlugins } from "../types.js";
 import { anonymousHandler } from "./lib/anonymous.js";
 import { exportDefaultHandler } from "./lib/exportDefault.js";
 import { createBundledSourceFile, isJSON } from "./lib/helpers.js";
