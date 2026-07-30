@@ -15,13 +15,11 @@
 A **TypeScript-first** bundler designed specifically for **library packages** that delivers **fast builds**, **type safety**, and **modern JavaScript output** with minimal configuration.
 
 > [!NOTE]
-> Susee currently depends on the `TypeScript 6` programmatic API.
 >
-> Starting with `v1.6.0`, Susee uses `@suseejs/ts6`, a focused fork of `@typescript/typescript6` that exposes the `ts6` runtime Susee needs.
->
-> This keeps Susee's TypeScript API dependency isolated, while allowing your project to install and use `TypeScript 7` alongside it without `tsc` naming conflicts.
->
-> For the best compatibility with this setup, use `Susee v1.6.0` or newer.
+> - Susee currently depends on the `TypeScript 6` programmatic API.
+> - Starting with `v1.6.0`, Susee uses `@suseejs/ts6`, a focused fork of `@typescript/typescript6` that exposes the `ts6` runtime Susee needs.
+> - This keeps Susee's TypeScript API dependency isolated, while allowing your project to install and use `TypeScript 7` alongside it without `tsc` naming conflicts.
+> - For the best compatibility with this setup, use `Susee v1.6.0` or newer.
 
 ---
 
