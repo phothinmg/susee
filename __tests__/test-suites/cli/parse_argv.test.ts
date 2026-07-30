@@ -105,7 +105,6 @@ describe("parse_argv", () => {
 		const actual = getDefaultOptions({
 			entry: "src/index.ts",
 			format: "commonjs",
-			minify: true,
 		});
 
 		assert.deepStrictEqual(actual, {
@@ -114,7 +113,6 @@ describe("parse_argv", () => {
 			format: "commonjs",
 			tsconfig: undefined,
 			allowUpdate: false,
-			minify: true,
 			warning: false,
 			profile: false,
 			plugins: [],

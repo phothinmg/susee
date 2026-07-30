@@ -9,6 +9,8 @@ title: Entry Points
 ## EntryPoint shape
 
 ```ts
+import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
+
 type OutputFormat = ("commonjs" | "esm")[];
 
 interface EntryPoint {
@@ -16,8 +18,7 @@ interface EntryPoint {
   exportPath: "." | `./${string}`;
   format?: OutputFormat;
   tsconfigFilePath?: string | undefined;
-  renameDuplicates?: boolean;
-  plugins?: unknown[];
+  plugins?: (SuseePlugin | SuseePluginFunction)[];
   warning?: boolean;
 }
 ```
@@ -29,7 +30,6 @@ interface EntryPoint {
   entry: "src/index.ts",
   exportPath: ".",
   format: ["esm", "commonjs"],
-  renameDuplicates: true,
   tsconfigFilePath: "tsconfig.json",
   warning: false,
 }
@@ -94,14 +94,13 @@ This is useful when one entry needs compiler settings different from the rest of
 
 For practical setup patterns and CLI integration with `--tsconfig`, see [tsconfig.json and Custom tsconfig Path Integration](/guide/tsconfig-and-custom-path-integration).
 
-### `renameDuplicates`
+### Duplicate declaration handling
 
-This controls duplicate declaration handling during bundling.
+Susee validates top-level declarations across the bundled dependency set.
 
-- Type: `boolean`
-- Default: `true`
-
-When enabled, Susee automatically renames duplicate declarations produced during source consolidation. When disabled, duplicate declarations can cause the build to fail.
+- Conflicting declarations fail the build.
+- The fix is to rename or restructure the conflicting source declarations.
+- There is no `EntryPoint` flag for automatic duplicate renaming in the current API.
 
 ### `plugins`
 

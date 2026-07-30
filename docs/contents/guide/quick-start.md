@@ -54,7 +54,6 @@ const config: SuSeeConfig = {
       entry: "src/index.ts",
       exportPath: ".",
       format: ["esm", "commonjs"],
-      renameDuplicates: true,
     },
   ],
   outDir: "dist",
@@ -86,9 +85,12 @@ Common options:
 
 - `--format <esm|commonjs|cjs>`
 - `--outdir <path>`
-- `--rename[=true|false]`
+- `--tsconfig <path>`
 - `--allow-update[=true|false]`
-- `--minify[=true|false]`
+- `--warning[=true|false]`
+- `--profile[=true|false]`
+
+If the bundled dependency set contains conflicting top-level declarations, Susee fails the build and reports the conflict instead of renaming identifiers automatically.
 
 ## Use the programmatic API
 
@@ -103,7 +105,6 @@ await build({
       entry: "src/index.ts",
       exportPath: ".",
       format: ["esm", "commonjs"],
-      renameDuplicates: true,
     },
   ],
   outDir: "dist",

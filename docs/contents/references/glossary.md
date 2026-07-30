@@ -37,11 +37,11 @@ The `susee` execution flow is managed by the `Compiler` class, which orchestrate
 The system loads the `susee.config.ts` (or `.js/.mjs`) and converts it into `BuildOptions`.
 
 - **Key Function** : `finalSuseeConfig()` called in `build()`.
-- **Resolution** : `getConfigPath` checks for supported extensions in the current working directory.
+- **Resolution** : `getSuseeConfigPath()` checks for supported extensions in the current working directory.
 
-#### 2. Bundling Phase
+### 2. Bundling Phase
 
-The system uses the `@suseejs/bundler` package to resolve the dependency tree and merge files into a single source string.
+The system uses the internal bundler implementation in `src/bundler` to resolve the dependency tree and merge files into a single source string.
 
 - **Key Function** : `bundler()` called within the compiler's format-specific methods
-- **Logic** : It handles identifier renaming (if `renameDuplicates` is true) and applies AST-level transformations.
+- **Logic** : It applies dependency resolution, JSON handling, anonymous/export-default normalization, import/export cleanup, unused-code cleanup, and plugin-driven transformations.

@@ -8,7 +8,6 @@ interface CliOptions {
 	format?: "commonjs" | "esm" | undefined;
 	tsconfig?: string | undefined;
 	allowUpdate?: boolean | undefined;
-	minify?: boolean | undefined;
 	warning?: boolean | undefined;
 	profile?: boolean | undefined;
 }
@@ -125,7 +124,6 @@ export interface CliBuildOptions {
 	format: "commonjs" | "esm";
 	tsconfig: string | undefined;
 	allowUpdate: boolean;
-	minify: boolean;
 	warning: boolean;
 	profile: boolean;
 	plugins: (SuseePlugin | SuseePluginFunction)[];
@@ -137,7 +135,6 @@ export function getDefaultOptions(args: CliOptions): CliBuildOptions {
 	const format = args.format ?? "esm";
 	const tsconfig = args.tsconfig ?? undefined;
 	const allowUpdate = args.allowUpdate ?? false;
-	const minify = args.minify ?? false;
 	const warning = args.warning ?? false;
 	const profile = args.profile ?? false;
 	return {
@@ -146,7 +143,6 @@ export function getDefaultOptions(args: CliOptions): CliBuildOptions {
 		format,
 		tsconfig,
 		allowUpdate,
-		minify,
 		warning,
 		profile,
 		plugins: [],

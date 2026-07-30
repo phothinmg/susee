@@ -23,7 +23,7 @@ Notes:
 Examples:
   susee build src/index.ts --outdir dist
   susee build src/index.ts --format commonjs
-  susee build --entry src/index.ts --format esm --minify
+  susee build --entry src/index.ts --format esm --tsconfig tsconfig.build.json
   susee build src/index.ts --profile
   susee --profile
   

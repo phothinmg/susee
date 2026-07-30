@@ -17,6 +17,8 @@ Susee looks for one of these files in your project root:
 ## Root config shape
 
 ```ts
+import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
+
 type OutputFormat = ("commonjs" | "esm")[];
 
 interface EntryPoint {
@@ -24,8 +26,7 @@ interface EntryPoint {
   exportPath: "." | `./${string}`;
   format?: OutputFormat;
   tsconfigFilePath?: string | undefined;
-  renameDuplicates?: boolean;
-  plugins?: unknown[];
+  plugins?: (SuseePlugin | SuseePluginFunction)[];
   warning?: boolean;
 }
 
@@ -47,7 +48,6 @@ const config: SuSeeConfig = {
       entry: "src/index.ts",
       exportPath: ".",
       format: ["esm", "commonjs"],
-      renameDuplicates: true,
       warning: false,
     },
   ],
@@ -94,7 +94,11 @@ At a high level, each `EntryPoint` defines:
 - Which source file to build
 - Which package export path it maps to
 - Which module formats to generate
-- Whether entry-specific tsconfig, plugins, duplicate renaming, or warning handling should apply
+- Whether entry-specific tsconfig, plugins, or warning handling should apply
+
+Susee does not expose a config flag for automatic duplicate top-level declaration renaming. Conflicting declarations are reported as build errors and should be fixed in source files.
+
+The `warning` field is specific: when dependency analysis finds referenced npm modules that are not installed, setting `warning: true` makes those warnings fatal and exits the build with code `1`.
 
 For a focused guide on root `tsconfig.json`, per-entry `tsconfigFilePath`, and CLI `--tsconfig`, see [tsconfig.json and Custom tsconfig Path Integration](/guide/tsconfig-and-custom-path-integration).
 

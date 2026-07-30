@@ -14,9 +14,9 @@ Susee is built around TypeScript library development, not application bundling. 
 
 Susee can produce both ESM and CommonJS outputs from the same entry definition. This helps you ship packages that work smoothly with modern import-based environments and older require-based ecosystems at the same time.
 
-## Automatic duplicate symbol handling
+## Duplicate declaration validation
 
-When source consolidation produces conflicting declarations, susee can automatically rename duplicates. This reduces manual cleanup work and helps prevent collisions that would otherwise break build output.
+When source consolidation produces conflicting top-level declarations, susee fails the build with file and location output. This keeps the emitted bundle deterministic and pushes name conflicts back to the source files that caused them.
 
 ## Fast, low-overhead builds
 
@@ -35,6 +35,10 @@ For plugin categories, execution order, and implementation examples, see [Plugin
 ## CLI and programmatic API
 
 Susee supports both command-line usage and direct integration through its build API. Use the CLI for local development and CI commands, or call the API when you need custom scripting and orchestration.
+
+## Optional profiling output
+
+Susee can print bundler and compiler phase timings when profiling is enabled through the CLI `--profile` flag. This is useful for understanding where time is spent in the build pipeline.
 
 ## Why these features matter
 

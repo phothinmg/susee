@@ -4,12 +4,12 @@ label: references
 title: Command Line Interface
 ---
 
-This document details the Command Line Interface (CLI) for susee, covering installation methods, execution patterns, and the internal architecture that enables command-line operation.
+This document details the Command Line Interface (CLI) for susee, covering installation methods, execution patterns, and the command behavior implemented in `src/cli`.
 
-The CLI includes a utility for initializing project configurations and provides two primary modes :
+The CLI includes a utility for initializing project configurations and provides two primary build modes:
 
-- Configuration based execution for complex projects.
-- Flag based execution for single-entry builds
+- Configuration-based execution for complex projects
+- Flag-based execution for single-entry builds
 
 ## Installation and Execution
 
@@ -21,7 +21,7 @@ The `susee` command is the primary entry point for the tool. It can be invoked v
 | Package script       | `npm run build`    | Project-local via scripts |
 | Global install       | `susee`            | System-wide               |
 
-The CLI supports a variety of file extensions for entry points, including `.js`, `.ts`, `.mts`, `.mjs`, `.cjs`, and `.cts`
+The CLI accepts entry files ending in `.js`, `.ts`, `.mts`, `.mjs`, `.cjs`, and `.cts`.
 
 ## Architecture and Data Flow
 
@@ -37,7 +37,7 @@ The CLI is structured to handle three distinct workflows:
 
 **Command** : `susee` or `npx susee`
 
-When run without arguments, susee attempts to find a configuration file (`susee.config.ts`, `susee.config.js`, or `susee.config.mjs`) in the current directory.It resolve the build options and executes the bundling/compilation pipeline.
+When run without arguments, susee attempts to find a configuration file (`susee.config.ts`, `susee.config.js`, or `susee.config.mjs`) in the current directory. It resolves the build options and executes the bundling and compilation pipeline.
 
 #### 2. Single Entry Build
 
@@ -50,10 +50,9 @@ This command allows for quick builds without a configuration file.
 --outdir <path>               Output directory (default: dist)
 --format <cjs|commonjs|esm>   Output format (default: esm)
 --tsconfig <path>             Custom tsconfig path
---rename[=true|false]         Rename duplicate declarations (default: true)
 --allow-update[=true|false]   Allow package.json updates (default: false)
---minify[=true|false]         Minify output (default: false)
---warning[=true|false]        Enable warnings (default: false)
+--warning[=true|false]        Treat dependency graph warnings as fatal (default: false)
+--profile[=true|false]        Print bundler and compiler phase timings (default: false)
 ```
 
 **Example** :
@@ -61,7 +60,8 @@ This command allows for quick builds without a configuration file.
 ```sh
 npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
-npx susee build --entry src/index.ts --format esm --minify
+npx susee build --entry src/index.ts --format esm --tsconfig tsconfig.build.json
+npx susee build src/index.ts --profile
 ```
 
 #### 3. Initialization
@@ -72,14 +72,20 @@ This command provides an interactive prompt to determine if the project is TypeS
 Based on the user input and the `type` field in `package.json`, it generates the appropriate configuration file:
 
 - **TypeScript** : `susee.config.ts`
-- **ESM JavaScript** : `susee.config.js`
-- **CommonJS JavaScript** : `susee.config.mjs`
+- **ESM JavaScript package** : `susee.config.js`
+- **CommonJS JavaScript package** : `susee.config.mjs`
+
+#### 4. Help, Version, and Profiling
+
+- `susee --help` or `susee build --help` prints the usage text.
+- `susee --version` prints the current package version.
+- `--profile` can be passed to `susee` or `susee build ...` to enable per-phase timing logs.
 
 ## Exit Codes and Diagnostics
 
 The CLI uses standard exit codes to communicate status:
 
-| Exit Code | Meaning | Triggers                                                        |
-| --------- | ------- | --------------------------------------------------------------- |
-| 0         | Success | Build completed and artifacts written to disk.                  |
-| 1         | Failure | Missing entry point, invalid format flags, or unknown CLI usage |
+| Exit Code | Meaning | Triggers                                                                      |
+| --------- | ------- | ----------------------------------------------------------------------------- |
+| 0         | Success | Build completed and artifacts written to disk.                                |
+| 1         | Failure | Missing entry point, invalid flags, unknown CLI usage, or failed validation.  |
