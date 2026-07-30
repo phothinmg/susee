@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { build } from "./src/index.js";
 import { files } from "./src/helpers/files.js";
-import { suseeTerser } from "@suseejs/terser-plugin";
 import { suseeBannerText } from "@suseejs/banner-text-plugin";
 
 const ef = "dist/bin/index.mjs";
@@ -40,7 +39,7 @@ await build({
 			entry: "src/index.ts",
 			exportPath: ".",
 			format: ["esm", "commonjs"],
-			plugins: [suseeBannerText(bannerText), suseeTerser],
+			plugins: [suseeBannerText(bannerText)],
 		},
 	],
 	allowUpdatePackageJson: true,
