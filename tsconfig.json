@@ -46,5 +46,5 @@
 		"skipLibCheck": true,
 		"allowJs": true
 	},
-	"include": ["src/bundler/**/*"]
+	"include": ["src/**/*", "__tests__/**/*"]
 }

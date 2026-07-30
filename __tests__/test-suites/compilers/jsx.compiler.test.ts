@@ -9,7 +9,7 @@ import { fileExists, setupTempDir } from "../test_helpers.js";
 
 const execFileAsync = promisify(execFile);
 const compilerModulePath = path
-	.resolve(process.cwd(), "src/lib/compiler.ts")
+	.resolve(process.cwd(), "src/compiler/index.ts")
 	.replaceAll("\\", "/");
 
 async function createVueRuntimePackage(tempDir: string) {

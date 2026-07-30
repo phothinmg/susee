@@ -12,10 +12,13 @@ Options:
   --outdir <path>                      Output directory
   --format <cjs|commonjs|esm>          Output module format
   --tsconfig <path>                    Custom tsconfig path
-  --rename[=true|false]                Enable/disable renaming
   --allow-update[=true|false]          Enable/disable dependency update
-  --minify[=true|false]                Enable/disable minification
+  --warning[=true|false]               Treat dependency graph warnings as fatal
   --profile[=true|false]               Print bundler/compiler phase timings
+
+Notes:
+  Duplicate top-level declarations fail the build with file and location output.
+  Rename conflicting declarations in source files before bundling.
 
 Examples:
   susee build src/index.ts --outdir dist

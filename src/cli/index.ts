@@ -32,9 +32,8 @@ const config: SuSeeConfig = {
       // (optional) Output module formats ["commonjs"] or ["esm", "commonjs"], default: ["esm"].
       // Uncomment the following line to edit.
       //format: ["esm"],
-      // (optional) Rename duplicate declarations, default: true.
-      // Uncomment the following line to edit.
-      //renameDuplicates: true,
+			// Duplicate top-level declarations are checked during bundling.
+			// Rename conflicting declarations in source files before building.
       // (optional) Custom tsconfig.json path, default: undefined.
       // Uncomment the following line to edit.
       //tsconfigFilePath: undefined,
@@ -78,9 +77,8 @@ const config = {
       // (optional) Output module formats ["commonjs"] or ["esm", "commonjs"], default: ["esm"].
       // Uncomment the following line to edit.
       //format: ["esm"],
-      // (optional) Rename duplicate declarations, default: true.
-      // Uncomment the following line to edit.
-      //renameDuplicates: true,
+			// Duplicate top-level declarations are checked during bundling.
+			// Rename conflicting declarations in source files before building.
       // (optional) Custom tsconfig.json path, default: undefined.
       // Uncomment the following line to edit.
       //tsconfigFilePath: undefined,
@@ -217,6 +215,10 @@ async function suseeCliBuild() {
 		console.error("Unknown CLI usage");
 		process.exit(1);
 	}
+}
+
+if (import.meta.main) {
+	await suseeCliBuild();
 }
 
 export { suseeCliBuild };

@@ -1,29 +1,58 @@
 // cSpell:disable
 
+import tcolor from "@suseejs/color";
 import ts6 from "@suseejs/ts6";
-import type {
-	DependenciesTree,
-	DepsFile,
-	DuplicatesNameMap,
-} from "@suseejs/type";
+import type { DependenciesTree, DepsFile } from "@suseejs/type";
 
-const duplicateNameMap: DuplicatesNameMap = new Map();
+type DuplicateDeclarationLocation = {
+	file: string;
+	line: number;
+	column: number;
+};
+
+type DuplicateNameMap = Map<string, Set<DuplicateDeclarationLocation>>;
 
 const collectDuplicateDeclarations = (
 	deps: DepsFile[],
 	bundledSourceFile: (file: string, content: string) => ts6.SourceFile,
 ) => {
-	const collectFile = (file: string, node: ts6.Node, isGlobalScope = true) => {
+	const duplicateNameMap: DuplicateNameMap = new Map();
+
+	const addDuplicateDeclaration = (
+		name: string,
+		file: string,
+		sourceFile: ts6.SourceFile,
+		positionNode: ts6.Node,
+	) => {
+		const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+			positionNode.getStart(sourceFile),
+		);
+		const location = {
+			file,
+			line: line + 1,
+			column: character + 1,
+		};
+
+		if (!duplicateNameMap.has(name)) {
+			duplicateNameMap.set(name, new Set([location]));
+			return;
+		}
+
+		duplicateNameMap.get(name)?.add(location);
+	};
+
+	const collectFile = (
+		file: string,
+		sourceFile: ts6.SourceFile,
+		node: ts6.Node,
+		isGlobalScope = true,
+	) => {
 		if (isGlobalScope) {
 			if (ts6.isVariableStatement(node)) {
 				node.declarationList.declarations.forEach((decl) => {
 					if (ts6.isIdentifier(decl.name)) {
 						const name = decl.name.text;
-						if (!duplicateNameMap.has(name)) {
-							duplicateNameMap.set(name, new Set([{ file }]));
-						} else {
-							duplicateNameMap.get(name)?.add({ file });
-						}
+						addDuplicateDeclaration(name, file, sourceFile, decl.name);
 					}
 				});
 			} else if (
@@ -35,11 +64,7 @@ const collectDuplicateDeclarations = (
 			) {
 				const name = node.name?.text;
 				if (name) {
-					if (!duplicateNameMap.has(name)) {
-						duplicateNameMap.set(name, new Set([{ file }]));
-					} else {
-						duplicateNameMap.get(name)?.add({ file });
-					}
+					addDuplicateDeclaration(name, file, sourceFile, node.name);
 				}
 			}
 		}
@@ -53,24 +78,28 @@ const collectDuplicateDeclarations = (
 			ts6.isClassDeclaration(node)
 		) {
 			if (ts6.isBlock(node)) {
-				node.statements.forEach((child) => collectFile(file, child, false));
+				node.statements.forEach((child) =>
+					collectFile(file, sourceFile, child, false),
+				);
 			} else {
 				ts6.forEachChild(node, (child) => {
-					collectFile(file, child, false);
+					collectFile(file, sourceFile, child, false);
 				});
 			}
 			return;
 		}
 
 		ts6.forEachChild(node, (child) => {
-			collectFile(file, child, isGlobalScope);
+			collectFile(file, sourceFile, child, isGlobalScope);
 		});
 	};
 
 	for (const dep of deps) {
 		const sourceFile = bundledSourceFile(dep.file, dep.content);
-		collectFile(dep.file, sourceFile, true);
+		collectFile(dep.file, sourceFile, sourceFile, true);
 	}
+
+	return duplicateNameMap;
 };
 
 const checkDuplicates = (
@@ -78,12 +107,26 @@ const checkDuplicates = (
 	bundledSourceFile: (file: string, content: string) => ts6.SourceFile,
 ) => {
 	let _err = false;
-	collectDuplicateDeclarations(tree.depFiles, bundledSourceFile);
+	const duplicateNameMap = collectDuplicateDeclarations(
+		tree.depFiles,
+		bundledSourceFile,
+	);
 	duplicateNameMap.forEach((files, name) => {
 		if (files.size > 1) {
 			_err = true;
-			console.warn(`Name -> ${name} declared in multiple files : `);
-			files.forEach((f) => console.warn(`  - ${f.file}`));
+			console.warn(tcolor.yellow("[susee:error]"));
+			console.warn(
+				"  Duplicate declarations found in your dependencies tree as follows:",
+			);
+			console.warn(
+				`  - "${tcolor.magenta(name)}" declared in multiple files : `,
+			);
+			files.forEach((f) =>
+				console.warn(`    - ${f.file}:${f.line}:${f.column}`),
+			);
+			console.info(
+				"Please rename these with different names to avoid duplicate declarations.",
+			);
 		}
 	});
 	if (_err) {

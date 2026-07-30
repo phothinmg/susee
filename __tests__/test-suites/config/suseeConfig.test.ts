@@ -2,8 +2,8 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import ts6 from "@suseejs/ts6";
 import {
-	finalSuseeConfig,
 	type BuildEntryPoint,
+	finalSuseeConfig,
 } from "../../../src/config/index.js";
 import { exitWithCodeOneAndMessage, sortObject } from "../test_helpers.js";
 
@@ -95,7 +95,6 @@ describe("finalSuseeConfig", async () => {
 					format: ["esm", "commonjs"],
 					outputDirectoryPath: "dist",
 					plugins: [],
-					rename: true,
 					warning: false,
 					tsconfigFilePath: undefined,
 				}),

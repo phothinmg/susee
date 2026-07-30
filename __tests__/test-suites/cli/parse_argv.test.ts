@@ -8,8 +8,8 @@ import {
 	getDefaultOptions,
 	isEmptyObject,
 	isFile,
-	parseBooleanFlag,
 	parseArgs,
+	parseBooleanFlag,
 } from "../../../src/cli/lib/parse_argv.js";
 import { setupTempDir } from "../test_helpers.js";
 
@@ -50,9 +50,7 @@ describe("parse_argv", () => {
 			"cjs",
 			"--tsconfig",
 			"tsconfig.build.json",
-			"--rename=false",
 			"--allow-update",
-			"--minify=true",
 			"--warning",
 			"--profile",
 		]);
@@ -62,9 +60,7 @@ describe("parse_argv", () => {
 			outDir: "dist",
 			format: "commonjs",
 			tsconfig: "tsconfig.build.json",
-			rename: false,
 			allowUpdate: true,
-			minify: true,
 			warning: true,
 			profile: true,
 		});
@@ -84,11 +80,8 @@ describe("parse_argv", () => {
 			"--entry=src/index.ts",
 			"--outdir=lib",
 			"--tsconfig=tsconfig.json",
-			"--rename",
+			"--allow-update",
 			"false",
-			"--allow-update=false",
-			"--minify",
-			"true",
 			"--warning=false",
 			"--profile=false",
 		]);
@@ -97,9 +90,7 @@ describe("parse_argv", () => {
 			entry: "src/index.ts",
 			outDir: "lib",
 			tsconfig: "tsconfig.json",
-			rename: false,
 			allowUpdate: false,
-			minify: true,
 			warning: false,
 			profile: false,
 		});
@@ -122,7 +113,6 @@ describe("parse_argv", () => {
 			outDir: "dist",
 			format: "commonjs",
 			tsconfig: undefined,
-			rename: true,
 			allowUpdate: false,
 			minify: true,
 			warning: false,
@@ -152,32 +142,6 @@ parseArgs(["src/index.ts", "--format", "amd"]);
 				assert.strictEqual(error.code, 1);
 				const stderr = String(error.message ?? "");
 				assert.match(stderr, /Format must be cjs, commonjs, or esm\./);
-				return true;
-			},
-		);
-	});
-
-	it("parseArgs exits for invalid boolean flag value", async () => {
-		const tmpDir = await setupTempDir("parse-argv-invalid-boolean");
-		const scriptPath = path.join(tmpDir, "invalid-boolean.ts");
-		const parseArgvPath = path
-			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
-			.replaceAll("\\", "/");
-
-		await fs.writeFile(
-			scriptPath,
-			`import { parseArgs } from "${parseArgvPath}";
-parseArgs(["src/index.ts", "--rename=maybe"]);
-`,
-			"utf8",
-		);
-
-		await assert.rejects(
-			execFileAsync(getTsxBin(), [scriptPath], { cwd: tmpDir }),
-			(error: NodeJS.ErrnoException) => {
-				assert.strictEqual(error.code, 1);
-				const stderr = String(error.message ?? "");
-				assert.match(stderr, /Type of rename must be boolean\./);
 				return true;
 			},
 		);
@@ -271,7 +235,7 @@ parseArgs(["src/index.ts", "--outdir", "--format", "esm"]);
 		await fs.writeFile(
 			scriptPath,
 			`import { parseArgs } from "${parseArgvPath}";
-parseArgs(["src/index.ts", "--tsconfig", "--rename"]);
+parseArgs(["src/index.ts", "--tsconfig", "--allow-update"]);
 `,
 			"utf8",
 		);

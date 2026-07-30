@@ -74,19 +74,8 @@ async function bundler(
 	phaseStart = process.hrtime.bigint();
 	depsFiles = await anonymousHandler(depsFiles, compilerOptions);
 	logBundlerPhase(entry, "anonymous", phaseStart);
-	// 6. Handling Duplicated Declarations
-	// 6.1 options.reName
-	// if (reName) {
-	// 	phaseStart = process.hrtime.bigint();
-	// 	depsFiles = await duplicateHandlers.renamed(depsFiles, compilerOptions);
-	// 	logBundlerPhase(entry, "duplicate:renamed", phaseStart);
-	// }
-	// // 6.2 !options.reName, for who want to rename manually
-	// else {
-	// 	phaseStart = process.hrtime.bigint();
-	// 	depsFiles = await duplicateHandlers.notRenamed(depsFiles, compilerOptions);
-	// 	logBundlerPhase(entry, "duplicate:notRenamed", phaseStart);
-	// }
+	// 6. Duplicate top-level declarations are validated during dependency generation.
+	// Susee fails fast and asks callers to fix conflicting names in source files.
 	// 7. Handling  Remove Imports/Exports
 	phaseStart = process.hrtime.bigint();
 	const removed = await removeHandlers(removedStatements, compilerOptions);

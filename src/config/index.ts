@@ -46,6 +46,10 @@ export interface EntryPoint {
 	 */
 	plugins?: (SuseePlugin | SuseePluginFunction)[];
 	/**
+	 * Susee fails the build when duplicate top-level declarations are found across bundled files.
+	 * Resolve those conflicts in source files before building.
+	 */
+	/**
 	 * When generating a dependency graph, Susee checks whether referenced npm modules are installed.
 	 * If a module is not installed in your project, Susee emits a warning message.
 	 * If this option is `true`, Susee treats those warnings as fatal and exits with code 1.
@@ -160,7 +164,7 @@ export type BuildOptions = {
 /**
  * Generates normalized build options from the user config.
  * It validates entry points, applies default values, removes duplicate formats,
- * and resolves the output directory for each export path.
+ * resolves the output directory for each export path, and keeps duplicate declaration handling fail-fast.
  * @param {SuSeeConfig} config - raw susee configuration object.
  * @returns {BuildOptions} normalized build options for the compiler.
  */

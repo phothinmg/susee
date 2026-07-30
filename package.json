@@ -23,12 +23,11 @@
 	},
 	"scripts": {
 		"build": "tsx build.ts",
-		"lint": "biome check src  --write",
+		"lint": "biome lint ./src ./__tests__  --write",
 		"fmt": "biome format --write",
 		"test": "tsx --test",
 		"coverage": "npx tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=__tests__/coverage/lcov.info",
 		"hooks:install": "bash scripts/install-hooks.sh",
-		"lint:test": "biome check tests --write",
 		"commit": "bash scripts/commit.sh",
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
@@ -69,16 +68,15 @@
 		"url": "https://github.com/phothinmg/susee/issues"
 	},
 	"dependencies": {
-		"@suseejs/color": "^0.0.8",
+		"@suseejs/color": "^0.0.9",
 		"@suseejs/ts6": "^1.0.0",
 		"mmcov": "^0.0.8",
 		"shiki": "^4.3.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
-		"@suseejs/banner-text-plugin": "^0.0.8",
-		"@suseejs/terser-plugin": "^0.0.8",
-		"@suseejs/type": "^0.0.8",
+		"@suseejs/banner-text-plugin": "^0.0.9",
+		"@suseejs/type": "^0.0.9",
 		"@types/node": "^25.6.0",
 		"tsx": "^4.21.0",
 		"typescript": "^7.0.2"

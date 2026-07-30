@@ -28,7 +28,7 @@ A **TypeScript-first** bundler designed specifically for **library packages** th
 
 ✅ **Dual Output** - Generate both ESM and CommonJS formats automatically
 
-✅ **Automatic Renaming** - Handles duplicate declarations intelligently
+✅ **Duplicate Declaration Detection** - Fails fast when bundled files contain conflicting top-level declarations
 
 ✅ **Fast Builds** - Optimized for library packages with minimal overhead
 
@@ -37,6 +37,8 @@ A **TypeScript-first** bundler designed specifically for **library packages** th
 ✅ **Plugin System** - Extend functionality with custom plugins
 
 ✅ **CLI & Programmatic API** - Use as a CLI tool or integrate directly
+
+✅ **Build Profiling** - Print bundler and compiler phase timings with `--profile`
 
 ---
 
@@ -103,7 +105,6 @@ await build({
       entry: "src/index.ts",
       exportPath: ".",
       format: ["esm", "commonjs"],
-      renameDuplicates: true,
     },
   ],
   outDir: "dist",
@@ -142,18 +143,18 @@ Do not open public issues for security reports.
 
 ## API Quick Reference
 
-| Surface      | Command / API                    | Purpose                                               | Defaults                                                                                                      |
-| ------------ | -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Programmatic | `build(options?)`                | Build from provided options or discovered config file | Exits with code 1 when options and config are both missing                                                    |
-| CLI          | `susee`                          | Build using `susee.config.ts/js/mjs` in project root  | Uses resolved config                                                                                          |
-| CLI          | `susee init`                     | Create config template in project root                | Prompts for TypeScript project                                                                                |
-| CLI          | `susee build <entry> [options]`  | Build a single entry directly from CLI args           | `--outdir dist`, `--format esm`, `--rename true`, `--allow-update false`, `--minify false`, `--warning false` |
-| Config       | `entryPoints[].format`           | Output module format(s)                               | `["esm"]`                                                                                                     |
-| Config       | `entryPoints[].renameDuplicates` | Rename duplicate declarations                         | `true`                                                                                                        |
-| Config       | `entryPoints[].tsconfigFilePath` | Custom tsconfig path                                  | `undefined`                                                                                                   |
-| Config       | `entryPoints[].plugins`          | Post-process plugin list                              | `[]`                                                                                                          |
-| Config       | `outDir`                         | Root output directory                                 | `"dist"`                                                                                                      |
-| Config       | `allowUpdatePackageJson`         | Update package fields based on output                 | `false`                                                                                                       |
+1. `build(options?)`: Build from the provided options or from a discovered `susee.config.ts/js/mjs` file. If neither exists, Susee exits with code `1`.
+2. `suseeBundler(entry)`: Bundle a single entry and return the merged source string. This export does not expose plugin or warning options.
+3. `suseeCliBuild()`: Run the CLI dispatcher programmatically using `process.argv`.
+4. `susee`: Build from the root config file and clear the configured `outDir` before compiling.
+5. `susee init`: Generate a config template in the project root after prompting whether the project uses TypeScript.
+6. `susee build <entry> [options]`: Build a single entry directly from CLI arguments. Defaults: `--outdir dist`, `--format esm`, `--warning false`, `--allow-update false`, `--profile false`.
+7. `entryPoints[].format`: Output module format list. Default: `["esm"]`.
+8. `entryPoints[].tsconfigFilePath`: Custom tsconfig path. Default: `undefined`.
+9. `entryPoints[].plugins`: Dependency, pre-process, and post-process plugins. Default: `[]`.
+10. `entryPoints[].warning`: Treat dependency graph warnings as fatal. Default: `false`.
+11. `outDir`: Root output directory. Default: `"dist"`.
+12. `allowUpdatePackageJson`: Update package fields based on generated output. Default: `false`.
 
 ---
 
@@ -177,10 +178,9 @@ Usage:
 --outdir <path>               Output directory (default: dist)
 --format <cjs|commonjs|esm>   Output format (default: esm)
 --tsconfig <path>             Custom tsconfig path
---rename[=true|false]         Rename duplicate declarations (default: true)
 --allow-update[=true|false]   Allow package.json updates (default: false)
---minify[=true|false]         Minify output (default: false)
---warning[=true|false]        Enable warnings (default: false)
+--warning[=true|false]        Treat dependency graph warnings as fatal (default: false)
+--profile[=true|false]        Print bundler/compiler phase timings (default: false)
 ```
 
 ### CLI Examples
@@ -188,8 +188,15 @@ Usage:
 ```bash
 npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
-npx susee build --entry src/index.ts --format esm --minify
+npx susee build --entry src/index.ts --format esm
+npx susee build src/index.ts --profile
 ```
+
+Notes:
+
+1. `susee build` accepts either a positional `<entry>` or `--entry <path>`.
+2. `--profile` is also accepted on plain `susee` config-driven builds.
+3. The CLI clears the target `outDir` before writing new output.
 
 ---
 
@@ -211,7 +218,6 @@ interface EntryPoint {
   exportPath: "." | `./${string}`;
   format?: OutputFormat; // default: ["esm"]
   tsconfigFilePath?: string | undefined; // default: undefined
-  renameDuplicates?: boolean; // default: true
   plugins?: unknown[]; // default: []
   warning?: boolean; // default: false
 }
@@ -266,6 +272,7 @@ Runtime behavior:
 1. If `options` is provided, Susee builds from that object.
 2. If `options` is omitted, Susee tries to load config from project root.
 3. If both are missing, Susee logs an error and exits with code `1`.
+4. Before compiling, Susee clears the configured `outDir`.
 
 ```ts
 import { build, type SuSeeConfig } from "susee";
@@ -308,19 +315,19 @@ Notes:
 
 ## Package.json Update Matrix
 
-When `allowUpdatePackageJson` (config) or `--allow-update` (CLI build) is enabled, Susee can update package fields.
+When `allowUpdatePackageJson` (config) or `--allow-update` (CLI build) is enabled, Susee rewrites package metadata from the emitted file paths.
 
-| Context              | Condition                                     | Updated Fields              | Observed Result                                             |
-| -------------------- | --------------------------------------------- | --------------------------- | ----------------------------------------------------------- |
-| Main export build    | `exportPath: "."` with ESM + CommonJS outputs | `main`, `module`            | `main: "dist/index.cjs"`, `module: "dist/index.mjs"`        |
-| Main export build    | `exportPath: "."` with declarations           | `types`                     | Set from generated CommonJS declaration path when available |
-| Subpath export build | `exportPath: "./foo"`                         | `exports` (subpath mapping) | Currently remains `{}` in tested behavior                   |
+1. Main export build with `exportPath: "."` and CommonJS output: updates `main` to the generated `.cjs` file.
+2. Main export build with `exportPath: "."` and ESM output: updates `module` to the generated `.mjs` file.
+3. Main export build with `exportPath: "."` and declarations: updates `types` to the generated declaration file.
+4. Any export build with generated import or require declarations: creates or merges `exports` entries for that export path.
+5. Any package update: forces `type` to `"module"`.
 
 Notes:
 
 1. Package update requires a `package.json` file in the project root.
-2. With update disabled, package fields are left unchanged.
-3. Existing tests in this repo currently assert `exports` remains `{}` for the tested update flows.
+2. For subpath exports, Susee merges the generated entry into existing `exports` when that field is an object.
+3. For the main export path `.`, Susee replaces `exports` with the generated root mapping.
 
 ## Validation Rules
 
@@ -329,6 +336,8 @@ From config validation logic:
 1. At least one `entryPoints` item is required.
 2. Duplicate `exportPath` values are rejected.
 3. Each `entry` path must exist.
+4. Duplicate top-level declarations across bundled files fail the build during dependency analysis.
+5. CommonJS modules in the dependency tree fail the build unless you handle them with `@suseejs/commonjs-plugin`.
 
 Violations print an error and exit with code `1`.
 

@@ -22,7 +22,9 @@ describe("print_help", () => {
 		assert.match(output, /Options:/);
 		assert.match(output, /--entry <path>/);
 		assert.match(output, /--allow-update\[=true\|false\]/);
+		assert.match(output, /--warning\[=true\|false\]/);
 		assert.match(output, /--profile\[=true\|false\]/);
+		assert.match(output, /Duplicate top-level declarations fail the build/);
 		assert.match(output, /Examples:/);
 	});
 });

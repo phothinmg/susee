@@ -1,8 +1,8 @@
 import assert from "node:assert";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 import { before, describe, it } from "node:test";
+import { pathToFileURL } from "node:url";
 import { suseeTerser } from "@suseejs/terser-plugin";
 import { fileExists, readJson, setupTempDir } from "../test_helpers.js";
 
@@ -45,7 +45,7 @@ async function writeProjectFiles(cwd: string, source = "ORIGINAL_VALUE") {
 	);
 	await fs.writeFile(
 		path.join(srcDir, "index.ts"),
-		`export const message = \"${source}\";\n`,
+		`export const message = "${source}";\n`,
 		"utf8",
 	);
 }
@@ -89,7 +89,7 @@ describe("CliCompiler", () => {
 				type: "post-process",
 				async: true,
 				async func(code: string) {
-					return `${code}\nexport const asyncValue = \"ASYNC_PLUGIN_VALUE\";`;
+					return `${code}\nexport const asyncValue = "ASYNC_PLUGIN_VALUE";`;
 				},
 			};
 			const options = {
@@ -146,7 +146,7 @@ describe("CliCompiler", () => {
 				type: "post-process" as const,
 				async: false,
 				func(code: string) {
-					return `${code}\nexport const fromFactory = \"FACTORY_PLUGIN\";`;
+					return `${code}\nexport const fromFactory = "FACTORY_PLUGIN";`;
 				},
 			});
 

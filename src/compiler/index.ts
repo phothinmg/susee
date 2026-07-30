@@ -47,12 +47,7 @@ class Compiler {
 	private async _bundle(point: BuildEntryPoint) {
 		let bundledCode = this._bundledCodeCache.get(point);
 		if (!bundledCode) {
-			bundledCode = bundler(
-				point.entry,
-				point.plugins,
-				point.warning,
-				point.rename,
-			);
+			bundledCode = bundler(point.entry, point.plugins, point.warning);
 			this._bundledCodeCache.set(point, bundledCode);
 		}
 		return bundledCode;

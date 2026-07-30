@@ -242,6 +242,12 @@ describe("CLI integration", () => {
 		assert.strictEqual(result.code, 0);
 		const content = await fs.readFile(configPath, "utf8");
 		assert.ok(content.includes("const config: SuSeeConfig"));
+		assert.ok(
+			content.includes(
+				"Duplicate top-level declarations are checked during bundling.",
+			),
+		);
+		assert.ok(!content.includes("renameDuplicates"));
 		assert.ok(!content.includes("stale: true"));
 	});
 

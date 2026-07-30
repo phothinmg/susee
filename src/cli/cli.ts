@@ -1,4 +1,3 @@
-import { suseeTerser } from "@suseejs/terser-plugin";
 import { bundler } from "../bundler/index.js";
 import { suseeCompiler } from "../compiler/suseeCompiler.js";
 import { getCompilerOptions } from "../compiler/tsoptions.js";
@@ -65,10 +64,6 @@ class CliCompiler {
 			`${compiled.file_name}.cjs.map`,
 		);
 		// --
-		if (opts.minify) {
-			opts.plugins = [suseeTerser, ...opts.plugins];
-			opts.plugins = [...new Set(opts.plugins)];
-		}
 		// call post-process plugin
 		if (opts.plugins.length > 0) {
 			for (const plugin of opts.plugins) {
@@ -140,10 +135,6 @@ class CliCompiler {
 			new RegExp(`${compiled.file_name}.js.map`, "gm"),
 			`${compiled.file_name}.mjs.map`,
 		);
-		if (opts.minify) {
-			opts.plugins = [suseeTerser, ...opts.plugins];
-			opts.plugins = [...new Set(opts.plugins)];
-		}
 		// call post-process plugin
 		if (opts.plugins.length > 0) {
 			for (const plugin of opts.plugins) {

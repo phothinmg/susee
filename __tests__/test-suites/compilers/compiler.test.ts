@@ -25,7 +25,6 @@ describe("Compiler", () => {
 					entry: entryFile,
 					exportPath: ".",
 					format: ["esm", "commonjs"],
-					rename: true,
 					plugins: [],
 					warning: false,
 					outputDirectoryPath: outDir,
@@ -85,7 +84,6 @@ describe("Compiler", () => {
 					entry: entryFile,
 					exportPath: ".",
 					format: ["esm"],
-					rename: true,
 					plugins: [
 						{
 							type: "post-process",
@@ -125,7 +123,7 @@ describe("Compiler", () => {
 		const packageJsonPath = path.join(tempDir, "package.json");
 		const scriptPath = path.join(tempDir, "compile.ts");
 		const compilerModulePath = path
-			.resolve(process.cwd(), "src/lib/compiler.ts")
+			.resolve(process.cwd(), "src/compiler/index.ts")
 			.replaceAll("\\", "/");
 
 		await fs.mkdir(entryDir, { recursive: true });
@@ -193,7 +191,6 @@ await compiler.compile();
 					entry: entryFile,
 					exportPath: "./foo",
 					format: ["esm", "commonjs"],
-					rename: true,
 					plugins: [],
 					warning: false,
 					outputDirectoryPath: subpathOutDir,

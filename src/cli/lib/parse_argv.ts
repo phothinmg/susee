@@ -7,7 +7,6 @@ interface CliOptions {
 	outDir?: string | undefined;
 	format?: "commonjs" | "esm" | undefined;
 	tsconfig?: string | undefined;
-	rename?: boolean | undefined;
 	allowUpdate?: boolean | undefined;
 	minify?: boolean | undefined;
 	warning?: boolean | undefined;
@@ -83,16 +82,6 @@ export function parseArgs(argv: any[]) {
 					index += 1;
 				}
 				break;
-			case "--rename":
-				if (inlineValue !== undefined) {
-					opts.rename = parseBooleanFlag("rename", inlineValue);
-				} else if (nextValue === "true" || nextValue === "false") {
-					opts.rename = parseBooleanFlag("rename", nextValue);
-					index += 1;
-				} else {
-					opts.rename = true;
-				}
-				break;
 			case "--allow-update":
 				if (inlineValue !== undefined) {
 					opts.allowUpdate = parseBooleanFlag("allow update", inlineValue);
@@ -101,16 +90,6 @@ export function parseArgs(argv: any[]) {
 					index += 1;
 				} else {
 					opts.allowUpdate = true;
-				}
-				break;
-			case "--minify":
-				if (inlineValue !== undefined) {
-					opts.minify = parseBooleanFlag("minify", inlineValue);
-				} else if (nextValue === "true" || nextValue === "false") {
-					opts.minify = parseBooleanFlag("minify", nextValue);
-					index += 1;
-				} else {
-					opts.minify = true;
 				}
 				break;
 			case "--warning":
@@ -145,7 +124,6 @@ export interface CliBuildOptions {
 	outDir: string;
 	format: "commonjs" | "esm";
 	tsconfig: string | undefined;
-	rename: boolean;
 	allowUpdate: boolean;
 	minify: boolean;
 	warning: boolean;
@@ -158,7 +136,6 @@ export function getDefaultOptions(args: CliOptions): CliBuildOptions {
 	const outDir = args.outDir ?? "dist";
 	const format = args.format ?? "esm";
 	const tsconfig = args.tsconfig ?? undefined;
-	const rename = args.rename ?? true;
 	const allowUpdate = args.allowUpdate ?? false;
 	const minify = args.minify ?? false;
 	const warning = args.warning ?? false;
@@ -168,7 +145,6 @@ export function getDefaultOptions(args: CliOptions): CliBuildOptions {
 		outDir,
 		format,
 		tsconfig,
-		rename,
 		allowUpdate,
 		minify,
 		warning,

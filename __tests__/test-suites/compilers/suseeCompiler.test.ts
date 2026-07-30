@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { suseeCompiler } from "../../../src/compiler/suseeCompiler.js";
 import ts6 from "@suseejs/ts6";
+import { suseeCompiler } from "../../../src/compiler/suseeCompiler.js";
 
 describe("SuseeCompilers", () => {
 	it("compiles TypeScript to CommonJS", () => {
