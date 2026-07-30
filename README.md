@@ -14,11 +14,11 @@
 
 A **TypeScript-first** bundler designed specifically for **library packages** that delivers **fast builds**, **type safety**, and **modern JavaScript output** with minimal configuration.
 
-> [!WARNING]
-> Susee relies on TypeScript's programmatic API. Because `TypeScript 7.0` does not ship that API yet, Susee currently works with `TypeScript 6.0`.
-> As part of the TypeScript 6.0/7.0 transition, TypeScript published a compatibility package, `@typescript/typescript6`. This package provides a `tsc6` executable, allowing you to install `TypeScript 7.0` side by side with its own `tsc` binary and avoid naming conflicts. It also re-exports the TypeScript 6.0 API, so you can use `tsc` for TypeScript 7 while other tooling continues to rely on 6.0.
-> See the details in this [blog post](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/).
-> The `susee` package and its ecosystem are currently adapting to the new compatibility package, `@typescript/typescript6`, so some Susee APIs may be temporarily unavailable.
+> [!INFO]
+> Susee currently depends on the `TypeScript 6` programmatic API.
+> Starting with `v1.6.0`, Susee uses `@suseejs/ts6`, a focused fork of `@typescript/typescript6` that exposes the `ts6` runtime Susee needs.
+> This keeps Susee's TypeScript API dependency isolated, while allowing your project to install and use `TypeScript 7` alongside it without `tsc` naming conflicts.
+> For the best compatibility with this setup, use `Susee v1.6.0` or newer.
 
 ---
 
