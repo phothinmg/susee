@@ -16,7 +16,7 @@ const exportDefaultPrefixKey = "ExportDefault";
 const createExportDefaultNameGenerator = () =>
 	uniqueName.setPrefix({
 		key: exportDefaultPrefixKey,
-		value: "__exportDefault__",
+		value: "susee__exportDefault__",
 	});
 
 let exportDefaultName = createExportDefaultNameGenerator();

@@ -4,6 +4,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
 
+# coverage
+npx tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=__tests__/coverage/lcov.info
 # pre cache
 mkdir -p docs/.jekyll-cache && cp -r node_modules/.jekyll-cache-backup/. docs/.jekyll-cache/ 2>/dev/null || true 
 sleep 0.5

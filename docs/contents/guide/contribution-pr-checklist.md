@@ -4,10 +4,9 @@ label: guide
 title: Pull Request Checklist
 ---
 
-Use this checklist before opening a PR in either repository:
+Use this checklist before opening a PR for this repository:
 
 - `susee`: <https://github.com/phothinmg/susee>
-- `suseejs`: <https://github.com/phothinmg/suseejs>
 
 ## Scope and intent
 
@@ -35,7 +34,7 @@ Use this checklist before opening a PR in either repository:
 ## Release impact
 
 - [ ] Breaking changes are clearly called out.
-- [ ] Consumer impact is documented (especially for `@suseejs/*` packages).
+- [ ] Consumer impact is documented, especially for CLI, config, plugin, or build-output changes.
 
 ## Final sanity check
 

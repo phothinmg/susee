@@ -28,7 +28,7 @@ git checkout -b feat/my-change
 Common contribution areas:
 
 - CLI behavior (`src/cli/**`)
-- Compiler pipeline integration (`src/lib/**`)
+- Build pipeline internals (`src/bundler/**`, `src/compiler/**`, `src/dependencies/**`)
 - Documentation (`docs/**`)
 - Tests (`__tests__/test-suites/**`)
 
@@ -39,7 +39,13 @@ Use the scripts from this repository:
 ```sh
 npm run test
 npm run lint
-npm run docs:build
+```
+
+For docs work, use the available docs scripts when needed:
+
+```sh
+npm run docs:init
+npm run docs:dev
 ```
 
 Optional formatting:

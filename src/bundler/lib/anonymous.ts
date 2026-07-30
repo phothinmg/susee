@@ -13,7 +13,7 @@ const anonymousPrefixKey = "AnonymousName";
 const createAnonymousNameGenerator = () =>
 	uniqueName.setPrefix({
 		key: anonymousPrefixKey,
-		value: "__anonymous__",
+		value: "susee__anonymous__",
 	});
 
 let anonymousName = createAnonymousNameGenerator();

@@ -7,7 +7,7 @@ title: Contribution Overview
 This section describes how to contribute to:
 
 - `susee` (this repository)
-- Core build scope packages in the `@suseejs/*` ecosystem from the monorepo: <https://github.com/phothinmg/suseejs>
+- The internal build modules that implement bundling, dependency analysis, compilation, file output, and tsconfig resolution
 
 ## Choose your contribution path
 
@@ -17,15 +17,15 @@ Use this path when your change is in the main CLI/tooling package, docs, or inte
 
 Read next: [Contributing to Susee](/guide/contribution-susee)
 
-### Contribute to core build packages in `suseejs`
+### Contribute to core build internals
 
-Use this path when your change belongs to package internals such as:
+Use this path when your change belongs to the internal build pipeline, such as:
 
-- `@suseejs/bundler`
-- `@suseejs/compiler`
-- `@suseejs/graph`
-- `@suseejs/files`
-- `@suseejs/tsoptions`
+- `src/bundler`
+- `src/compiler`
+- `src/dependencies`
+- `src/helpers/files.ts`
+- `src/compiler/tsoptions.ts`
 
 Read next: [Contributing to Core Build Packages](/guide/contribution-core-build-packages)
 

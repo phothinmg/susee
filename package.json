@@ -32,7 +32,7 @@
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
 		"v:major": "npm version major --no-git-tag-version",
-		"vercel:install": "npm i mmcov shiki && bundle install",
+		"vercel:install": "npm i mmcov shiki tsx && bundle install",
 		"vercel:build": "bash scripts/vercel_build.sh",
 		"docs:dev": "bundle exec jekyll serve --profile",
 		"docs:init": "bash scripts/setup.sh"
@@ -76,7 +76,6 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
 		"@suseejs/banner-text-plugin": "^0.0.9",
-		"@suseejs/static": "^0.1.1",
 		"@suseejs/terser-plugin": "^0.0.9",
 		"@suseejs/type": "^0.0.9",
 		"@types/node": "^25.6.0",

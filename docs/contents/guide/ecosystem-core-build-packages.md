@@ -4,99 +4,80 @@ label: guide
 title: Core Build Packages
 ---
 
-These packages make up the main Susee build pipeline.
+These internal modules make up the main Susee build pipeline inside this repository.
 
-## `@suseejs/bundler`
+## `src/bundler`
 
 - Purpose: dependency-aware source bundling for Susee builds
-- Description: Susee Bundler
+- Description: internal bundling stage used by the public `build()` API and CLI compiler flow
 - Role in flow: merges dependency and entry content, runs dependency and pre-process plugin stages
 
-## `@suseejs/compiler`
+## `src/compiler`
 
 - Purpose: TypeScript-based compilation of bundled source
-- Description: TypeScript compiler
+- Description: internal compiler stage that emits `.mjs`, `.cjs`, declaration files, and sourcemaps
 - Role in flow: produces ESM/CommonJS output code and declaration artifacts
 
-## `@suseejs/graph`
+## `src/dependencies`
 
 - Purpose: dependency graph generation
-- Description: Generate dependencies graph.
-- Role in flow: analyzes source dependency tree used by bundler
+- Description: graph building, duplicate detection, and dependency-file collection for bundling
+- Role in flow: analyzes source dependency tree used by bundler and fails fast on duplicate top-level declarations
 
-## `@suseejs/files`
+## `src/helpers/files.ts`
 
 - Purpose: file system utilities for build output lifecycle
-- Description: NodeJs File System for SuseeJs
+- Description: path resolution, output cleanup, file writes, JSON reads, and `package.json` export updates
 - Role in flow: output directory handling, file writes, package metadata updates
 
-## `@suseejs/tsoptions`
+## `src/compiler/tsoptions.ts`
 
 - Purpose: compiler option resolution
-- Description: Get typescript compiler options
+- Description: loads and normalizes TypeScript compiler options from custom paths, root `tsconfig.json`, or defaults
 - Role in flow: loads and normalizes TypeScript compiler options from configured tsconfig/defaults
 
-## When to use these directly
+## When to work in these directly
 
-Use these packages directly when:
+Work in these modules directly when:
 
-- You are building custom tooling around Susee internals.
-- You need programmatic control over a specific build stage.
-- You want a narrow package dependency instead of the full top-level tool.
+- You are changing a specific internal build stage.
+- You need to debug bundling, dependency analysis, compiler output, or package metadata updates.
+- You want to understand which source module owns a behavior before editing.
 
-## Quick install and examples
+## High-level flow
 
-Install core packages:
+These modules are wired together in the current codebase like this:
 
-::: code-group
+1. `src/dependencies/graph.ts` discovers the dependency graph.
+2. `src/dependencies/index.ts` loads dependency files and validates duplicate declarations.
+3. `src/bundler/index.ts` merges sources and runs bundler-stage plugin hooks.
+4. `src/compiler/tsoptions.ts` resolves compiler options.
+5. `src/compiler/index.ts` emits output files and delegates metadata updates to `src/helpers/files.ts`.
 
-```sh [npm]
-npm i @suseejs/bundler @suseejs/compiler @suseejs/graph @suseejs/files @suseejs/tsoptions
-```
+## Public entry points into this pipeline
 
-```sh [pnpm]
-pnpm add @suseejs/bundler @suseejs/compiler @suseejs/graph @suseejs/files @suseejs/tsoptions
-```
+Most users should interact with the pipeline through the public `susee` package exports:
 
-```sh [yarn]
-yarn add @suseejs/bundler @suseejs/compiler @suseejs/graph @suseejs/files @suseejs/tsoptions
-```
+- `build(options?)`
+- `suseeBundler(entry)`
+- `suseeCliBuild()`
 
-```sh [bun]
-bun add @suseejs/bundler @suseejs/compiler @suseejs/graph @suseejs/files @suseejs/tsoptions
-```
-
-:::
-
-Bundle an entry file:
+Example:
 
 ```ts
-import { bundler } from "@suseejs/bundler";
+import { build, suseeBundler } from "susee";
 
-const code = await bundler("src/index.ts");
-```
+const bundledCode = await suseeBundler("src/index.ts");
 
-Compile bundled code:
-
-```ts
-import { suseeCompiler } from "@suseejs/compiler";
-import { getCompilerOptions } from "@suseejs/tsoptions";
-
-const opts = getCompilerOptions();
-const compiled = suseeCompiler({
-  sourceCode: "export const x = 1;",
-  fileName: "src/index.ts",
-  compilerOptions: opts.esm("dist"),
+await build({
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: ["esm", "commonjs"],
+    },
+  ],
 });
-```
-
-Generate a dependency graph:
-
-```ts
-import { generateGraph } from "@suseejs/graph";
-
-const graph = generateGraph("src/index.ts");
-const sorted = graph.sort();
 ```
 
 ## Related pages

@@ -148,8 +148,8 @@ describe("anonymousHandler", () => {
 		const resolved = await anonymousHandler(deps, {});
 		const anon = resolved[0]?.content as string;
 
-		assert.match(anon, /const __anonymous__anon_\d+ = \(\) => 42/);
-		assert.match(anon, /export default __anonymous__anon_\d+/);
+		assert.match(anon, /const susee__anonymous__anon_\d+ = \(\) => 42/);
+		assert.match(anon, /export default susee__anonymous__anon_\d+/);
 	});
 });
 
@@ -171,8 +171,11 @@ describe("exportDefaultHandler", () => {
 		const resolved = await exportDefaultHandler(deps, {});
 		const exp = resolved[0]?.content as string;
 
-		assert.match(exp, /export default function __exportDefault__hello_\d+/);
-		assert.match(exp, /__exportDefault__hello_\d+\(\)/);
+		assert.match(
+			exp,
+			/export default function susee__exportDefault__hello_\d+/,
+		);
+		assert.match(exp, /susee__exportDefault__hello_\d+\(\)/);
 		assert.doesNotMatch(exp, /\bhello\(\)/);
 	});
 });

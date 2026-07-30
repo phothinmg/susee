@@ -4,27 +4,23 @@ label: guide
 title: Contributing to Core Build Packages
 ---
 
-This page is for contributions to core `@suseejs/*` build packages in the monorepo:
+This page is for contributions to Susee's core build internals in this repository.
 
-- <https://github.com/phothinmg/suseejs>
+## Target modules
 
-## Target packages
+The main build stages now live under `src/` as internal modules:
 
-Core build scope packages:
+- `src/bundler`
+- `src/compiler`
+- `src/dependencies`
+- `src/helpers/files.ts`
+- `src/compiler/tsoptions.ts`
 
-- `@suseejs/bundler`
-- `@suseejs/compiler`
-- `@suseejs/graph`
-- `@suseejs/files`
-- `@suseejs/tsoptions`
+## 1. Work in this repository
 
-## 1. Clone monorepo and install
-
-Use npm for consistency with lockfile and npm-based scripts in the monorepo.
+Use npm for consistency with this repository's lockfile and npm-based scripts.
 
 ```sh
-git clone https://github.com/phothinmg/suseejs.git
-cd suseejs
 npm install
 ```
 
@@ -34,30 +30,30 @@ If the repository has a hooks installation script, run:
 npm run hooks:install
 ```
 
-## 2. Pick package scope first
+## 2. Pick the owning module first
 
 Before coding, choose exactly where the fix belongs:
 
-- API surface or transforms in bundling: `packages/bundler`
-- compiler behavior: `packages/compiler`
-- dependency graph logic: `packages/graph`
-- filesystem/output handling: `packages/files`
-- TypeScript options resolution: `packages/tsoptions`
+- API surface or transforms in bundling: `src/bundler`
+- compiler behavior: `src/compiler`
+- dependency graph logic: `src/dependencies`
+- filesystem/output handling or `package.json` updates: `src/helpers/files.ts`
+- TypeScript options resolution: `src/compiler/tsoptions.ts`
 
-## 3. Implement and test in-package
+## 3. Implement and test in-module
 
 Recommended flow:
 
-1. Make changes in one package first.
-2. Run that package tests/build locally.
-3. Validate dependent packages if your change affects shared contracts.
+1. Make changes in one module slice first.
+2. Run the narrowest local test or validation that covers that slice.
+3. Validate adjacent build stages if your change affects shared contracts.
 
-## 4. Keep downstream compatibility in mind
+## 4. Keep public behavior in mind
 
-The `susee` package consumes these core packages, so for behavior changes:
+These internals power the public `susee` CLI and programmatic API, so for behavior changes:
 
 - document the change in package README/changelog if needed
-- verify `susee` integration behavior still matches expectations
+- verify CLI, config, or build integration behavior still matches expectations
 - avoid silent breaking changes
 
 ## 5. Commit and open PR
@@ -78,7 +74,7 @@ Enter commit message: # enter your commit message
 
 Then open a pull request in:
 
-- <https://github.com/phothinmg/suseejs>
+- <https://github.com/phothinmg/susee>
 
 ## Related pages
 

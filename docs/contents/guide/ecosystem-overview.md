@@ -4,17 +4,17 @@ label: guide
 title: Ecosystem Overview
 ---
 
-The `@suseejs/*` ecosystem is split into focused packages so you can use only what your workflow needs.
+The current Susee ecosystem mixes public packages with internal build modules.
 
 ## Package map
 
-### Core build pipeline
+### Core build pipeline in this repository
 
-- `@suseejs/bundler`
-- `@suseejs/compiler`
-- `@suseejs/graph`
-- `@suseejs/files`
-- `@suseejs/tsoptions`
+- `src/bundler`
+- `src/compiler`
+- `src/dependencies`
+- `src/helpers/files.ts`
+- `src/compiler/tsoptions.ts`
 
 ### Plugin packages
 
@@ -31,11 +31,11 @@ The `@suseejs/*` ecosystem is split into focused packages so you can use only wh
 
 A typical Susee build flow:
 
-1. `@suseejs/graph` builds dependency information.
-2. `@suseejs/bundler` merges and normalizes dependency and entry code.
-3. `@suseejs/compiler` compiles bundled source into output formats.
-4. `@suseejs/files` writes output artifacts and handles file operations.
-5. `@suseejs/tsoptions` resolves compiler options from tsconfig/defaults.
+1. `src/dependencies/graph.ts` builds dependency information.
+2. `src/bundler` merges and normalizes dependency and entry code.
+3. `src/compiler` compiles bundled source into output formats.
+4. `src/helpers/files.ts` writes output artifacts and handles file operations.
+5. `src/compiler/tsoptions.ts` resolves compiler options from tsconfig/defaults.
 6. Optional plugin packages transform code in plugin hooks.
 
 ## Which page to read next
@@ -43,14 +43,14 @@ A typical Susee build flow:
 - For pipeline internals: [Core Build Packages](/guide/ecosystem-core-build-packages)
 - For installable plugins: [Plugin Packages](/guide/ecosystem-plugin-packages)
 - For shared primitives and types: [Foundation Packages](/guide/ecosystem-foundation-packages)
-- For contribution workflows across `susee` and `suseejs`: [Contribution Overview](/guide/contribution-overview)
+- For contribution workflows across public APIs and internal build modules: [Contribution Overview](/guide/contribution-overview)
 
-## Quick install examples
+## Install examples
 
-Install a core package:
+Install the top-level tool:
 
 ```sh
-npm i @suseejs/bundler
+npm i -D susee
 ```
 
 Install plugin packages:
