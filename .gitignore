@@ -14,11 +14,3 @@ sr
 out
 site
 gpg.sh
-
-# Jekyll
-_site
-.jekyll-cache
-# add bundle config
-.bundle/
-# add bundle source
-vendor

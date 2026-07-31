@@ -1,0 +1,9 @@
+# Jekyll
+_site
+.jekyll-cache
+# add bundle config
+.bundle/
+# add bundle source
+vendor
+# node js
+node_modules

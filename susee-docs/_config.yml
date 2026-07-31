@@ -1,7 +1,6 @@
 url: https://susee.js.org
 # site
 title: susee
-source: docs
 markdown:  kramdown
 kramdown:
   syntax_highlighter: none
