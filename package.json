@@ -26,16 +26,11 @@
 		"lint": "biome lint ./src ./__tests__  --write",
 		"fmt": "biome format --write",
 		"test": "tsx --test",
-		"coverage": "npx tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=__tests__/coverage/lcov.info",
 		"hooks:install": "bash scripts/install-hooks.sh",
 		"commit": "bash scripts/commit.sh",
 		"v:patch": "npm version patch --no-git-tag-version",
 		"v:minor": "npm version minor --no-git-tag-version",
-		"v:major": "npm version major --no-git-tag-version",
-		"vercel:install": "npm i mmcov shiki tsx && bundle install",
-		"vercel:build": "bash scripts/vercel_build.sh",
-		"docs:dev": "bundle exec jekyll serve --profile",
-		"docs:init": "bash scripts/setup.sh"
+		"v:major": "npm version major --no-git-tag-version"
 	},
 	"keywords": [
 		"bundler",

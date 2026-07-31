@@ -9,10 +9,12 @@
 	"devDependencies": {
 		"@suseejs/static": "^0.1.2",
 		"@types/node": "^25.9.5",
+		"tsx": "^4.23.1",
 		"typescript": "^7.0.2"
 	},
 	"scripts": {
 		"setup": "bash scripts/setup.sh",
-		"dev": "bash scripts/dev.sh"
+		"dev": "bash scripts/dev.sh",
+		"vercel:install": "npm && bundle install"
 	}
 }
