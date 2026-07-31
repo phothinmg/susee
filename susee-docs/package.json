@@ -15,6 +15,7 @@
 	"scripts": {
 		"setup": "bash scripts/setup.sh",
 		"dev": "bash scripts/dev.sh",
-		"vercel:install": "npm && bundle install"
+		"vercel:install": "npm install && bundle install",
+		"vercel:build": "bash scripts/vercel_build.sh"
 	}
 }
