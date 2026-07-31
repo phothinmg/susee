@@ -381,17 +381,8 @@ DA:77,17
 DA:78,17
 DA:79,17
 DA:80,17
-DA:81,17
-DA:82,17
-DA:83,17
-DA:84,17
-DA:85,17
-DA:86,17
-DA:87,17
-DA:88,17
-DA:89,17
-LH:89
-LF:89
+LH:80
+LF:80
 end_of_record
 SF:src/bundler/index.ts
 FN:2,__name
@@ -6678,7 +6669,7 @@ DA:506,4
 LH:339
 LF:506
 end_of_record
-SF:../../../../../tmp/susee-cli-default-build-profile-zF5LA7/susee.config.js
+SF:../../../../../tmp/susee-cli-default-build-AB0OiE/susee.config.js
 FNF:0
 FNH:0
 BRDA:1,0,0,1
@@ -6696,7 +6687,7 @@ DA:9,1
 LH:9
 LF:9
 end_of_record
-SF:../../../../../tmp/susee-cli-default-build-WMDWmX/susee.config.js
+SF:../../../../../tmp/susee-cli-default-build-profile-RHKUuH/susee.config.js
 FNF:0
 FNH:0
 BRDA:1,0,0,1
@@ -6714,7 +6705,7 @@ DA:9,1
 LH:9
 LF:9
 end_of_record
-SF:../../../../../tmp/susee-compiler-package-json-TolJgd/compile.ts
+SF:../../../../../tmp/susee-compiler-package-json-i6hUf8/compile.ts
 FNF:0
 FNH:0
 BRDA:1,0,0,1
@@ -6747,7 +6738,7 @@ DA:24,1
 LH:24
 LF:24
 end_of_record
-SF:../../../../../tmp/susee-jsx-compiler-mismatch-TE98jF/compile.ts
+SF:../../../../../tmp/susee-jsx-compiler-mismatch-kTcMAy/compile.ts
 FN:2,__name
 FN:11,main
 FNDA:1,__name
@@ -6790,7 +6781,7 @@ DA:28,1
 LH:28
 LF:28
 end_of_record
-SF:../../../../../tmp/susee-jsx-compiler-missing-import-source-lIDZdH/compile.ts
+SF:../../../../../tmp/susee-jsx-compiler-missing-import-source-R9Qwy6/compile.ts
 FN:2,__name
 FN:11,main
 FNDA:1,__name
@@ -6833,7 +6824,7 @@ DA:28,1
 LH:28
 LF:28
 end_of_record
-SF:../../../../../tmp/susee-jsx-compiler-success-b96uAt/compile.ts
+SF:../../../../../tmp/susee-jsx-compiler-success-Fd5Ko1/compile.ts
 FN:2,__name
 FN:11,main
 FNDA:1,__name
@@ -6876,7 +6867,7 @@ DA:28,1
 LH:28
 LF:28
 end_of_record
-SF:../../../../../tmp/susee-jsx-compiler-success-b96uAt/dist/index.mjs
+SF:../../../../../tmp/susee-jsx-compiler-success-Fd5Ko1/dist/index.mjs
 FNF:0
 FNH:0
 BRDA:1,0,0,1
@@ -6889,7 +6880,7 @@ DA:4,1
 LH:4
 LF:4
 end_of_record
-SF:../../../../../tmp/susee-parse-argv-duplicate-entry-EVtHch/duplicate-entry.ts
+SF:../../../../../tmp/susee-parse-argv-duplicate-entry-kxzOCD/duplicate-entry.ts
 FN:1,anonymous_0
 FNDA:1,anonymous_0
 FNF:1
@@ -6903,7 +6894,7 @@ DA:2,1
 LH:2
 LF:2
 end_of_record
-SF:../../../../../tmp/susee-parse-argv-invalid-format-81sobH/invalid-format.ts
+SF:../../../../../tmp/susee-parse-argv-invalid-format-THcoBF/invalid-format.ts
 FN:1,anonymous_0
 FNDA:1,anonymous_0
 FNF:1
@@ -6917,7 +6908,7 @@ DA:2,1
 LH:2
 LF:2
 end_of_record
-SF:../../../../../tmp/susee-parse-argv-missing-entry-4E0RtC/missing-entry.ts
+SF:../../../../../tmp/susee-parse-argv-missing-entry-fNvY02/missing-entry.ts
 FN:1,anonymous_0
 FNDA:1,anonymous_0
 FNF:1
@@ -6931,7 +6922,7 @@ DA:2,1
 LH:2
 LF:2
 end_of_record
-SF:../../../../../tmp/susee-parse-argv-missing-entry-value-kxfgZk/missing-entry-value.ts
+SF:../../../../../tmp/susee-parse-argv-missing-entry-value-Rhq0S5/missing-entry-value.ts
 FN:2,anonymous_0
 FNDA:1,anonymous_0
 FNF:1
@@ -6945,7 +6936,7 @@ DA:2,1
 LH:2
 LF:2
 end_of_record
-SF:../../../../../tmp/susee-parse-argv-missing-outdir-tPCipG/missing-outdir.ts
+SF:../../../../../tmp/susee-parse-argv-missing-outdir-5NZhft/missing-outdir.ts
 FN:1,anonymous_0
 FNDA:1,anonymous_0
 FNF:1
@@ -6959,7 +6950,7 @@ DA:2,1
 LH:2
 LF:2
 end_of_record
-SF:../../../../../tmp/susee-parse-argv-missing-tsconfig-uHdaan/missing-tsconfig.ts
+SF:../../../../../tmp/susee-parse-argv-missing-tsconfig-XRajxr/missing-tsconfig.ts
 FN:1,anonymous_0
 FNDA:1,anonymous_0
 FNF:1

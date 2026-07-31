@@ -52,9 +52,6 @@ mmdocs:
     theme: dark
     lang: en
   docs:
-    - label: Coverage
-      link: /coverage
-      nav: true
     - label: Guide
       link: /guide/quick-start
       nav: true
