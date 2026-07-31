@@ -2,7 +2,12 @@
 set -euo pipefail
 
 # coverage
+# to susee root
+cd ..
+echo "Running coverage"
 npx tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=__tests__/coverage/lcov.info
+cd susee-docs
+echo "Done running coverage"
 # pre cache
 mkdir -p docs/.jekyll-cache && cp -r node_modules/.jekyll-cache-backup/. docs/.jekyll-cache/ 2>/dev/null || true 
 sleep 0.5
