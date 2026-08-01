@@ -366,7 +366,5 @@ Violations print an error and exit with code `1`.
 [license_img]: https://img.shields.io/npm/l/susee
 [publish_npm]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml
 [publish_npm_svg]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml/badge.svg?event=release
-[code_ql]: https://github.com/phothinmg/susee/actions/workflows/codeql.yml
-[code_ql_svg]: https://github.com/phothinmg/susee/actions/workflows/codeql.yml/badge.svg
 [mmcov_svg]: https://img.shields.io/badge/mmcov-85.01%25-green?style=flat&labelColor=%232c3e50
 [mmcov_url]: https://suseejs.org/coverage

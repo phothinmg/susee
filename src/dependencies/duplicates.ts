@@ -10,7 +10,87 @@ type DuplicateDeclarationLocation = {
 	column: number;
 };
 
-type DuplicateNameMap = Map<string, Set<DuplicateDeclarationLocation>>;
+type DuplicateScopeEntry = {
+	name: string;
+	locations: Set<DuplicateDeclarationLocation>;
+};
+
+type DuplicateNameMap = Map<string, DuplicateScopeEntry>;
+
+const getScopeNodeLabel = (
+	sourceFile: ts6.SourceFile,
+	node: ts6.Node,
+	index: number,
+) => {
+	if (ts6.isModuleDeclaration(node)) {
+		return `namespace:${node.name.getText(sourceFile)}`;
+	}
+
+	if (ts6.isClassDeclaration(node)) {
+		return `class:${node.name?.text ?? `anonymous-${index}`}`;
+	}
+
+	if (ts6.isFunctionDeclaration(node) || ts6.isFunctionExpression(node)) {
+		return `function:${node.name?.text ?? `anonymous-${index}`}`;
+	}
+
+	if (ts6.isArrowFunction(node)) {
+		return `arrow:${index}`;
+	}
+
+	if (ts6.isMethodDeclaration(node)) {
+		return `method:${node.name.getText(sourceFile)}`;
+	}
+
+	if (ts6.isBlock(node)) {
+		return `block:${index}`;
+	}
+
+	return `${ts6.SyntaxKind[node.kind].toLowerCase()}:${index}`;
+};
+
+const getScopeKey = (file: string, scopeStack: string[]) => {
+	if (scopeStack.length === 0) {
+		return "global";
+	}
+
+	return `${file}::${scopeStack.join(" > ")}`;
+};
+
+const isScopeNode = (node: ts6.Node) =>
+	ts6.isModuleDeclaration(node) ||
+	ts6.isClassDeclaration(node) ||
+	ts6.isFunctionDeclaration(node) ||
+	ts6.isFunctionExpression(node) ||
+	ts6.isArrowFunction(node) ||
+	ts6.isMethodDeclaration(node) ||
+	ts6.isBlock(node);
+
+const collectDeclarationNames = (node: ts6.Node) => {
+	if (ts6.isVariableStatement(node)) {
+		return node.declarationList.declarations.flatMap((decl) => {
+			if (!ts6.isIdentifier(decl.name)) {
+				return [];
+			}
+
+			return [{ name: decl.name.text, positionNode: decl.name }];
+		});
+	}
+
+	if (
+		ts6.isFunctionDeclaration(node) ||
+		ts6.isClassDeclaration(node) ||
+		ts6.isEnumDeclaration(node) ||
+		ts6.isInterfaceDeclaration(node) ||
+		ts6.isTypeAliasDeclaration(node)
+	) {
+		if (node.name) {
+			return [{ name: node.name.text, positionNode: node.name }];
+		}
+	}
+
+	return [];
+};
 
 const collectDuplicateDeclarations = (
 	deps: DepsFile[],
@@ -19,6 +99,7 @@ const collectDuplicateDeclarations = (
 	const duplicateNameMap: DuplicateNameMap = new Map();
 
 	const addDuplicateDeclaration = (
+		scopeKey: string,
 		name: string,
 		file: string,
 		sourceFile: ts6.SourceFile,
@@ -32,71 +113,57 @@ const collectDuplicateDeclarations = (
 			line: line + 1,
 			column: character + 1,
 		};
+		const duplicateKey = `${scopeKey}::${name}`;
 
-		if (!duplicateNameMap.has(name)) {
-			duplicateNameMap.set(name, new Set([location]));
+		if (!duplicateNameMap.has(duplicateKey)) {
+			duplicateNameMap.set(duplicateKey, {
+				name,
+				locations: new Set([location]),
+			});
 			return;
 		}
 
-		duplicateNameMap.get(name)?.add(location);
+		duplicateNameMap.get(duplicateKey)?.locations.add(location);
 	};
 
 	const collectFile = (
 		file: string,
 		sourceFile: ts6.SourceFile,
 		node: ts6.Node,
-		isGlobalScope = true,
+		scopeStack: string[] = [],
 	) => {
-		if (isGlobalScope) {
-			if (ts6.isVariableStatement(node)) {
-				node.declarationList.declarations.forEach((decl) => {
-					if (ts6.isIdentifier(decl.name)) {
-						const name = decl.name.text;
-						addDuplicateDeclaration(name, file, sourceFile, decl.name);
-					}
-				});
-			} else if (
-				ts6.isFunctionDeclaration(node) ||
-				ts6.isClassDeclaration(node) ||
-				ts6.isEnumDeclaration(node) ||
-				ts6.isInterfaceDeclaration(node) ||
-				ts6.isTypeAliasDeclaration(node)
-			) {
-				const name = node.name?.text;
-				if (name) {
-					addDuplicateDeclaration(name, file, sourceFile, node.name);
-				}
-			}
+		const scopeKey = getScopeKey(file, scopeStack);
+
+		for (const declaration of collectDeclarationNames(node)) {
+			addDuplicateDeclaration(
+				scopeKey,
+				declaration.name,
+				file,
+				sourceFile,
+				declaration.positionNode,
+			);
 		}
 
-		if (
-			ts6.isBlock(node) ||
-			ts6.isFunctionDeclaration(node) ||
-			ts6.isFunctionExpression(node) ||
-			ts6.isArrowFunction(node) ||
-			ts6.isMethodDeclaration(node) ||
-			ts6.isClassDeclaration(node)
-		) {
-			if (ts6.isBlock(node)) {
-				node.statements.forEach((child) =>
-					collectFile(file, sourceFile, child, false),
-				);
-			} else {
-				ts6.forEachChild(node, (child) => {
-					collectFile(file, sourceFile, child, false);
-				});
-			}
+		if (isScopeNode(node)) {
+			const nextScopeStack = [
+				...scopeStack,
+				getScopeNodeLabel(sourceFile, node, node.getStart(sourceFile)),
+			];
+
+			ts6.forEachChild(node, (child) => {
+				collectFile(file, sourceFile, child, nextScopeStack);
+			});
 			return;
 		}
 
 		ts6.forEachChild(node, (child) => {
-			collectFile(file, sourceFile, child, isGlobalScope);
+			collectFile(file, sourceFile, child, scopeStack);
 		});
 	};
 
 	for (const dep of deps) {
 		const sourceFile = bundledSourceFile(dep.file, dep.content);
-		collectFile(dep.file, sourceFile, sourceFile, true);
+		collectFile(dep.file, sourceFile, sourceFile);
 	}
 
 	return duplicateNameMap;
@@ -111,8 +178,8 @@ const checkDuplicates = (
 		tree.depFiles,
 		bundledSourceFile,
 	);
-	duplicateNameMap.forEach((files, name) => {
-		if (files.size > 1) {
+	duplicateNameMap.forEach(({ name, locations }) => {
+		if (locations.size > 1) {
 			_err = true;
 			console.warn(tcolor.yellow("[susee:error]"));
 			console.warn(
@@ -121,7 +188,7 @@ const checkDuplicates = (
 			console.warn(
 				`  - "${tcolor.magenta(name)}" declared in multiple files : `,
 			);
-			files.forEach((f) =>
+			locations.forEach((f) =>
 				console.warn(`    - ${f.file}:${f.line}:${f.column}`),
 			);
 			console.info(
