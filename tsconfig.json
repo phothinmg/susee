@@ -45,5 +45,5 @@
 		"skipLibCheck": true,
 		"allowJs": true
 	},
-	"include": ["src/**/*", "__tests__/**/*", "build.mjs"]
+	"include": ["src/**/*", "__tests__/**/*", "build.ts"]
 }
