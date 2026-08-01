@@ -1,4 +1,3 @@
-import { exec } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { build } from "./src/index.js";
@@ -7,18 +6,6 @@ import { suseeBannerText } from "@suseejs/banner-text-plugin";
 
 const ef = "dist/bin/index.mjs";
 const bf = "bin/susee";
-
-async function grantCli() {
-	const file = path.resolve(process.cwd(), ef);
-	const shebang = "#!/usr/bin/env node";
-	if (fs.existsSync(file)) {
-		let content = await fs.promises.readFile(file, "utf8");
-		if (!content.startsWith(shebang)) {
-			content = `${shebang}\n${content}`;
-			await fs.promises.writeFile(file, content);
-		}
-	}
-}
 
 async function writeBinary() {
 	const content = `#!/usr/bin/env node\n\nimport {suseeCliBuild} from "../dist/index.mjs";\nsuseeCliBuild()`;
@@ -46,8 +33,6 @@ await build({
 	outDir: "dist",
 });
 try {
-	//   await grantCli();
-	//   await fs.promises.chmod(path.resolve(process.cwd(), ef), 0o755);
 	await writeBinary();
 	await fs.promises.chmod(path.resolve(process.cwd(), bf), 0o755);
 } catch (chmodOrGrantError) {

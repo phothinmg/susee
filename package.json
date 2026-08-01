@@ -1,6 +1,6 @@
 {
 	"name": "susee",
-	"version": "1.6.0",
+	"version": "1.6.1",
 	"description": "TypeScript-first bundler for library packages",
 	"type": "module",
 	"main": "dist/index.cjs",
@@ -22,7 +22,7 @@
 		"susee": "bin/susee"
 	},
 	"scripts": {
-		"build": "tsx build.ts",
+		"build": "node build.mjs",
 		"lint": "biome lint ./src ./__tests__  --write",
 		"fmt": "biome format --write",
 		"test": "tsx --test",
@@ -65,10 +65,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
 		"@suseejs/banner-text-plugin": "^0.0.9",
-		"@suseejs/terser-plugin": "^0.0.9",
 		"@suseejs/type": "^0.0.9",
 		"@types/node": "^25.6.0",
-		"tsx": "^4.21.0",
 		"typescript": "^7.0.2"
 	},
 	"allowScripts": {

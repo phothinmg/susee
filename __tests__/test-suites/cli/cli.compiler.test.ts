@@ -3,7 +3,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { before, describe, it } from "node:test";
 import { pathToFileURL } from "node:url";
-import { suseeTerser } from "@suseejs/terser-plugin";
 import { fileExists, readJson, setupTempDir } from "../test_helpers.js";
 
 const repoRoot = process.cwd();
@@ -101,15 +100,15 @@ describe("CliCompiler", () => {
 				allowUpdate: true,
 				minify: true,
 				warning: false,
-				plugins: [suseeTerser, syncPlugin, asyncPlugin],
+				plugins: [syncPlugin, asyncPlugin],
 			};
 
 			await cliCompiler.compile(options);
 
-			assert.strictEqual(
-				options.plugins.filter((plugin) => plugin === suseeTerser).length,
-				1,
-			);
+			// assert.strictEqual(
+			// 	options.plugins.filter((plugin) => plugin === suseeTerser).length,
+			// 	1,
+			// );
 		});
 
 		assert.strictEqual(
