@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { build } from "./node_src/index.js";
-import { files } from "./node_src/helpers/files.js";
+import { build } from "./src/nodejs/index.js";
+import { files } from "./src/nodejs/helpers/files.js";
 import { suseeBannerText } from "@suseejs/banner-text-plugin";
 
 const ef = "dist/bin/index.mjs";
@@ -23,7 +23,7 @@ License at http://www.apache.org/licenses/LICENSE-2.0
 await build({
 	entryPoints: [
 		{
-			entry: "node_src/index.ts",
+			entry: "src/nodejs/index.ts",
 			exportPath: ".",
 			format: ["esm", "commonjs"],
 			plugins: [suseeBannerText(bannerText)],

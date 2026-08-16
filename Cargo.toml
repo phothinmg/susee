@@ -8,3 +8,7 @@ indexmap = { version = "2", features = ["serde"] }
 oxc = { version = "0.144.0", features = ["serialize", "ast_visit"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
+
+[[bin]]
+name = "susee_main"
+path = "src/rust/main.rs"
