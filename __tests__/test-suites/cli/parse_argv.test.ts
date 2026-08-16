@@ -10,7 +10,7 @@ import {
 	isFile,
 	parseArgs,
 	parseBooleanFlag,
-} from "../../../src/cli/lib/parse_argv.js";
+} from "../../../node_src/cli/lib/parse_argv.js";
 import { setupTempDir } from "../test_helpers.js";
 
 const execFileAsync = promisify(execFile);
@@ -123,7 +123,7 @@ describe("parse_argv", () => {
 		const tmpDir = await setupTempDir("parse-argv-invalid-format");
 		const scriptPath = path.join(tmpDir, "invalid-format.ts");
 		const parseArgvPath = path
-			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.resolve(process.cwd(), "node_src/cli/lib/parse_argv.ts")
 			.replaceAll("\\", "/");
 
 		await fs.writeFile(
@@ -149,7 +149,7 @@ parseArgs(["src/index.ts", "--format", "amd"]);
 		const tmpDir = await setupTempDir("parse-argv-duplicate-entry");
 		const scriptPath = path.join(tmpDir, "duplicate-entry.ts");
 		const parseArgvPath = path
-			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.resolve(process.cwd(), "node_src/cli/lib/parse_argv.ts")
 			.replaceAll("\\", "/");
 
 		await fs.writeFile(
@@ -175,7 +175,7 @@ parseArgs(["src/index.ts", "--entry", "src/second.ts"]);
 		const tmpDir = await setupTempDir("parse-argv-missing-entry-value");
 		const scriptPath = path.join(tmpDir, "missing-entry-value.ts");
 		const parseArgvPath = path
-			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.resolve(process.cwd(), "node_src/cli/lib/parse_argv.ts")
 			.replaceAll("\\", "/");
 
 		await fs.writeFile(
@@ -201,7 +201,7 @@ parseArgs(["--entry", "--minify"]);
 		const tmpDir = await setupTempDir("parse-argv-missing-outdir");
 		const scriptPath = path.join(tmpDir, "missing-outdir.ts");
 		const parseArgvPath = path
-			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.resolve(process.cwd(), "node_src/cli/lib/parse_argv.ts")
 			.replaceAll("\\", "/");
 
 		await fs.writeFile(
@@ -227,7 +227,7 @@ parseArgs(["src/index.ts", "--outdir", "--format", "esm"]);
 		const tmpDir = await setupTempDir("parse-argv-missing-tsconfig");
 		const scriptPath = path.join(tmpDir, "missing-tsconfig.ts");
 		const parseArgvPath = path
-			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.resolve(process.cwd(), "node_src/cli/lib/parse_argv.ts")
 			.replaceAll("\\", "/");
 
 		await fs.writeFile(
@@ -253,7 +253,7 @@ parseArgs(["src/index.ts", "--tsconfig", "--allow-update"]);
 		const tmpDir = await setupTempDir("parse-argv-missing-entry");
 		const scriptPath = path.join(tmpDir, "missing-entry.ts");
 		const parseArgvPath = path
-			.resolve(process.cwd(), "src/cli/lib/parse_argv.ts")
+			.resolve(process.cwd(), "node_src/cli/lib/parse_argv.ts")
 			.replaceAll("\\", "/");
 
 		await fs.writeFile(

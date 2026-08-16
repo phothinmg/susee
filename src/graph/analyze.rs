@@ -1,0 +1,129 @@
+//! Find circular dependencies and build dependency chains via DFS.
+//!
+//! Ported from `deps/lib/analyze.ts`.
+
+use std::collections::{BTreeMap, HashSet};
+
+/// A circular dependency: the cycle chain and its type.
+#[derive(Debug, Clone)]
+pub struct CircularDependency {
+    /// The cycle of dependencies, e.g. `["a", "b", "a"]`.
+    pub chain: Vec<String>,
+    /// Always `"circular"`.
+    pub r#type: String,
+}
+
+/// Result of analyzing a dependency graph.
+#[derive(Debug, Clone)]
+pub struct DependencyAnalysis {
+    pub circular_dependencies: Vec<CircularDependency>,
+    pub dependency_chains: BTreeMap<String, Vec<String>>,
+    pub entry_to_leaf_chains: Vec<Vec<String>>,
+}
+
+/// Find circular dependencies in a dependency graph and build dependency chains.
+///
+/// Uses DFS to detect cycles and record entry-to-leaf chains.
+pub fn analyze_dependencies(
+    dep_obj: &BTreeMap<String, Vec<String>>,
+) -> DependencyAnalysis {
+    let mut circular_dependencies: Vec<CircularDependency> = Vec::new();
+    let mut dependency_chains: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut visited: HashSet<String> = HashSet::new();
+    let mut currently_visiting: HashSet<String> = HashSet::new();
+    let mut entry_to_leaf_chains: Vec<Vec<String>> = Vec::new();
+
+    #[allow(clippy::too_many_arguments)]
+    fn dfs(
+        current_file: &str,
+        path: &[String],
+        dep_obj: &BTreeMap<String, Vec<String>>,
+        circular_dependencies: &mut Vec<CircularDependency>,
+        dependency_chains: &mut BTreeMap<String, Vec<String>>,
+        entry_to_leaf_chains: &mut Vec<Vec<String>>,
+        visited: &mut HashSet<String>,
+        currently_visiting: &mut HashSet<String>,
+    ) {
+        if currently_visiting.contains(current_file) {
+            // Circular dependency found
+            let cycle_start_index = path.iter().position(|p| p == current_file);
+            if let Some(idx) = cycle_start_index {
+                let cycle: Vec<String> = path[idx..].to_vec();
+                let mut chain = cycle.clone();
+                chain.push(current_file.to_string());
+                circular_dependencies.push(CircularDependency {
+                    chain,
+                    r#type: "circular".to_string(),
+                });
+            }
+            return;
+        }
+
+        if visited.contains(current_file) {
+            return;
+        }
+
+        visited.insert(current_file.to_string());
+        currently_visiting.insert(current_file.to_string());
+
+        let mut current_path = path.to_vec();
+        current_path.push(current_file.to_string());
+
+        let dependencies = dep_obj.get(current_file).cloned().unwrap_or_default();
+
+        if dependencies.is_empty() {
+            // This is a leaf node
+            entry_to_leaf_chains.push(current_path.clone());
+        } else {
+            for dep in &dependencies {
+                dfs(
+                    dep,
+                    &current_path,
+                    dep_obj,
+                    circular_dependencies,
+                    dependency_chains,
+                    entry_to_leaf_chains,
+                    visited,
+                    currently_visiting,
+                );
+            }
+        }
+
+        // Store the complete dependency chain for this file
+        dependency_chains.insert(current_file.to_string(), current_path);
+
+        currently_visiting.remove(current_file);
+    }
+
+    // Analyze all files in the dependency graph (deterministic order via BTreeMap)
+    for file in dep_obj.keys() {
+        if !visited.contains(file) {
+            dfs(
+                file,
+                &[],
+                dep_obj,
+                &mut circular_dependencies,
+                &mut dependency_chains,
+                &mut entry_to_leaf_chains,
+                &mut visited,
+                &mut currently_visiting,
+            );
+        }
+    }
+
+    // Remove duplicate circular dependencies (same chain string)
+    let mut seen: HashSet<String> = HashSet::new();
+    let unique_circular_deps: Vec<CircularDependency> = circular_dependencies
+        .into_iter()
+        .filter(|c| {
+            let key = c.chain.join("->");
+            seen.insert(key)
+        })
+        .collect();
+
+    DependencyAnalysis {
+        circular_dependencies: unique_circular_deps,
+        dependency_chains,
+        entry_to_leaf_chains,
+    }
+}

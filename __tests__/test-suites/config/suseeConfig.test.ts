@@ -4,7 +4,7 @@ import ts6 from "@suseejs/ts6";
 import {
 	type BuildEntryPoint,
 	finalSuseeConfig,
-} from "../../../src/config/index.js";
+} from "../../../node_src/config/index.js";
 import { exitWithCodeOneAndMessage, sortObject } from "../test_helpers.js";
 
 describe("finalSuseeConfig", async () => {

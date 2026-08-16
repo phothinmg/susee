@@ -1,9 +1,9 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { DepsFile } from "@suseejs/type";
-import { anonymousHandler } from "../../src/bundler/lib/anonymous.js";
-import { exportDefaultHandler } from "../../src/bundler/lib/exportDefault.js";
-import { jsonModuleHandlers } from "../../src/bundler/lib/resolveJSON.js";
+import { anonymousHandler } from "../../node_src/bundler/lib/anonymous.js";
+import { exportDefaultHandler } from "../../node_src/bundler/lib/exportDefault.js";
+import { jsonModuleHandlers } from "../../node_src/bundler/lib/resolveJSON.js";
 
 const jsonFile = "/tmp/project/src/config.json";
 const consumerFile = "/tmp/project/src/main.ts";

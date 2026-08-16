@@ -2,7 +2,7 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import ts6 from "@suseejs/ts6";
 import type { DependenciesTree, DepsFile } from "@suseejs/type";
-import { checkDuplicates } from "../../src/dependencies/duplicates.js";
+import { checkDuplicates } from "../../node_src/dependencies/duplicates.js";
 
 function createDepFile(file: string, content: string): DepsFile {
 	return {
