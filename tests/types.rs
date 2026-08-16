@@ -66,7 +66,10 @@ fn valid_exts_deserialize_rejects_unknown() {
 fn module_type_serializes_as_lowercase() {
     assert_eq!(serde_json::to_string(&ModuleType::Cjs).unwrap(), "\"cjs\"");
     assert_eq!(serde_json::to_string(&ModuleType::Esm).unwrap(), "\"esm\"");
-    assert_eq!(serde_json::to_string(&ModuleType::Json).unwrap(), "\"json\"");
+    assert_eq!(
+        serde_json::to_string(&ModuleType::Json).unwrap(),
+        "\"json\""
+    );
 }
 
 #[test]

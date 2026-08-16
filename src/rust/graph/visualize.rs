@@ -20,7 +20,11 @@ pub fn visualize_dependencies(dep_obj: &IndexMap<String, Vec<String>>) -> String
         } else {
             for (index, dep) in dependencies.iter().enumerate() {
                 let is_last = index == dependencies.len() - 1;
-                let prefix = if is_last { "  └── " } else { "  ├── " };
+                let prefix = if is_last {
+                    "  └── "
+                } else {
+                    "  ├── "
+                };
                 let _ = writeln!(result, "{prefix}{dep}");
             }
         }

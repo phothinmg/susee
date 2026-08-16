@@ -18,8 +18,7 @@ pub fn find_mutual_dependencies(dep_obj: &IndexMap<String, Vec<String>>) -> Vec<
             {
                 // Check if this mutual dependency is already recorded (either order)
                 let exists = mutual_deps.iter().any(|pair| {
-                    (&pair[0] == file && &pair[1] == dep)
-                        || (&pair[0] == dep && &pair[1] == file)
+                    (&pair[0] == file && &pair[1] == dep) || (&pair[0] == dep && &pair[1] == file)
                 });
                 if !exists {
                     mutual_deps.push(vec![file.clone(), dep.clone()]);

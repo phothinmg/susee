@@ -17,10 +17,7 @@ fn build_graph(pairs: &[(&str, &[&str])]) -> IndexMap<String, Vec<String>> {
 #[test]
 fn finds_mutual_dependency_pair() {
     // a → b, b → a
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["a"]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["a"])]);
     let mutual = find_mutual_dependencies(&graph);
     assert_eq!(mutual.len(), 1);
     let pair = &mutual[0];
@@ -32,20 +29,14 @@ fn finds_mutual_dependency_pair() {
 
 #[test]
 fn no_mutual_when_one_way() {
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &[]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &[])]);
     let mutual = find_mutual_dependencies(&graph);
     assert!(mutual.is_empty());
 }
 
 #[test]
 fn mutual_pair_recorded_only_once() {
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["a"]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["a"])]);
     let mutual = find_mutual_dependencies(&graph);
     assert_eq!(mutual.len(), 1);
 }
@@ -53,12 +44,7 @@ fn mutual_pair_recorded_only_once() {
 #[test]
 fn finds_multiple_mutual_pairs() {
     // a ↔ b, c ↔ d
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["a"]),
-        ("c", &["d"]),
-        ("d", &["c"]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["a"]), ("c", &["d"]), ("d", &["c"])]);
     let mutual = find_mutual_dependencies(&graph);
     assert_eq!(mutual.len(), 2);
 }

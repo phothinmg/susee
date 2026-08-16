@@ -81,9 +81,16 @@ pub fn get_package_info(root: &Path) -> PackageInfo {
     all_deps.sort();
     all_deps.dedup();
 
-    let dependencies: Vec<String> = all_deps.iter().filter(|d| !d.starts_with("@types/")).cloned().collect();
-    let types_dependencies: Vec<String> =
-        all_deps.iter().filter(|d| d.starts_with("@types/")).cloned().collect();
+    let dependencies: Vec<String> = all_deps
+        .iter()
+        .filter(|d| !d.starts_with("@types/"))
+        .cloned()
+        .collect();
+    let types_dependencies: Vec<String> = all_deps
+        .iter()
+        .filter(|d| d.starts_with("@types/"))
+        .cloned()
+        .collect();
 
     let mut deps_map: BTreeMap<String, DepMeta> = BTreeMap::new();
     for dep in &dependencies {
@@ -95,10 +102,22 @@ pub fn get_package_info(root: &Path) -> PackageInfo {
             deps_map.insert(
                 dep.clone(),
                 DepMeta {
-                    r#type: dep_pkg.get("type").and_then(Value::as_str).map(String::from),
-                    main: dep_pkg.get("main").and_then(Value::as_str).map(String::from),
-                    module: dep_pkg.get("module").and_then(Value::as_str).map(String::from),
-                    types: dep_pkg.get("types").and_then(Value::as_str).map(String::from),
+                    r#type: dep_pkg
+                        .get("type")
+                        .and_then(Value::as_str)
+                        .map(String::from),
+                    main: dep_pkg
+                        .get("main")
+                        .and_then(Value::as_str)
+                        .map(String::from),
+                    module: dep_pkg
+                        .get("module")
+                        .and_then(Value::as_str)
+                        .map(String::from),
+                    types: dep_pkg
+                        .get("types")
+                        .and_then(Value::as_str)
+                        .map(String::from),
                     exports: dep_pkg.get("exports").cloned(),
                 },
             );
@@ -115,7 +134,10 @@ pub fn get_package_info(root: &Path) -> PackageInfo {
             type_deps_map.insert(
                 dep.clone(),
                 TypeDepMeta {
-                    types: dep_pkg.get("types").and_then(Value::as_str).map(String::from),
+                    types: dep_pkg
+                        .get("types")
+                        .and_then(Value::as_str)
+                        .map(String::from),
                     exports: dep_pkg.get("exports").cloned(),
                 },
             );

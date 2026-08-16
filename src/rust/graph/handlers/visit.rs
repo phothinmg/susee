@@ -8,9 +8,9 @@
 
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    Argument, AwaitExpression, CallExpression, ExportAllDeclaration,
-    ExportFromDeclaration, Expression, ImportDeclaration, ImportExpression,
-    StringLiteral, TSExternalModuleReference, TSImportEqualsDeclaration,
+    Argument, AwaitExpression, CallExpression, ExportAllDeclaration, ExportFromDeclaration,
+    Expression, ImportDeclaration, ImportExpression, StringLiteral, TSExternalModuleReference,
+    TSImportEqualsDeclaration,
 };
 use oxc::ast_visit::Visit;
 use oxc::parser::Parser;
@@ -55,18 +55,15 @@ impl<'a> Visit<'a> for SpecifierCollector {
 
     // import foo = require("foo")
     fn visit_ts_import_equals_declaration(&mut self, it: &TSImportEqualsDeclaration<'a>) {
-        if let oxc::ast::ast::TSModuleReference::ExternalModuleReference(ext) =
-            &it.module_reference
+        if let oxc::ast::ast::TSModuleReference::ExternalModuleReference(ext) = &it.module_reference
         {
             self.visit_ts_external_module_reference(ext);
         }
     }
 
-    fn visit_ts_external_module_reference(
-        &mut self,
-        it: &TSExternalModuleReference<'a>,
-    ) {
-        self.specifiers.push(it.expression.value.as_str().to_string());
+    fn visit_ts_external_module_reference(&mut self, it: &TSExternalModuleReference<'a>) {
+        self.specifiers
+            .push(it.expression.value.as_str().to_string());
     }
 
     // await import("foo") — the dynamic import is an `ImportExpression`.
@@ -117,7 +114,9 @@ fn first_string_argument(call: &CallExpression<'_>) -> Option<String> {
         other => {
             // `Argument` inherits `Expression` variants via `INHERIT(Expression)`.
             // Use `as_expression` to get the underlying expression.
-            other.as_expression().and_then(|expr| string_from_expression(expr))
+            other
+                .as_expression()
+                .and_then(|expr| string_from_expression(expr))
         }
     }
 }
@@ -134,4 +133,3 @@ fn string_from_expression(expr: &Expression<'_>) -> Option<String> {
 fn string_literal_value(s: &StringLiteral<'_>) -> String {
     s.value.as_str().to_string()
 }
-

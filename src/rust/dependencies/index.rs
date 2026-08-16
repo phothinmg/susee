@@ -30,10 +30,7 @@ use crate::graph::dependensia;
 ///   present without ESM syntax.
 /// - `Esm` otherwise (ESM syntax present, or no module syntax).
 fn detect_module_type(content: &str, file_path: &Path) -> ModuleType {
-    let ext = file_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("");
+    let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
     if ext == "json" {
         return ModuleType::Json;
@@ -67,19 +64,13 @@ struct ModuleTypeDetector {
 
 impl<'a> Visit<'a> for ModuleTypeDetector {
     // ESM: import declarations.
-    fn visit_import_declaration(
-        &mut self,
-        _it: &oxc::ast::ast::ImportDeclaration<'a>,
-    ) {
+    fn visit_import_declaration(&mut self, _it: &oxc::ast::ast::ImportDeclaration<'a>) {
         self.is_esm = true;
         // Don't walk children — we only care about the declaration itself.
     }
 
     // ESM: export named declarations.
-    fn visit_export_named_declaration(
-        &mut self,
-        _it: &oxc::ast::ast::ExportNamedDeclaration<'a>,
-    ) {
+    fn visit_export_named_declaration(&mut self, _it: &oxc::ast::ast::ExportNamedDeclaration<'a>) {
         self.is_esm = true;
     }
 
@@ -92,10 +83,7 @@ impl<'a> Visit<'a> for ModuleTypeDetector {
     }
 
     // ESM: export all declarations (`export * from "..."`).
-    fn visit_export_all_declaration(
-        &mut self,
-        _it: &oxc::ast::ast::ExportAllDeclaration<'a>,
-    ) {
+    fn visit_export_all_declaration(&mut self, _it: &oxc::ast::ast::ExportAllDeclaration<'a>) {
         self.is_esm = true;
     }
 
@@ -122,10 +110,7 @@ impl<'a> Visit<'a> for ModuleTypeDetector {
     }
 
     // CommonJS: `module.exports` / `exports.x` static member access.
-    fn visit_static_member_expression(
-        &mut self,
-        it: &oxc::ast::ast::StaticMemberExpression<'a>,
-    ) {
+    fn visit_static_member_expression(&mut self, it: &oxc::ast::ast::StaticMemberExpression<'a>) {
         if let Expression::Identifier(ident) = &it.object {
             let name = ident.name.as_str();
             let prop = it.property.name.as_str();
@@ -217,10 +202,7 @@ pub fn generate_dependencies<P: AsRef<Path>>(
             .and_then(|n| n.to_str())
             .unwrap_or(&file)
             .to_string();
-        let file_ext_str = path
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let file_ext_str = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         let (content, bytes) = match read_file(&root, &file) {
             Ok(c) => c,

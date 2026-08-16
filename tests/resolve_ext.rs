@@ -1,8 +1,8 @@
 //! Unit tests for `graph::resolve_ext::resolve_extension`.
 
-use susee_lib::graph::resolve_ext::resolve_extension;
 use std::fs;
 use std::path::{Path, PathBuf};
+use susee_lib::graph::resolve_ext::resolve_extension;
 use tempfile::tempdir;
 
 fn write_file(dir: &Path, rel: &str, content: &str) -> PathBuf {

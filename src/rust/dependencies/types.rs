@@ -39,9 +39,8 @@ impl<'de> Deserialize<'de> for ValidExts {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        ValidExts::from_path_ext(&s).ok_or_else(|| {
-            serde::de::Error::custom(format!("unknown file extension: {s}"))
-        })
+        ValidExts::from_path_ext(&s)
+            .ok_or_else(|| serde::de::Error::custom(format!("unknown file extension: {s}")))
     }
 }
 

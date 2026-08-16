@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use super::handlers::collect_module_specifiers;
 use super::package_info::PackageInfo;
 use super::resolve_ext::resolve_extension;
-use super::utils::{is_node_builtin_module, CollectedObject};
+use super::utils::{CollectedObject, is_node_builtin_module};
 
 /// Aggregated result of collecting dependencies from an entry file.
 #[derive(Debug, Clone)]
@@ -83,8 +83,10 @@ impl CollectState {
                 index,
                 import_files: Vec::new(),
             });
-            self.collected_warning
-                .push(vec![format!("File not found: {}", checked_abs_path.display())]);
+            self.collected_warning.push(vec![format!(
+                "File not found: {}",
+                checked_abs_path.display()
+            )]);
             return;
         }
 
@@ -96,8 +98,10 @@ impl CollectState {
                     index,
                     import_files: Vec::new(),
                 });
-                self.collected_warning
-                    .push(vec![format!("Cannot read {}: {e}", checked_abs_path.display())]);
+                self.collected_warning.push(vec![format!(
+                    "Cannot read {}: {e}",
+                    checked_abs_path.display()
+                )]);
                 return;
             }
         };
@@ -210,7 +214,8 @@ fn normalize_path(p: &Path) -> PathBuf {
                     Some(Component::Normal(_)) => {
                         out.pop();
                     }
-                    Some(Component::RootDir) | Some(Component::Prefix(_)) => { /* at root, drop `..` */ }
+                    Some(Component::RootDir) | Some(Component::Prefix(_)) => { /* at root, drop `..` */
+                    }
                     None => out.push(comp),
                     Some(_) => out.push(comp),
                 }

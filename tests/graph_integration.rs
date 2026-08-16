@@ -4,9 +4,9 @@
 //! These tests create temporary projects on disk, then invoke
 //! `susee_lib::graph::dependensia` to collect and analyze dependencies.
 
-use susee_lib::graph::dependensia;
 use std::fs;
 use std::path::Path;
+use susee_lib::graph::dependensia;
 use tempfile::tempdir;
 
 fn write_file(dir: &Path, rel: &str, content: &str) {
@@ -97,7 +97,11 @@ fn collects_local_node_npm_and_unknown_dependencies() {
 fn handles_entry_path_without_file_extension() {
     let dir = tempdir().unwrap();
     write_package_json(dir.path(), &[]);
-    write_file(dir.path(), "src/entry.ts", "import './dep'; export const ok = true;");
+    write_file(
+        dir.path(),
+        "src/entry.ts",
+        "import './dep'; export const ok = true;",
+    );
     write_file(dir.path(), "src/dep.ts", "export const dep = 1;");
 
     let graph = dependensia("src/entry", dir.path()).unwrap();
@@ -146,7 +150,11 @@ fn deduplicates_npm_and_node_collections() {
 fn leaf_files_are_identified() {
     let dir = tempdir().unwrap();
     write_package_json(dir.path(), &[]);
-    write_file(dir.path(), "src/entry.ts", "import './dep'; export const ok = true;");
+    write_file(
+        dir.path(),
+        "src/entry.ts",
+        "import './dep'; export const ok = true;",
+    );
     write_file(dir.path(), "src/dep.ts", "export const dep = 1;");
 
     let graph = dependensia("src/entry.ts", dir.path()).unwrap();
@@ -170,7 +178,11 @@ fn circular_dependencies_are_detected() {
 fn text_graph_contains_files() {
     let dir = tempdir().unwrap();
     write_package_json(dir.path(), &[]);
-    write_file(dir.path(), "src/entry.ts", "import './dep'; export const ok = true;");
+    write_file(
+        dir.path(),
+        "src/entry.ts",
+        "import './dep'; export const ok = true;",
+    );
     write_file(dir.path(), "src/dep.ts", "export const dep = 1;");
 
     let graph = dependensia("src/entry.ts", dir.path()).unwrap();
@@ -195,7 +207,11 @@ fn mutual_dependencies_are_found() {
 fn dependents_returns_files_that_depend_on_target() {
     let dir = tempdir().unwrap();
     write_package_json(dir.path(), &[]);
-    write_file(dir.path(), "src/entry.ts", "import './dep'; export const ok = true;");
+    write_file(
+        dir.path(),
+        "src/entry.ts",
+        "import './dep'; export const ok = true;",
+    );
     write_file(dir.path(), "src/dep.ts", "export const dep = 1;");
 
     let graph = dependensia("src/entry.ts", dir.path()).unwrap();

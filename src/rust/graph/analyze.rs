@@ -25,9 +25,7 @@ pub struct DependencyAnalysis {
 /// Find circular dependencies in a dependency graph and build dependency chains.
 ///
 /// Uses DFS to detect cycles and record entry-to-leaf chains.
-pub fn analyze_dependencies(
-    dep_obj: &IndexMap<String, Vec<String>>,
-) -> DependencyAnalysis {
+pub fn analyze_dependencies(dep_obj: &IndexMap<String, Vec<String>>) -> DependencyAnalysis {
     let mut circular_dependencies: Vec<CircularDependency> = Vec::new();
     let mut dependency_chains: IndexMap<String, Vec<String>> = IndexMap::new();
     let mut visited: HashSet<String> = HashSet::new();

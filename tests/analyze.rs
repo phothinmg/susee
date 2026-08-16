@@ -17,11 +17,7 @@ fn build_graph(pairs: &[(&str, &[&str])]) -> IndexMap<String, Vec<String>> {
 #[test]
 fn detects_circular_dependency() {
     // a → b → c → a
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["c"]),
-        ("c", &["a"]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["c"]), ("c", &["a"])]);
     let analysis = analyze_dependencies(&graph);
     assert!(!analysis.circular_dependencies.is_empty());
     let chain = &analysis.circular_dependencies[0].chain;
@@ -34,22 +30,14 @@ fn detects_circular_dependency() {
 
 #[test]
 fn no_circular_in_dag() {
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["c"]),
-        ("c", &[]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["c"]), ("c", &[])]);
     let analysis = analyze_dependencies(&graph);
     assert!(analysis.circular_dependencies.is_empty());
 }
 
 #[test]
 fn dependency_chains_include_all_files() {
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["c"]),
-        ("c", &[]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["c"]), ("c", &[])]);
     let analysis = analyze_dependencies(&graph);
     assert!(analysis.dependency_chains.contains_key("a"));
     assert!(analysis.dependency_chains.contains_key("b"));
@@ -59,11 +47,7 @@ fn dependency_chains_include_all_files() {
 #[test]
 fn entry_to_leaf_chains_capture_paths() {
     // a → b → c (leaf)
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["c"]),
-        ("c", &[]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["c"]), ("c", &[])]);
     let analysis = analyze_dependencies(&graph);
     // c is a leaf, so there should be a chain ending at c
     let leaf_chain = analysis
@@ -79,10 +63,7 @@ fn entry_to_leaf_chains_capture_paths() {
 
 #[test]
 fn circular_dependency_type_is_circular() {
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["a"]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["a"])]);
     let analysis = analyze_dependencies(&graph);
     for cd in &analysis.circular_dependencies {
         assert_eq!(cd.r#type, "circular");

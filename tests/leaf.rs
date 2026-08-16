@@ -17,10 +17,7 @@ fn build_graph(pairs: &[(&str, &[&str])]) -> IndexMap<String, Vec<String>> {
 #[test]
 fn finds_files_with_no_local_deps() {
     // entry depends on util; util has no deps → util is a leaf
-    let graph = build_graph(&[
-        ("src/entry.ts", &["src/util.ts"]),
-        ("src/util.ts", &[]),
-    ]);
+    let graph = build_graph(&[("src/entry.ts", &["src/util.ts"]), ("src/util.ts", &[])]);
     let leaves = find_leaf_files(&graph);
     assert_eq!(leaves, vec!["src/util.ts".to_string()]);
 }
@@ -37,30 +34,21 @@ fn files_with_only_node_builtin_deps_are_leaves() {
 
 #[test]
 fn files_with_only_non_local_relative_deps_are_leaves() {
-    let graph = build_graph(&[
-        ("src/entry.ts", &["src/helper.ts"]),
-        ("src/helper.ts", &[]),
-    ]);
+    let graph = build_graph(&[("src/entry.ts", &["src/helper.ts"]), ("src/helper.ts", &[])]);
     let leaves = find_leaf_files(&graph);
     assert_eq!(leaves, vec!["src/helper.ts".to_string()]);
 }
 
 #[test]
 fn no_leaves_when_all_files_have_local_deps() {
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["a"]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["a"])]);
     let leaves = find_leaf_files(&graph);
     assert!(leaves.is_empty());
 }
 
 #[test]
 fn all_files_are_leaves_when_no_deps() {
-    let graph = build_graph(&[
-        ("a", &[]),
-        ("b", &[]),
-    ]);
+    let graph = build_graph(&[("a", &[]), ("b", &[])]);
     let leaves = find_leaf_files(&graph);
     assert_eq!(leaves.len(), 2);
     assert!(leaves.contains(&"a".to_string()));

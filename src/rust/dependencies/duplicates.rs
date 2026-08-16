@@ -19,8 +19,8 @@ use std::path::Path;
 
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind,
-    Expression, FunctionBody, Statement, TSNamespaceDeclarationBody,
+    ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression,
+    FunctionBody, Statement, TSNamespaceDeclarationBody,
 };
 use oxc::parser::Parser;
 use oxc::span::SourceType;
@@ -220,29 +220,27 @@ fn collect_declaration_names(stmt: &Statement) -> Vec<DeclarationName> {
 
         // `export default function foo() {}` / `export default class C {}` —
         // collect the name from the wrapped declaration.
-        Statement::ExportDefaultDeclaration(export_decl) => {
-            match &export_decl.declaration {
-                ExportDefaultDeclarationKind::FunctionDeclaration(func) => func
-                    .id
-                    .as_ref()
-                    .map(|id| DeclarationName {
-                        name: id.name.as_str().to_string(),
-                        offset: id.span.start,
-                    })
-                    .into_iter()
-                    .collect(),
-                ExportDefaultDeclarationKind::ClassDeclaration(class) => class
-                    .id
-                    .as_ref()
-                    .map(|id| DeclarationName {
-                        name: id.name.as_str().to_string(),
-                        offset: id.span.start,
-                    })
-                    .into_iter()
-                    .collect(),
-                _ => Vec::new(),
-            }
-        }
+        Statement::ExportDefaultDeclaration(export_decl) => match &export_decl.declaration {
+            ExportDefaultDeclarationKind::FunctionDeclaration(func) => func
+                .id
+                .as_ref()
+                .map(|id| DeclarationName {
+                    name: id.name.as_str().to_string(),
+                    offset: id.span.start,
+                })
+                .into_iter()
+                .collect(),
+            ExportDefaultDeclarationKind::ClassDeclaration(class) => class
+                .id
+                .as_ref()
+                .map(|id| DeclarationName {
+                    name: id.name.as_str().to_string(),
+                    offset: id.span.start,
+                })
+                .into_iter()
+                .collect(),
+            _ => Vec::new(),
+        },
 
         _ => Vec::new(),
     }
@@ -324,9 +322,7 @@ fn get_scope_key(file: &str, scope_stack: &[String]) -> String {
 fn get_scope_node_label(stmt: &Statement, index: usize) -> Option<String> {
     match stmt {
         // `namespace Foo {}` / `module Foo {}`
-        Statement::TSNamespaceDeclaration(ns) => {
-            Some(format!("namespace:{}", ns.id.name.as_str()))
-        }
+        Statement::TSNamespaceDeclaration(ns) => Some(format!("namespace:{}", ns.id.name.as_str())),
         Statement::TSExternalModuleDeclaration(t) => {
             Some(format!("namespace:{}", t.id.value.as_str()))
         }
@@ -363,27 +359,24 @@ fn get_scope_node_label(stmt: &Statement, index: usize) -> Option<String> {
         }
 
         // `export default function foo() {}` / `export default class C {}`
-        Statement::ExportDefaultDeclaration(export_decl) => {
-            match &export_decl.declaration {
-                ExportDefaultDeclarationKind::FunctionDeclaration(func) => Some(format!(
-                    "function:{}",
-                    func
-                        .id
-                        .as_ref()
-                        .map(|id| id.name.as_str().to_string())
-                        .unwrap_or_else(|| format!("anonymous-{index}"))
-                )),
-                ExportDefaultDeclarationKind::ClassDeclaration(class) => Some(format!(
-                    "class:{}",
-                    class
-                        .id
-                        .as_ref()
-                        .map(|id| id.name.as_str().to_string())
-                        .unwrap_or_else(|| format!("anonymous-{index}"))
-                )),
-                _ => None,
-            }
-        }
+        Statement::ExportDefaultDeclaration(export_decl) => match &export_decl.declaration {
+            ExportDefaultDeclarationKind::FunctionDeclaration(func) => Some(format!(
+                "function:{}",
+                func.id
+                    .as_ref()
+                    .map(|id| id.name.as_str().to_string())
+                    .unwrap_or_else(|| format!("anonymous-{index}"))
+            )),
+            ExportDefaultDeclarationKind::ClassDeclaration(class) => Some(format!(
+                "class:{}",
+                class
+                    .id
+                    .as_ref()
+                    .map(|id| id.name.as_str().to_string())
+                    .unwrap_or_else(|| format!("anonymous-{index}"))
+            )),
+            _ => None,
+        },
 
         // Block statements introduce a scope.
         Statement::BlockStatement(_) => Some(format!("block:{index}")),
@@ -398,8 +391,7 @@ fn scope_label_from_declaration(decl: &Declaration, index: usize) -> Option<Stri
     match decl {
         Declaration::FunctionDeclaration(func) => Some(format!(
             "function:{}",
-            func
-                .id
+            func.id
                 .as_ref()
                 .map(|id| id.name.as_str().to_string())
                 .unwrap_or_else(|| format!("anonymous-{index}"))
@@ -430,8 +422,7 @@ fn scope_label_from_expression(expr: &Expression, index: usize) -> Option<String
     match expr {
         Expression::FunctionExpression(func) => Some(format!(
             "function:{}",
-            func
-                .id
+            func.id
                 .as_ref()
                 .map(|id| id.name.as_str().to_string())
                 .unwrap_or_else(|| format!("anonymous-{index}"))
@@ -480,27 +471,23 @@ fn child_statements<'a>(stmt: &'a Statement<'a>) -> Vec<&'a Statement<'a>> {
             child_statements_from_declaration(&export_decl.declaration)
         }
         // `export default function foo() {}` / `export default class C {}`
-        Statement::ExportDefaultDeclaration(export_decl) => {
-            match &export_decl.declaration {
-                ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
-                    if let Some(body) = &func.body {
-                        function_body_statements(body)
-                    } else {
-                        Vec::new()
-                    }
+        Statement::ExportDefaultDeclaration(export_decl) => match &export_decl.declaration {
+            ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
+                if let Some(body) = &func.body {
+                    function_body_statements(body)
+                } else {
+                    Vec::new()
                 }
-                _ => Vec::new(),
             }
-        }
+            _ => Vec::new(),
+        },
         _ => Vec::new(),
     }
 }
 
 /// Get child statements from a [`Declaration`] (the inner declaration of an
 /// `ExportDeclaration`).
-fn child_statements_from_declaration<'a>(
-    decl: &'a Declaration<'a>,
-) -> Vec<&'a Statement<'a>> {
+fn child_statements_from_declaration<'a>(decl: &'a Declaration<'a>) -> Vec<&'a Statement<'a>> {
     match decl {
         Declaration::FunctionDeclaration(func) => {
             if let Some(body) = &func.body {
@@ -581,10 +568,12 @@ fn add_duplicate_declaration(
     };
     let duplicate_key = format!("{scope_key}::{name}");
 
-    let entry = map.entry(duplicate_key).or_insert_with(|| DuplicateScopeEntry {
-        name: name.to_string(),
-        locations: BTreeSet::new(),
-    });
+    let entry = map
+        .entry(duplicate_key)
+        .or_insert_with(|| DuplicateScopeEntry {
+            name: name.to_string(),
+            locations: BTreeSet::new(),
+        });
     entry.locations.insert(location);
 }
 

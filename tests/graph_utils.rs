@@ -1,10 +1,10 @@
 //! Unit tests for `graph::utils`, mirroring the deduplication and
 //! Node builtin detection tested in `__tests__/test-suites/graph.test.ts`.
 
+use std::path::Path;
 use susee_lib::graph::utils::{
     CollectedObject, create_graph, is_node_builtin_module, merge_string_arr,
 };
-use std::path::Path;
 
 #[test]
 fn detects_node_builtin_modules() {

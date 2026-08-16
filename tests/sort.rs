@@ -31,11 +31,7 @@ fn single_node_no_deps() {
 #[test]
 fn dependencies_come_before_dependents() {
     // a depends on b, b depends on c → order should be c, b, a
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["c"]),
-        ("c", &[]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["c"]), ("c", &[])]);
     let sorted = topo_sort(&graph);
     let idx = |name: &str| sorted.iter().position(|s| s == name).unwrap();
     assert!(idx("c") < idx("b"));
@@ -45,12 +41,7 @@ fn dependencies_come_before_dependents() {
 #[test]
 fn diamond_dependency_preserves_topological_order() {
     // a → b, a → c, b → d, c → d
-    let graph = build_graph(&[
-        ("a", &["b", "c"]),
-        ("b", &["d"]),
-        ("c", &["d"]),
-        ("d", &[]),
-    ]);
+    let graph = build_graph(&[("a", &["b", "c"]), ("b", &["d"]), ("c", &["d"]), ("d", &[])]);
     let sorted = topo_sort(&graph);
     let idx = |name: &str| sorted.iter().position(|s| s == name).unwrap();
     assert!(idx("d") < idx("b"));
@@ -84,10 +75,7 @@ fn topo_sort_kahn_matches_dfs_for_dag() {
 #[test]
 fn handles_cycle_gracefully_in_dfs_sort() {
     // a → b → a (circular). DFS topo_sort tolerates cycles by marking visited.
-    let graph = build_graph(&[
-        ("a", &["b"]),
-        ("b", &["a"]),
-    ]);
+    let graph = build_graph(&[("a", &["b"]), ("b", &["a"])]);
     let sorted = topo_sort(&graph);
     assert_eq!(sorted.len(), 2);
     assert!(sorted.contains(&"a".to_string()));

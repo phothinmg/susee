@@ -6,9 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// File extensions allowed for JS/TS/JSON modules.
-const ALLOWED_EXTENSIONS: &[&str] = &[
-    "js", "cjs", "mjs", "ts", "mts", "cts", "jsx", "tsx", "json",
-];
+const ALLOWED_EXTENSIONS: &[&str] = &["js", "cjs", "mjs", "ts", "mts", "cts", "jsx", "tsx", "json"];
 
 /// Result of resolving a module path.
 #[derive(Debug, Clone)]
@@ -76,10 +74,7 @@ pub fn resolve_extension(file_path: &Path) -> Result<ResolvedPath, String> {
     } else {
         dir_name
     };
-    let base_name = file_path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("");
+    let base_name = file_path.file_name().and_then(|s| s.to_str()).unwrap_or("");
     let stem = file_name(base_name);
     let input_ext = extension_name(base_name);
 
@@ -87,7 +82,9 @@ pub fn resolve_extension(file_path: &Path) -> Result<ResolvedPath, String> {
         Ok(rd) => rd,
         Err(_) => {
             // Fall back to directory check (e.g. `./lib` with no extension)
-            if is_dir(file_path) && let Some(found) = find_index_file(file_path) {
+            if is_dir(file_path)
+                && let Some(found) = find_index_file(file_path)
+            {
                 return Ok(ResolvedPath {
                     result: file_path.join(&found),
                     ext: extension_name(&found),
@@ -115,7 +112,9 @@ pub fn resolve_extension(file_path: &Path) -> Result<ResolvedPath, String> {
 
     let Some(match_ext) = matched_ext else {
         // Maybe it's a directory import (e.g. ./lib)
-        if is_dir(file_path) && let Some(found) = find_index_file(file_path) {
+        if is_dir(file_path)
+            && let Some(found) = find_index_file(file_path)
+        {
             return Ok(ResolvedPath {
                 result: file_path.join(&found),
                 ext: extension_name(&found),

@@ -16,7 +16,7 @@ pub mod index;
 pub mod types;
 
 #[allow(unused_imports)]
-pub use duplicates::{check_duplicates, DuplicateDeclaration, DuplicateDeclarationLocation};
+pub use duplicates::{DuplicateDeclaration, DuplicateDeclarationLocation, check_duplicates};
 pub use index::generate_dependencies;
 #[allow(unused_imports)]
 pub use types::{DependenciesTree, DepsFile, ModuleType, ValidExts};
