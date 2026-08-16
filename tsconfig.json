@@ -45,5 +45,5 @@
 		"skipLibCheck": true,
 		"allowJs": true
 	},
-	"include": ["node_src/**/*", "__tests__/**/*", "build.ts"]
+	"include": ["node_src/**/*", "__tests__/**/*", "build.ts", "aa.ts"]
 }

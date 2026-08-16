@@ -2,14 +2,14 @@
 //!
 //! Ported from `deps/lib/visualize.ts`.
 
-use std::collections::BTreeMap;
+use indexmap::IndexMap;
 use std::fmt::Write;
 
 /// Visualize a dependency graph as a string.
 ///
 /// Each file is represented by its name, and its dependencies are listed
 /// underneath it. Files with no dependencies show `(no dependencies)`.
-pub fn visualize_dependencies(dep_obj: &BTreeMap<String, Vec<String>>) -> String {
+pub fn visualize_dependencies(dep_obj: &IndexMap<String, Vec<String>>) -> String {
     let mut result = String::from("Dependency Graph:\n\n");
 
     for (file, dependencies) in dep_obj.iter() {

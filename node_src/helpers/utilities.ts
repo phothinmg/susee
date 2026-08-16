@@ -269,7 +269,17 @@ namespace utils {
 	} // namespace promises
 	export namespace gen {
 		export const mergeStringArr = (input: string[][]): string[] => {
-			return input.reduce((prev, curr) => prev.concat(curr), []);
+			const seen = new Set<string>();
+			const result: string[] = [];
+			for (const arr of input) {
+				for (const item of arr) {
+					if (!seen.has(item)) {
+						seen.add(item);
+						result.push(item);
+					}
+				}
+			}
+			return result;
 		};
 		export function splitCamelCase(str: string): string {
 			const splitString = str

@@ -116,7 +116,7 @@ describe("generateGraph", () => {
 		});
 	});
 
-	it("preserves duplicates in npm and node collections", () => {
+	it("deduplicates npm and node collections", () => {
 		withTempProject((tempDir) => {
 			writeFile(
 				path.join(tempDir, "package.json"),
@@ -152,10 +152,10 @@ describe("generateGraph", () => {
 			const graph = generateGraph("src/entry.ts");
 
 			const npm = graph.npm();
-			assert.strictEqual(npm.filter((name) => name === "typescript").length, 2);
+			assert.strictEqual(npm.filter((name) => name === "typescript").length, 1);
 
 			const node = graph.node();
-			assert.strictEqual(node.filter((name) => name === "fs").length, 2);
+			assert.strictEqual(node.filter((name) => name === "fs").length, 1);
 		});
 	});
 });

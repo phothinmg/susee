@@ -5,9 +5,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// File extensions allowed for JS/TS modules.
+/// File extensions allowed for JS/TS/JSON modules.
 const ALLOWED_EXTENSIONS: &[&str] = &[
-    "js", "cjs", "mjs", "ts", "mts", "cts", "jsx", "tsx",
+    "js", "cjs", "mjs", "ts", "mts", "cts", "jsx", "tsx", "json",
 ];
 
 /// Result of resolving a module path.
@@ -68,6 +68,14 @@ pub fn resolve_extension(file_path: &Path) -> Result<ResolvedPath, String> {
 
     // 2. Not a directory: try to resolve extension
     let dir_name = file_path.parent().unwrap_or_else(|| Path::new("."));
+    // A parent of `""` (from a single-component relative path like
+    // `package.json`) cannot be opened with `read_dir`; treat it as the
+    // current directory instead.
+    let dir_name = if dir_name.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        dir_name
+    };
     let base_name = file_path
         .file_name()
         .and_then(|s| s.to_str())

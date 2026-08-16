@@ -2,7 +2,7 @@
 //!
 //! Ported from `deps/lib/utils.ts`.
 
-use std::collections::BTreeMap;
+use indexmap::IndexMap;
 use std::path::Path;
 
 /// A collected dependency entry.
@@ -97,8 +97,8 @@ pub fn is_node_builtin_module(input: &str) -> bool {
 ///
 /// Returns a map where each key is a file path (relative to `root`) and each
 /// value is the list of files that the key file depends on.
-pub fn create_graph(deps: &[CollectedObject], root: &Path) -> BTreeMap<String, Vec<String>> {
-    let mut graph: BTreeMap<String, Vec<String>> = BTreeMap::new();
+pub fn create_graph(deps: &[CollectedObject], root: &Path) -> IndexMap<String, Vec<String>> {
+    let mut graph: IndexMap<String, Vec<String>> = IndexMap::new();
     for dep in deps {
         let name = relative_path(root, &dep.file);
         graph.insert(name, dep.import_files.clone());
@@ -117,9 +117,8 @@ fn relative_path(root: &Path, file: &str) -> String {
 
 /// Merge an array of string arrays into a single deduplicated string array.
 ///
-/// Unlike the TS version (which simply concatenates), this also deduplicates
-/// while preserving first-seen order — which is the practically useful behaviour
-/// for the npm/node/warning lists.
+/// Deduplicates while preserving first-seen order, so the npm/node/warning
+/// lists contain unique entries only.
 pub fn merge_string_arr(input: &[Vec<String>]) -> Vec<String> {
     let mut result: Vec<String> = Vec::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();

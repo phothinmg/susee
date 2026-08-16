@@ -2,14 +2,14 @@
 //!
 //! Ported from `deps/lib/leaf.ts`.
 
-use std::collections::BTreeMap;
+use indexmap::IndexMap;
 
 use super::utils::is_node_builtin_module;
 
 /// Find leaf files — files with no local-file dependencies.
 ///
 /// Filters out dependencies that are not local files (npm modules, node builtins).
-pub fn find_leaf_files(dep_obj: &BTreeMap<String, Vec<String>>) -> Vec<String> {
+pub fn find_leaf_files(dep_obj: &IndexMap<String, Vec<String>>) -> Vec<String> {
     dep_obj
         .iter()
         .filter(|(_, deps)| {

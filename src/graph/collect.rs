@@ -170,6 +170,7 @@ fn process_module(
         };
         import_files.push(rel_import);
     } else if is_node_builtin_module(module_text) {
+        // Recognize both bare (`fs`) and `node:`-prefixed (`node:fs`) builtins.
         node_modules.push(module_text.to_string());
     } else if pkg.contains(module_text) {
         npm_modules.push(module_text.to_string());

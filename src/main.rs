@@ -1,10 +1,11 @@
+mod dependencies;
 mod graph;
-use graph::dependensia;
+use dependencies::generate_dependencies;
 
 
 fn main(){
-    let grp = dependensia("node_src/index.ts", ".").expect("Fail to generate graph");
-    let topo = grp.sort();
-    let topo_json = serde_json::to_string_pretty(&topo).expect("failed to serialize topological order");
-    std::fs::write("topo_2.json", topo_json).expect("failed to write topo_2.json");
+    let tree = generate_dependencies("node_src/index.ts", ".")
+        .expect("Fail to generate dependencies tree");
+    let tree_json = serde_json::to_string_pretty(&tree).expect("failed to serialize dependencies tree");
+    std::fs::write("topo_2.json", tree_json).expect("failed to write topo_2.json");
 }

@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import module from "node:module";
 import path from "node:path";
 import ts6 from "@suseejs/ts6";
 import { utils } from "../helpers/utilities.js";
@@ -283,7 +282,7 @@ function collectDependencies(
 				importFiles.push(relImport);
 			}
 			// Handle : Imported dependencies of node builtin modules of a file.
-			else if (module.builtinModules.includes(moduleText)) {
+			else if (utils.checks.isNodeBuiltinModule(moduleText)) {
 				nodeModules.push(moduleText);
 			}
 			// Handle : Imported npm dependencies of a file

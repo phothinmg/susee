@@ -21,6 +21,7 @@ pub mod sort;
 pub mod utils;
 pub mod visualize;
 
+use indexmap::IndexMap;
 use std::path::{Path, PathBuf};
 
 use analyze::{CircularDependency, DependencyAnalysis, analyze_dependencies};
@@ -40,7 +41,7 @@ pub struct Dependensia {
     sorted_graph: Vec<String>,
     npm_modules: Vec<String>,
     node_modules: Vec<String>,
-    deps_obj: std::collections::BTreeMap<String, Vec<String>>,
+    deps_obj: IndexMap<String, Vec<String>>,
     warning: Vec<String>,
     mutual_files: Vec<Vec<String>>,
     leaves: Vec<String>,
@@ -65,7 +66,7 @@ impl Dependensia {
     }
 
     /// The dependency graph: file -> list of files it depends on.
-    pub fn deps(&self) -> &std::collections::BTreeMap<String, Vec<String>> {
+    pub fn deps(&self) -> &IndexMap<String, Vec<String>> {
         &self.deps_obj
     }
 
@@ -102,7 +103,7 @@ impl Dependensia {
     }
 
     /// The dependency chain of the graph.
-    pub fn chain(&self) -> &std::collections::BTreeMap<String, Vec<String>> {
+    pub fn chain(&self) -> &IndexMap<String, Vec<String>> {
         &self.analyzed_data.dependency_chains
     }
 
@@ -122,7 +123,18 @@ impl Dependensia {
 /// `entry` is the entry file to start analyzing from, relative to `root`.
 /// `root` is the project root directory (defaults to current directory).
 pub fn dependensia<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Dependensia> {
-    let root = root.as_ref().to_path_buf();
+    // Canonicalize `root` to an absolute path so that all derived file paths
+    // are absolute too. This mirrors the TS version's `process.cwd()` and
+    // avoids `resolve_extension` failures on relative paths (e.g. when a
+    // single-component relative path like `package.json` yields an empty
+    // parent directory that `read_dir` cannot open).
+    let root = if root.as_ref().is_absolute() {
+        root.as_ref().to_path_buf()
+    } else {
+        std::env::current_dir()
+            .map(|cwd| cwd.join(root.as_ref()))
+            .unwrap_or_else(|_| root.as_ref().to_path_buf())
+    };
     let pkg = get_package_info(&root);
     let collected: CollectedDepsInfo = collect_dependencies(entry, &pkg, &root);
 

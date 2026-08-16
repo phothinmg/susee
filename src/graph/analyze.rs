@@ -2,7 +2,8 @@
 //!
 //! Ported from `deps/lib/analyze.ts`.
 
-use std::collections::{BTreeMap, HashSet};
+use indexmap::IndexMap;
+use std::collections::HashSet;
 
 /// A circular dependency: the cycle chain and its type.
 #[derive(Debug, Clone)]
@@ -17,7 +18,7 @@ pub struct CircularDependency {
 #[derive(Debug, Clone)]
 pub struct DependencyAnalysis {
     pub circular_dependencies: Vec<CircularDependency>,
-    pub dependency_chains: BTreeMap<String, Vec<String>>,
+    pub dependency_chains: IndexMap<String, Vec<String>>,
     pub entry_to_leaf_chains: Vec<Vec<String>>,
 }
 
@@ -25,10 +26,10 @@ pub struct DependencyAnalysis {
 ///
 /// Uses DFS to detect cycles and record entry-to-leaf chains.
 pub fn analyze_dependencies(
-    dep_obj: &BTreeMap<String, Vec<String>>,
+    dep_obj: &IndexMap<String, Vec<String>>,
 ) -> DependencyAnalysis {
     let mut circular_dependencies: Vec<CircularDependency> = Vec::new();
-    let mut dependency_chains: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut dependency_chains: IndexMap<String, Vec<String>> = IndexMap::new();
     let mut visited: HashSet<String> = HashSet::new();
     let mut currently_visiting: HashSet<String> = HashSet::new();
     let mut entry_to_leaf_chains: Vec<Vec<String>> = Vec::new();
@@ -37,9 +38,9 @@ pub fn analyze_dependencies(
     fn dfs(
         current_file: &str,
         path: &[String],
-        dep_obj: &BTreeMap<String, Vec<String>>,
+        dep_obj: &IndexMap<String, Vec<String>>,
         circular_dependencies: &mut Vec<CircularDependency>,
-        dependency_chains: &mut BTreeMap<String, Vec<String>>,
+        dependency_chains: &mut IndexMap<String, Vec<String>>,
         entry_to_leaf_chains: &mut Vec<Vec<String>>,
         visited: &mut HashSet<String>,
         currently_visiting: &mut HashSet<String>,
@@ -95,7 +96,8 @@ pub fn analyze_dependencies(
         currently_visiting.remove(current_file);
     }
 
-    // Analyze all files in the dependency graph (deterministic order via BTreeMap)
+    // Analyze all files in the dependency graph (insertion order via IndexMap,
+    // matching the TypeScript implementation's Object.keys iteration)
     for file in dep_obj.keys() {
         if !visited.contains(file) {
             dfs(

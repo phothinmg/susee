@@ -2,13 +2,13 @@
 //!
 //! Ported from `deps/lib/mutual.ts`.
 
-use std::collections::BTreeMap;
+use indexmap::IndexMap;
 
 /// Find mutually-dependent file pairs.
 ///
 /// Returns pairs `[a, b]` where `a` depends on `b` and `b` depends on `a`.
 /// Each unordered pair is recorded only once.
-pub fn find_mutual_dependencies(dep_obj: &BTreeMap<String, Vec<String>>) -> Vec<Vec<String>> {
+pub fn find_mutual_dependencies(dep_obj: &IndexMap<String, Vec<String>>) -> Vec<Vec<String>> {
     let mut mutual_deps: Vec<Vec<String>> = Vec::new();
 
     for (file, dependencies) in dep_obj.iter() {

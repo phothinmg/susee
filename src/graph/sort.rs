@@ -2,19 +2,23 @@
 //!
 //! Ported from `deps/lib/sort.ts`.
 
-use std::collections::{BTreeMap, HashSet, VecDeque};
+use indexmap::IndexMap;
+use std::collections::{HashSet, VecDeque};
 
 /// Topological sort of a dependency graph.
 ///
 /// `tree` maps each node to the list of nodes it depends on.
 /// Returns nodes in topological order (dependencies first).
-pub fn topo_sort(tree: &BTreeMap<String, Vec<String>>) -> Vec<String> {
+///
+/// Uses insertion order (via `IndexMap`) to match the TypeScript
+/// implementation, which iterates `Object.keys(tree)`.
+pub fn topo_sort(tree: &IndexMap<String, Vec<String>>) -> Vec<String> {
     let mut visited: HashSet<String> = HashSet::new();
     let mut sorted: Vec<String> = Vec::new();
 
     fn visit(
         node: &str,
-        tree: &BTreeMap<String, Vec<String>>,
+        tree: &IndexMap<String, Vec<String>>,
         visited: &mut HashSet<String>,
         sorted: &mut Vec<String>,
     ) {
@@ -34,9 +38,6 @@ pub fn topo_sort(tree: &BTreeMap<String, Vec<String>>) -> Vec<String> {
         visit(node, tree, &mut visited, &mut sorted);
     }
 
-    // Reverse so that dependents come first (entry point first, leaves last).
-    // The original TS version's comment says "reverse for correct order".
-    sorted.reverse();
     sorted
 }
 
@@ -45,9 +46,9 @@ pub fn topo_sort(tree: &BTreeMap<String, Vec<String>>) -> Vec<String> {
 /// This is a non-recursive alternative that also detects cycles. Kept as a
 /// utility for consumers that prefer BFS ordering.
 #[allow(dead_code)]
-pub fn topo_sort_kahn(tree: &BTreeMap<String, Vec<String>>) -> Vec<String> {
+pub fn topo_sort_kahn(tree: &IndexMap<String, Vec<String>>) -> Vec<String> {
     // Build in-degree map and adjacency list
-    let mut in_degree: BTreeMap<String, usize> = BTreeMap::new();
+    let mut in_degree: IndexMap<String, usize> = IndexMap::new();
     for node in tree.keys() {
         in_degree.entry(node.clone()).or_insert(0);
     }
