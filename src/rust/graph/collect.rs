@@ -1,7 +1,7 @@
 //! Recursively traverse files and collect local, node builtin, and npm dependencies.
 //!
 //! Ported from `deps/lib/collect.ts`. Instead of the TypeScript compiler API,
-//! this uses the oxc parser (via [`handlers::collect_module_specifiers`]).
+//! this uses the oxc parser (via [`super::handlers::collect_module_specifiers`]).
 
 use std::collections::HashSet;
 use std::fs;

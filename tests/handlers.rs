@@ -2,7 +2,7 @@
 //! the import/require/dynamic-import detection covered by the TS graph suite.
 
 use std::path::Path;
-use susee_lib::graph::handlers::collect_module_specifiers;
+use susee::graph::handlers::collect_module_specifiers;
 
 fn specifiers(source: &str, file_name: &str) -> Vec<String> {
     let mut result = collect_module_specifiers(source, Path::new(file_name));

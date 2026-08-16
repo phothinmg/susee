@@ -2,11 +2,11 @@
 //! the TS suite `__tests__/test-suites/graph.test.ts`.
 //!
 //! These tests create temporary projects on disk, then invoke
-//! `susee_lib::graph::dependensia` to collect and analyze dependencies.
+//! `susee::graph::dependensia` to collect and analyze dependencies.
 
 use std::fs;
 use std::path::Path;
-use susee_lib::graph::dependensia;
+use susee::graph::dependensia;
 use tempfile::tempdir;
 
 fn write_file(dir: &Path, rel: &str, content: &str) {

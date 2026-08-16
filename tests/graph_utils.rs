@@ -2,7 +2,7 @@
 //! Node builtin detection tested in `__tests__/test-suites/graph.test.ts`.
 
 use std::path::Path;
-use susee_lib::graph::utils::{
+use susee::graph::utils::{
     CollectedObject, create_graph, is_node_builtin_module, merge_string_arr,
 };
 

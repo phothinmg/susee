@@ -14,7 +14,7 @@ name = "susee_main"
 path = "src/rust/main.rs"
 
 [lib]
-name = "susee_lib"
+name = "susee"
 path = "src/rust/lib.rs"
 
 [dev-dependencies]

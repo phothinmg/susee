@@ -2,7 +2,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use susee_lib::graph::resolve_ext::resolve_extension;
+use susee::graph::resolve_ext::resolve_extension;
 use tempfile::tempdir;
 
 fn write_file(dir: &Path, rel: &str, content: &str) -> PathBuf {

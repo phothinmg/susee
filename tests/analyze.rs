@@ -1,7 +1,7 @@
 //! Unit tests for `graph::analyze::analyze_dependencies`.
 
 use indexmap::IndexMap;
-use susee_lib::graph::analyze::analyze_dependencies;
+use susee::graph::analyze::analyze_dependencies;
 
 fn build_graph(pairs: &[(&str, &[&str])]) -> IndexMap<String, Vec<String>> {
     let mut map: IndexMap<String, Vec<String>> = IndexMap::new();

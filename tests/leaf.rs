@@ -1,7 +1,7 @@
 //! Unit tests for `graph::leaf::find_leaf_files`.
 
 use indexmap::IndexMap;
-use susee_lib::graph::leaf::find_leaf_files;
+use susee::graph::leaf::find_leaf_files;
 
 fn build_graph(pairs: &[(&str, &[&str])]) -> IndexMap<String, Vec<String>> {
     let mut map: IndexMap<String, Vec<String>> = IndexMap::new();

@@ -1,6 +1,6 @@
 SHELL := bash
 
-.PHONY: check test
+.PHONY: check test fmt doc
 
 check:
 	cargo check --target x86_64-unknown-linux-gnu
@@ -12,3 +12,9 @@ check:
 	cargo check --target x86_64-pc-windows-msvc
 	cargo check --target aarch64-pc-windows-msvc
 	@echo "Cross-Platform checks are passed"
+test:
+	cargo test
+fmt:
+	cargo fmt
+doc:
+	cargo doc --open

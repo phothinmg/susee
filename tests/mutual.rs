@@ -1,7 +1,7 @@
 //! Unit tests for `graph::mutual::find_mutual_dependencies`.
 
 use indexmap::IndexMap;
-use susee_lib::graph::mutual::find_mutual_dependencies;
+use susee::graph::mutual::find_mutual_dependencies;
 
 fn build_graph(pairs: &[(&str, &[&str])]) -> IndexMap<String, Vec<String>> {
     let mut map: IndexMap<String, Vec<String>> = IndexMap::new();

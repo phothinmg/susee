@@ -1,7 +1,7 @@
 //! Unit tests for `dependencies::types` — ValidExts, ModuleType, and
 //! (de)serialization behavior.
 
-use susee_lib::dependencies::types::{DependenciesTree, DepsFile, ModuleType, ValidExts};
+use susee::dependencies::types::{DependenciesTree, DepsFile, ModuleType, ValidExts};
 
 #[test]
 fn valid_exts_from_ext_parses_known_extensions() {

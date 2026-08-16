@@ -1,8 +1,8 @@
 //! Unit tests for `dependencies::duplicates::check_duplicates`, mirroring
 //! the TS suite `__tests__/test-suites/dependencies.duplicates.test.ts`.
 
-use susee_lib::dependencies::duplicates::check_duplicates;
-use susee_lib::dependencies::types::{DepsFile, ModuleType, ValidExts};
+use susee::dependencies::duplicates::check_duplicates;
+use susee::dependencies::types::{DepsFile, ModuleType, ValidExts};
 
 fn create_dep_file(file: &str, content: &str) -> DepsFile {
     DepsFile {

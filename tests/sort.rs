@@ -2,7 +2,7 @@
 //! from the TS suite `__tests__/test-suites/graph.test.ts`.
 
 use indexmap::IndexMap;
-use susee_lib::graph::sort::{topo_sort, topo_sort_kahn};
+use susee::graph::sort::{topo_sort, topo_sort_kahn};
 
 fn build_graph(pairs: &[(&str, &[&str])]) -> IndexMap<String, Vec<String>> {
     let mut map: IndexMap<String, Vec<String>> = IndexMap::new();

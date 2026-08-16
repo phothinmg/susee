@@ -1,4 +1,4 @@
-use susee_lib::dependencies::generate_dependencies;
+use susee::dependencies::generate_dependencies;
 
 fn main() {
     let tree = generate_dependencies("node_src/index.ts", ".")
