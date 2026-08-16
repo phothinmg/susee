@@ -5,6 +5,7 @@
 node_modules
 dist
 bin
+.ruby-lsp
 # -----------------------------
 
 # ptm local development
