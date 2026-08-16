@@ -8,9 +8,9 @@
 
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    Argument, AwaitExpression, CallExpression, Expression, ImportDeclaration,
-    ImportExpression, StringLiteral, TSExternalModuleReference,
-    TSImportEqualsDeclaration,
+    Argument, AwaitExpression, CallExpression, ExportAllDeclaration,
+    ExportFromDeclaration, Expression, ImportDeclaration, ImportExpression,
+    StringLiteral, TSExternalModuleReference, TSImportEqualsDeclaration,
 };
 use oxc::ast_visit::Visit;
 use oxc::parser::Parser;
@@ -41,6 +41,16 @@ impl<'a> Visit<'a> for SpecifierCollector {
     fn visit_import_declaration(&mut self, it: &ImportDeclaration<'a>) {
         self.specifiers.push(it.source.value.as_str().to_string());
         // Do not walk children — we already captured the source.
+    }
+
+    // export * from "foo" / export * as bar from "foo"
+    fn visit_export_all_declaration(&mut self, it: &ExportAllDeclaration<'a>) {
+        self.specifiers.push(it.source.value.as_str().to_string());
+    }
+
+    // export { foo } from "foo" (re-export)
+    fn visit_export_from_declaration(&mut self, it: &ExportFromDeclaration<'a>) {
+        self.specifiers.push(it.source.value.as_str().to_string());
     }
 
     // import foo = require("foo")

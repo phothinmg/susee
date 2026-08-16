@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
 import { promisify } from "node:util";
-import { Compiler } from "../../../node_src/compiler/index.js";
+import { Compiler } from "../../../src/nodejs/compiler/index.js";
 import { fileExists, readJson, setupTempDir } from "../test_helpers.js";
 
 const execFileAsync = promisify(execFile);
@@ -123,7 +123,7 @@ describe("Compiler", () => {
 		const packageJsonPath = path.join(tempDir, "package.json");
 		const scriptPath = path.join(tempDir, "compile.ts");
 		const compilerModulePath = path
-			.resolve(process.cwd(), "node_src/compiler/index.ts")
+			.resolve(process.cwd(), "src/nodejs/compiler/index.ts")
 			.replaceAll("\\", "/");
 
 		await fs.mkdir(entryDir, { recursive: true });

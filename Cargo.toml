@@ -12,3 +12,10 @@ serde_json = "1.0.151"
 [[bin]]
 name = "susee_main"
 path = "src/rust/main.rs"
+
+[lib]
+name = "susee_lib"
+path = "src/rust/lib.rs"
+
+[dev-dependencies]
+tempfile = "3"

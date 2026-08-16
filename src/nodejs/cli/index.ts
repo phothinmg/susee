@@ -3,7 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import readline from "node:readline/promises";
 import tcolor from "@suseejs/color";
-import pkg from "../../package.json" with { type: "json" };
+import pkg from "../../../package.json" with { type: "json" };
 import { setProfileEnabled } from "../helpers/profile.js";
 import { cliBuild } from "./build.js";
 import { cliCompiler } from "./cli.js";

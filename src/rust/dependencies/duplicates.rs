@@ -19,8 +19,8 @@ use std::path::Path;
 
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    ArrowFunctionBody, BindingPattern, Expression, FunctionBody, Statement,
-    TSNamespaceDeclarationBody,
+    ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind,
+    Expression, FunctionBody, Statement, TSNamespaceDeclarationBody,
 };
 use oxc::parser::Parser;
 use oxc::span::SourceType;
@@ -212,6 +212,96 @@ fn collect_declaration_names(stmt: &Statement) -> Vec<DeclarationName> {
             offset: t.id.span.start,
         }],
 
+        // `export const x = 1;` / `export function foo() {}` / `export class C {}` —
+        // unwrap the inner Declaration and collect names from it.
+        Statement::ExportDeclaration(export_decl) => {
+            declaration_names_from_declaration(&export_decl.declaration)
+        }
+
+        // `export default function foo() {}` / `export default class C {}` —
+        // collect the name from the wrapped declaration.
+        Statement::ExportDefaultDeclaration(export_decl) => {
+            match &export_decl.declaration {
+                ExportDefaultDeclarationKind::FunctionDeclaration(func) => func
+                    .id
+                    .as_ref()
+                    .map(|id| DeclarationName {
+                        name: id.name.as_str().to_string(),
+                        offset: id.span.start,
+                    })
+                    .into_iter()
+                    .collect(),
+                ExportDefaultDeclarationKind::ClassDeclaration(class) => class
+                    .id
+                    .as_ref()
+                    .map(|id| DeclarationName {
+                        name: id.name.as_str().to_string(),
+                        offset: id.span.start,
+                    })
+                    .into_iter()
+                    .collect(),
+                _ => Vec::new(),
+            }
+        }
+
+        _ => Vec::new(),
+    }
+}
+
+/// Collect declaration names from a [`Declaration`] (the inner declaration
+/// of an `ExportDeclaration`).
+fn declaration_names_from_declaration(decl: &Declaration) -> Vec<DeclarationName> {
+    match decl {
+        Declaration::VariableDeclaration(var_decl) => {
+            let mut names = Vec::new();
+            for declarator in &var_decl.declarations {
+                if let BindingPattern::BindingIdentifier(ident) = &declarator.id {
+                    names.push(DeclarationName {
+                        name: ident.name.as_str().to_string(),
+                        offset: ident.span.start,
+                    });
+                }
+            }
+            names
+        }
+        Declaration::FunctionDeclaration(func) => func
+            .id
+            .as_ref()
+            .map(|id| DeclarationName {
+                name: id.name.as_str().to_string(),
+                offset: id.span.start,
+            })
+            .into_iter()
+            .collect(),
+        Declaration::ClassDeclaration(class) => class
+            .id
+            .as_ref()
+            .map(|id| DeclarationName {
+                name: id.name.as_str().to_string(),
+                offset: id.span.start,
+            })
+            .into_iter()
+            .collect(),
+        Declaration::TSTypeAliasDeclaration(t) => vec![DeclarationName {
+            name: t.id.name.as_str().to_string(),
+            offset: t.id.span.start,
+        }],
+        Declaration::TSInterfaceDeclaration(t) => vec![DeclarationName {
+            name: t.id.name.as_str().to_string(),
+            offset: t.id.span.start,
+        }],
+        Declaration::TSEnumDeclaration(t) => vec![DeclarationName {
+            name: t.id.name.as_str().to_string(),
+            offset: t.id.span.start,
+        }],
+        Declaration::TSNamespaceDeclaration(t) => vec![DeclarationName {
+            name: t.id.name.as_str().to_string(),
+            offset: t.id.span.start,
+        }],
+        Declaration::TSExternalModuleDeclaration(t) => vec![DeclarationName {
+            name: t.id.value.as_str().to_string(),
+            offset: t.id.span.start,
+        }],
         _ => Vec::new(),
     }
 }
@@ -266,9 +356,68 @@ fn get_scope_node_label(stmt: &Statement, index: usize) -> Option<String> {
             scope_label_from_expression(&expr_stmt.expression, index)
         }
 
+        // `export const x = 1;` — the inner declaration may introduce a scope
+        // (e.g. `export function foo() {}`).
+        Statement::ExportDeclaration(export_decl) => {
+            scope_label_from_declaration(&export_decl.declaration, index)
+        }
+
+        // `export default function foo() {}` / `export default class C {}`
+        Statement::ExportDefaultDeclaration(export_decl) => {
+            match &export_decl.declaration {
+                ExportDefaultDeclarationKind::FunctionDeclaration(func) => Some(format!(
+                    "function:{}",
+                    func
+                        .id
+                        .as_ref()
+                        .map(|id| id.name.as_str().to_string())
+                        .unwrap_or_else(|| format!("anonymous-{index}"))
+                )),
+                ExportDefaultDeclarationKind::ClassDeclaration(class) => Some(format!(
+                    "class:{}",
+                    class
+                        .id
+                        .as_ref()
+                        .map(|id| id.name.as_str().to_string())
+                        .unwrap_or_else(|| format!("anonymous-{index}"))
+                )),
+                _ => None,
+            }
+        }
+
         // Block statements introduce a scope.
         Statement::BlockStatement(_) => Some(format!("block:{index}")),
 
+        _ => None,
+    }
+}
+
+/// Determine the scope label from a [`Declaration`] (the inner declaration
+/// of an `ExportDeclaration`).
+fn scope_label_from_declaration(decl: &Declaration, index: usize) -> Option<String> {
+    match decl {
+        Declaration::FunctionDeclaration(func) => Some(format!(
+            "function:{}",
+            func
+                .id
+                .as_ref()
+                .map(|id| id.name.as_str().to_string())
+                .unwrap_or_else(|| format!("anonymous-{index}"))
+        )),
+        Declaration::ClassDeclaration(class) => Some(format!(
+            "class:{}",
+            class
+                .id
+                .as_ref()
+                .map(|id| id.name.as_str().to_string())
+                .unwrap_or_else(|| format!("anonymous-{index}"))
+        )),
+        Declaration::TSNamespaceDeclaration(ns) => {
+            Some(format!("namespace:{}", ns.id.name.as_str()))
+        }
+        Declaration::TSExternalModuleDeclaration(t) => {
+            Some(format!("namespace:{}", t.id.value.as_str()))
+        }
         _ => None,
     }
 }
@@ -325,6 +474,46 @@ fn child_statements<'a>(stmt: &'a Statement<'a>) -> Vec<&'a Statement<'a>> {
             // detection still works.
             Vec::new()
         }
+        // `export const x = 1;` / `export function foo() {}` — recurse into
+        // the inner declaration's body if it introduces a scope.
+        Statement::ExportDeclaration(export_decl) => {
+            child_statements_from_declaration(&export_decl.declaration)
+        }
+        // `export default function foo() {}` / `export default class C {}`
+        Statement::ExportDefaultDeclaration(export_decl) => {
+            match &export_decl.declaration {
+                ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
+                    if let Some(body) = &func.body {
+                        function_body_statements(body)
+                    } else {
+                        Vec::new()
+                    }
+                }
+                _ => Vec::new(),
+            }
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// Get child statements from a [`Declaration`] (the inner declaration of an
+/// `ExportDeclaration`).
+fn child_statements_from_declaration<'a>(
+    decl: &'a Declaration<'a>,
+) -> Vec<&'a Statement<'a>> {
+    match decl {
+        Declaration::FunctionDeclaration(func) => {
+            if let Some(body) = &func.body {
+                function_body_statements(body)
+            } else {
+                Vec::new()
+            }
+        }
+        Declaration::TSNamespaceDeclaration(ns) => namespace_body_statements(&ns.body),
+        Declaration::TSExternalModuleDeclaration(ns) => match &ns.body {
+            Some(body) => body.body.iter().collect(),
+            None => Vec::new(),
+        },
         _ => Vec::new(),
     }
 }

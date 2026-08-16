@@ -51,7 +51,7 @@ async function writeProjectFiles(cwd: string, source = "ORIGINAL_VALUE") {
 
 async function loadCliCompiler() {
 	const modulePath = pathToFileURL(
-		path.resolve(repoRoot, "node_src/cli/cli.ts"),
+		path.resolve(repoRoot, "src/nodejs/cli/cli.ts"),
 	).href;
 	const mod = (await import(modulePath)) as {
 		cliCompiler: { compile: (opts: unknown) => Promise<void> };

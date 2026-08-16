@@ -1,6 +1,4 @@
-mod dependencies;
-mod graph;
-use dependencies::generate_dependencies;
+use susee_lib::dependencies::generate_dependencies;
 
 
 fn main(){

@@ -1,3 +1,3 @@
-import { finalSuseeConfig } from "../../../../../../node_src/config/index.js";
+import { finalSuseeConfig } from "../../../../../../src/nodejs/config/index.js";
 
 await finalSuseeConfig();

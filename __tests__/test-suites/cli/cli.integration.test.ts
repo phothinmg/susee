@@ -21,7 +21,7 @@ function getTsxBin() {
 }
 
 function runCli(args: string[], cwd: string, input = ""): Promise<CliResult> {
-	const cliEntry = path.resolve(process.cwd(), "node_src/cli/index.ts");
+	const cliEntry = path.resolve(process.cwd(), "src/nodejs/cli/index.ts");
 	const tsxBin = getTsxBin();
 
 	return new Promise((resolve, reject) => {
