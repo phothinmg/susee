@@ -1,0 +1,13 @@
+{
+	"entryPoints": [
+		{
+			"entry": "src/nodejs/index.ts",
+			"exportPath": ".",
+			"format": ["esm", "commonjs"],
+			"tsconfigFilePath": null,
+			"warning": false
+		}
+	],
+	"outDir": "out",
+	"allowUpdatePackageJson": false
+}

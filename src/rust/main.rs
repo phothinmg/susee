@@ -1,6 +1,10 @@
-use susee::cli::susee_cli_build;
+use susee::api::build_from_config_file;
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    susee_cli_build(&args);
+    // Programmatic build from `susee.config.json` in the current directory.
+    // Pass `Some("path")` to use an explicit config file path.
+    if let Err(e) = build_from_config_file(None) {
+        eprintln!("[Error] : {e}");
+        std::process::exit(1);
+    }
 }

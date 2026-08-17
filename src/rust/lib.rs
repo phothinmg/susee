@@ -7,6 +7,7 @@
 //! The `napi` module is only compiled when the `napi` cargo feature is
 //! enabled, since it pulls in the Node native-addon headers.
 
+pub mod api;
 pub mod bundler;
 pub mod cli;
 pub mod compiler;

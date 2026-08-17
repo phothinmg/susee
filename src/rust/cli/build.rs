@@ -1,33 +1,26 @@
-//! Config-based build command.
+//! Config-based CLI build command.
 //!
-//! Ported from `src/nodejs/cli/build.ts`.
+//! Ported from `src/nodejs/cli/build.ts` (`cliBuild`).
 //!
-//! Loads `susee.config.json` via [`super::config::final_susee_config`] and
-//! runs the [`crate::compiler::Compiler`]. Mirrors the `cliBuild` function.
+//! This is the CLI surface — it exits the process on error. The
+//! programmatic API lives at [`crate::api`].
 
-use std::time::Instant;
+use crate::api::build_from_config_file;
 
-use crate::compiler::Compiler;
-
-use super::config::final_susee_config;
 use super::lib::fail::fail;
 
-/// Run a config-based build.
+/// Run a config-based build as a CLI command.
 ///
-/// Mirrors `cliBuild()` from `build.ts`. Prints a `[Build]` timer line, loads
-/// the susee config, constructs a [`Compiler`], and runs it. Exits with code
-/// 1 (via [`fail`]) when no config file is found or when the compiler fails.
+/// Mirrors `cliBuild()` from `build.ts`. Loads the susee config, constructs
+/// a [`Compiler`], and runs it. Exits with code 1 (via [`fail`]) when no
+/// config file is found or when the compiler fails.
+///
+/// This is a thin wrapper around [`crate::api::build_from_config_file`]
+/// that converts `Err` into `fail(...)` (process exit) and passes `None`
+/// to use default `susee.config.json` discovery. Programmatic callers
+/// should use [`crate::api::build_from_config_file`] directly.
 pub fn cli_build() {
-    let start = Instant::now();
-    let build_options = match final_susee_config() {
-        Ok(Some(opts)) => opts,
-        Ok(None) => fail("No susee.config file (\"susee.config.json\") found"),
-        Err(e) => fail(&e),
-    };
-    let mut compiler = Compiler::new(build_options);
-    if let Err(e) = compiler.compile() {
-        fail(&format!("build failed: {e}"));
+    if let Err(e) = build_from_config_file(None) {
+        fail(&e);
     }
-    let elapsed = start.elapsed().as_secs_f64();
-    eprintln!("[Build]  {elapsed:.2}s");
 }

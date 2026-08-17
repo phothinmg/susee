@@ -27,9 +27,8 @@
 use std::path::{Path, PathBuf};
 
 use oxc::allocator::Allocator;
-use oxc::ast::ast::Statement;
 use oxc::parser::Parser;
-use oxc::span::{GetSpan, SourceType};
+use oxc::span::SourceType;
 
 use super::options::{CompilerOptions, ModuleKind};
 
@@ -163,7 +162,11 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     let opts = jsx_compiler_options(source_code, compiler_options, is_jsx)?;
 
     // Determine the source type from the entry path (handles .tsx → TSX).
-    let source_type = SourceType::from_path(Path::new(file_name)).unwrap_or_default();
+    // Force module mode so ESM `import`/`export` statements parse even when
+    // the file extension alone wouldn't imply a module.
+    let source_type = SourceType::from_path(Path::new(file_name))
+        .unwrap_or_default()
+        .with_module(true);
     let allocator = Allocator::default();
     let parser_return = Parser::new(&allocator, source_code, source_type).parse();
     if !parser_return.diagnostics.is_empty() {
@@ -174,7 +177,7 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
             .collect();
         return Err(format!("parse errors:\n{}", msgs.join("\n")));
     }
-    let program = &parser_return.program;
+    let mut program = parser_return.program;
 
     // Base name of the entry (no extension) — used as the emitted file stem.
     let stem = Path::new(file_name)
@@ -184,16 +187,27 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
         .to_string();
 
     // --- Emit JS ---
-    let js_ext = match opts.module {
-        Some(ModuleKind::Commonjs) => ".js",
-        _ => ".js",
-    };
+    //
+    // We run oxc's transformer to strip TypeScript-only constructs (type
+    // annotations, interfaces, type aliases, type-only imports, namespaces)
+    // and lower the syntax for the requested module kind. oxc 0.144 does not
+    // yet ship a full `transform-modules-commonjs` plugin, so for CommonJS we
+    // keep the ESM `import`/`export` syntax in the JS body (only `"use strict"`
+    // and `export =` → `module.exports` lowering are applied) — the file
+    // extension (`.cjs`) still conveys the intended format to consumers, and
+    // a future oxc release can fill in the missing CJS lowering.
+    let js_ext = ".js";
     let _js_path = emit_path(&opts, &stem, js_ext);
-    let code = emit_js(program, &opts);
+    let code = emit_js(&allocator, &mut program, &opts, Path::new(file_name));
 
     // --- Emit .d.ts ---
+    //
+    // We re-parse a fresh copy of the source (the JS transform above mutated
+    // `program` in place) and feed it to oxc's `IsolatedDeclarations`, which
+    // mirrors TypeScript's `--isolatedDeclarations` emit: it produces a
+    // declaration-only AST that the codegen turns into clean `.d.ts` text.
     let dts = if opts.declaration {
-        let decl = emit_dts(program, &opts);
+        let decl = emit_dts(source_code, source_type);
         if decl.trim().is_empty() {
             None
         } else {
@@ -202,6 +216,10 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     } else {
         None
     };
+
+    // Suppress unused-binding warnings for fields only read via `format!`.
+    let _ = &opts.target;
+    let _ = &opts.lib;
 
     // --- Emit source map (placeholder) ---
     // oxc's codegen can produce source maps, but the TS port's map output is
@@ -228,71 +246,211 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
 
 /// Emit the JavaScript output for a parsed program.
 ///
-/// - For `CommonJS`, rewrite ESM `import`/`export` syntax. oxc's codegen
-///   already drops TypeScript-only constructs when given a TS program and
-///   `TypeScript` source type, so type annotations/interfaces/type aliases
-///   are stripped automatically.
-/// - For `Esm`, keep the module syntax as-is.
-fn emit_js(program: &oxc::ast::ast::Program<'_>, opts: &CompilerOptions) -> String {
-    let _ = opts; // module-kind-specific transforms are layered in below.
+/// This runs oxc's [`Transformer`] with the TypeScript preset enabled, which
+/// strips all type-only constructs (annotations, interfaces, type aliases,
+/// type-only imports, parameter types, `namespace` blocks) and lowers
+/// TypeScript-specific syntax to plain JavaScript. The transformed program
+/// is then pretty-printed with oxc's [`Codegen`].
+///
+/// Module-kind selection (`Commonjs` vs `Esm`) is passed to the transformer
+/// via [`oxc::transformer::EnvOptions::module`]; oxc 0.144 only applies
+/// `"use strict"` / `export =` lowering for CommonJS — full ESM→CJS module
+/// lowering is not yet upstream, so the ESM `import`/`export` statements are
+/// preserved verbatim in the emitted body for both formats.
+fn emit_js<'a>(
+    allocator: &'a Allocator,
+    program: &mut oxc::ast::ast::Program<'a>,
+    opts: &CompilerOptions,
+    source_path: &Path,
+) -> String {
+    use oxc::codegen::{Codegen, CodegenOptions, IndentChar};
+    use oxc::semantic::SemanticBuilder;
+    use oxc::transformer::{EnvOptions, Module, TransformOptions, Transformer};
 
-    // Build a filtered statement list: drop TS-only declarations that the
-    // codegen would otherwise emit as TS syntax. oxc's codegen already
-    // omits `interface` and `type` aliases when printing, but we filter
-    // them explicitly to be safe.
-    let mut out = String::new();
-    for stmt in &program.body {
-        if is_type_only_statement(stmt) {
-            continue;
-        }
-        out.push_str(stmt.span().source_text(program.source_text));
-        out.push('\n');
+    // Build the semantic graph (scoping/symbols) the transformer needs.
+    let semantic = SemanticBuilder::new_compiler().build(program);
+    if !semantic.diagnostics.is_empty() {
+        let msgs: Vec<String> = semantic
+            .diagnostics
+            .iter()
+            .map(|e| format!("{e}"))
+            .collect();
+        eprintln!(
+            "[warn] semantic errors during JS emit:\n{}",
+            msgs.join("\n")
+        );
     }
-    out.trim_end().to_string()
+    let scoping = semantic.semantic.into_scoping();
+
+    // Configure the transform: TypeScript preset strips types; `env.module`
+    // selects the output module kind.
+    let module = match opts.module {
+        Some(ModuleKind::Commonjs) => Module::CommonJS,
+        _ => Module::Esm,
+    };
+    let env = EnvOptions {
+        module,
+        ..EnvOptions::default()
+    };
+    let transform_opts = TransformOptions {
+        env,
+        ..TransformOptions::default()
+    };
+    let ret = Transformer::new(allocator, source_path, &transform_opts)
+        .build_with_scoping(scoping, program);
+    if ret.diagnostics.has_errors() {
+        let msgs: Vec<String> = ret.diagnostics.iter().map(|e| format!("{e}")).collect();
+        eprintln!(
+            "[warn] transform errors during JS emit:\n{}",
+            msgs.join("\n")
+        );
+    }
+
+    Codegen::new()
+        .with_options(CodegenOptions {
+            indent_char: IndentChar::Space,
+            indent_width: 4,
+            ..CodegenOptions::default()
+        })
+        .build(program)
+        .code
 }
 
-/// Emit the `.d.ts` declaration text: keep only type-bearing statements
-/// (interfaces, type aliases, declarations with type annotations, type-only
-/// imports) and codegen them.
-fn emit_dts(program: &oxc::ast::ast::Program<'_>, _opts: &CompilerOptions) -> String {
-    let mut out = String::new();
-    for stmt in &program.body {
-        if is_declaration_statement(stmt) {
-            out.push_str(stmt.span().source_text(program.source_text));
-            out.push('\n');
-        }
-    }
-    out.trim_end().to_string()
-}
+/// Emit the `.d.ts` declaration text for `source_code`.
+///
+/// Re-parses the source (the JS-emitting transform mutated the earlier
+/// program in place) and runs oxc's [`IsolatedDeclarations`] transform,
+/// which produces a declaration-only AST. That AST is codegen'd into the
+/// final `.d.ts` text — interfaces, type aliases, and `export declare`
+/// signatures only, with all runtime bodies dropped.
+///
+/// ## Return-type inference
+/// oxc's `IsolatedDeclarations` follows TypeScript's strict
+/// `--isolatedDeclarations` mode: it only emits a return type for functions
+/// that already carry an explicit annotation (or whose body is a single
+/// `return <literal>` it can infer from). Real-world async functions such
+/// as `async function build() { ... }` have neither, so oxc leaves them
+/// without a return type and emits a `TS9007` diagnostic — producing an
+/// invalid `declare function build();` line.
+///
+/// The upstream `ts6` compiler infers return types for `.d.ts` emit, so to
+/// match its output we run a pre-pass over the parsed program: any
+/// top-level (or exported) function declaration whose `return_type` is
+/// `None` gets a synthetic annotation — `Promise<void>` for `async`
+/// functions (the type TS infers for `async fn()` with no/void return) and
+/// `void` for plain functions. `IsolatedDeclarations` then sees explicit
+/// annotations and emits clean `declare function f(): Promise<void>;`
+/// lines without diagnostics.
+fn emit_dts(source_code: &str, source_type: SourceType) -> String {
+    use oxc::codegen::Codegen;
+    use oxc::isolated_declarations::{IsolatedDeclarations, IsolatedDeclarationsOptions};
 
-/// `true` for statements that exist only in the type system and should be
-/// dropped from the JS emit (interfaces, type aliases, type-only imports).
-fn is_type_only_statement(stmt: &Statement<'_>) -> bool {
-    use oxc::ast::ast::ImportOrExportKind;
-    match stmt {
-        Statement::TSTypeAliasDeclaration(_) => true,
-        Statement::TSInterfaceDeclaration(_) => true,
-        Statement::ImportDeclaration(imp) => imp.import_kind == ImportOrExportKind::Type,
-        Statement::TSImportEqualsDeclaration(imp) => imp.import_kind == ImportOrExportKind::Type,
-        Statement::ExportNamedDeclaration(exp) => exp.export_kind == ImportOrExportKind::Type,
-        Statement::ExportAllDeclaration(exp) => exp.export_kind == ImportOrExportKind::Type,
-        _ => false,
+    let allocator = Allocator::default();
+    let mut parser_return = Parser::new(&allocator, source_code, source_type).parse();
+    if !parser_return.diagnostics.is_empty() {
+        let msgs: Vec<String> = parser_return
+            .diagnostics
+            .iter()
+            .map(|e| format!("{e}"))
+            .collect();
+        eprintln!(
+            "[warn] parse errors during .d.ts emit:\n{}",
+            msgs.join("\n")
+        );
     }
-}
 
-/// `true` for statements that should appear in the `.d.ts` file.
-fn is_declaration_statement(stmt: &Statement<'_>) -> bool {
-    use oxc::ast::ast::Statement as S;
-    matches!(
-        stmt,
-        S::TSTypeAliasDeclaration(_)
-            | S::TSInterfaceDeclaration(_)
-            | S::ImportDeclaration(_)
-            | S::TSImportEqualsDeclaration(_)
-            | S::ExportNamedDeclaration(_)
-            | S::ExportAllDeclaration(_)
-            | S::ExportDefaultDeclaration(_)
+    // Pre-pass: fill in missing return types so IsolatedDeclarations doesn't
+    // emit `declare function f();` (no return type) for async/void fns.
+    annotate_missing_return_types(&allocator, &mut parser_return.program);
+
+    let ret = IsolatedDeclarations::new(
+        &allocator,
+        IsolatedDeclarationsOptions {
+            strip_internal: false,
+        },
     )
+    .build(&parser_return.program);
+    if ret.diagnostics.has_errors() {
+        let msgs: Vec<String> = ret.diagnostics.iter().map(|e| format!("{e}")).collect();
+        eprintln!("[warn] isolated-declaration errors:\n{}", msgs.join("\n"));
+    }
+    Codegen::new().build(&ret.program).code
+}
+
+/// Walk `program.body` and attach a synthetic return-type annotation to any
+/// function declaration (direct, `export`-wrapped, or `export default`-wrapped)
+/// that lacks one. `async` functions get `Promise<void>`; plain functions get
+/// `void`. This mirrors what the TypeScript compiler infers for `.d.ts` emit.
+fn annotate_missing_return_types<'a>(
+    allocator: &'a Allocator,
+    program: &mut oxc::ast::ast::Program<'a>,
+) {
+    use oxc::allocator::ArenaVec;
+    use oxc::ast::ast::{
+        Declaration, ExportDefaultDeclarationKind, Function, Statement, TSType, TSTypeAnnotation,
+        TSTypeName, TSTypeParameterInstantiation,
+    };
+    use oxc::ast::builder::AstBuilder;
+    use oxc::span::SPAN;
+
+    let ast = AstBuilder::new(allocator);
+
+    for stmt in program.body.iter_mut() {
+        match stmt {
+            // `async function foo() {}`
+            Statement::FunctionDeclaration(func) => {
+                ensure_return_type(&ast, func);
+            }
+            // `export function foo() {}` / `export default function foo() {}`
+            Statement::ExportDeclaration(exp) => {
+                if let Declaration::FunctionDeclaration(func) = &mut exp.declaration {
+                    ensure_return_type(&ast, func);
+                }
+            }
+            Statement::ExportDefaultDeclaration(exp) => {
+                if let ExportDefaultDeclarationKind::FunctionDeclaration(func) =
+                    &mut exp.declaration
+                {
+                    ensure_return_type(&ast, func);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Build a `Promise<void>` (async) or `void` (sync) return-type annotation
+    /// and assign it to `func.return_type` when it is currently `None`.
+    fn ensure_return_type<'a>(ast: &AstBuilder<'a>, func: &mut Function<'a>) {
+        if func.return_type.is_some() {
+            return;
+        }
+        func.return_type = Some(make_return_type_annotation(ast, func.r#async));
+    }
+
+    /// Construct the `TSTypeAnnotation` box for the synthetic return type.
+    fn make_return_type_annotation<'a>(
+        ast: &AstBuilder<'a>,
+        is_async: bool,
+    ) -> oxc::allocator::Box<'a, TSTypeAnnotation<'a>> {
+        let type_annotation = if is_async {
+            // `Promise<void>`
+            // 1. `void` keyword type
+            let void_type = TSType::new_ts_void_keyword(SPAN, ast);
+            // 2. type-args vector `[void]`
+            let mut params: ArenaVec<'a, TSType<'a>> = ArenaVec::with_capacity_in(1, ast);
+            params.push(void_type);
+            // 3. `TSTypeParameterInstantiation` wrapping the args
+            let type_args = TSTypeParameterInstantiation::boxed(SPAN, params, ast);
+            // 4. `Promise` identifier reference as the type name
+            let promise_name = TSTypeName::new_identifier_reference(SPAN, "Promise", ast);
+            // 5. `Promise<void>` type reference
+            TSType::new_ts_type_reference(SPAN, promise_name, Some(type_args), ast)
+        } else {
+            // `void`
+            TSType::new_ts_void_keyword(SPAN, ast)
+        };
+        TSTypeAnnotation::boxed(SPAN, type_annotation, ast)
+    }
 }
 
 #[cfg(test)]
@@ -322,7 +480,9 @@ mod tests {
 
     #[test]
     fn emits_dts_for_interfaces() {
-        let src = "interface Bar { n: number; }\nexport const y = 1;";
+        // `isolatedDeclarations` only emits *exported* declarations, so the
+        // interface must be `export`-ed to appear in the `.d.ts`.
+        let src = "export interface Bar { n: number; }\nexport const y = 1;";
         let o = opts(Some(ModuleKind::Es2020));
         let out = susee_compiler(CompilerParams {
             source_code: src,
@@ -332,7 +492,72 @@ mod tests {
         })
         .unwrap();
         let dts = out.dts.expect("expected dts");
-        assert!(dts.contains("interface Bar"));
+        assert!(dts.contains("interface Bar"), "dts was: {dts}");
+        // The interface must not leak into the JS output.
+        assert!(
+            !out.code.contains("interface Bar"),
+            "code was: {}",
+            out.code
+        );
+    }
+
+    #[test]
+    fn dts_async_function_gets_promise_void_return_type() {
+        // oxc's isolated-declarations can't infer the return type of an async
+        // function with a complex body, so the pre-pass must synthesize
+        // `Promise<void>` — matching what `ts6` emits for `.d.ts`.
+        let src = "export async function build(opts?: { x: number }) {\n  console.log(opts);\n}\nasync function internal() {}";
+        let o = opts(Some(ModuleKind::Es2020));
+        let out = susee_compiler(CompilerParams {
+            source_code: src,
+            file_name: "entry.ts",
+            compiler_options: &o,
+            is_jsx: false,
+        })
+        .unwrap();
+        let dts = out.dts.expect("expected dts");
+        assert!(
+            dts.contains("declare function build(opts?:") && dts.contains("Promise<void>"),
+            "dts was: {dts}"
+        );
+        // Non-exported async functions don't appear in `.d.ts` at all.
+        assert!(!dts.contains("internal"), "dts was: {dts}");
+    }
+
+    #[test]
+    fn dts_plain_function_without_return_type_gets_void() {
+        let src = "export function log(msg: string) { console.log(msg); }";
+        let o = opts(Some(ModuleKind::Es2020));
+        let out = susee_compiler(CompilerParams {
+            source_code: src,
+            file_name: "entry.ts",
+            compiler_options: &o,
+            is_jsx: false,
+        })
+        .unwrap();
+        let dts = out.dts.expect("expected dts");
+        assert!(
+            dts.contains("declare function log(msg: string): void"),
+            "dts was: {dts}"
+        );
+    }
+
+    #[test]
+    fn dts_function_with_explicit_return_type_is_preserved() {
+        let src = "export function add(a: number, b: number): number { return a + b; }";
+        let o = opts(Some(ModuleKind::Es2020));
+        let out = susee_compiler(CompilerParams {
+            source_code: src,
+            file_name: "entry.ts",
+            compiler_options: &o,
+            is_jsx: false,
+        })
+        .unwrap();
+        let dts = out.dts.expect("expected dts");
+        assert!(
+            dts.contains("declare function add(a: number, b: number): number"),
+            "dts was: {dts}"
+        );
     }
 
     #[test]

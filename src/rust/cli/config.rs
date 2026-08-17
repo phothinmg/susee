@@ -165,6 +165,23 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
     })
 }
 
+/// Read and parse a `susee.config.json` file from `path`.
+///
+/// Returns the raw [`SuSeeConfig`] (not yet normalized into
+/// [`BuildOptions`]). Callers run [`generate_build_options`] to validate
+/// and normalize.
+///
+/// Exposed so the programmatic API ([`crate::api::build_from_config_file`])
+/// can read a config from an explicit path without re-implementing the
+/// JSON parsing.
+pub fn read_config_file(path: &std::path::Path) -> Result<SuSeeConfig, String> {
+    let text = std::fs::read_to_string(path)
+        .map_err(|e| format!("failed to read {}: {e}", path.display()))?;
+    let config: SuSeeConfig = serde_json::from_str(&text)
+        .map_err(|e| format!("failed to parse {}: {e}", path.display()))?;
+    Ok(config)
+}
+
 /// Load and normalize the susee config from disk, mirroring
 /// `finalSuseeConfig`.
 ///
@@ -175,10 +192,7 @@ pub fn final_susee_config() -> Result<Option<BuildOptions>, String> {
     let Some(path) = get_susee_config_path() else {
         return Ok(None);
     };
-    let text = std::fs::read_to_string(&path)
-        .map_err(|e| format!("failed to read {}: {e}", path.display()))?;
-    let config: SuSeeConfig = serde_json::from_str(&text)
-        .map_err(|e| format!("failed to parse {}: {e}", path.display()))?;
+    let config = read_config_file(&path)?;
     Ok(Some(generate_build_options(&config)?))
 }
 
@@ -221,17 +235,22 @@ mod tests {
     #[test]
     fn format_defaults_to_esm() {
         // Use existing workspace file to pass the file-exists check.
+        // Guard the cwd mutex because `check_entries` resolves the entry
+        // relative to `current_dir()`, which other tests may change.
+        let _guard = CWD_TEST_MUTEX.lock().unwrap();
         let cfg = SuSeeConfig {
             entry_points: vec![cfg_entry("src/rust/lib.rs", ".")],
             out_dir: None,
             allow_update_package_json: None,
         };
         let opts = generate_build_options(&cfg).unwrap();
+        drop(_guard);
         assert_eq!(opts.build_entry_points[0].format, vec![OutputFormat::Esm]);
     }
 
     #[test]
     fn format_de_duplicates() {
+        let _guard = CWD_TEST_MUTEX.lock().unwrap();
         let mut ent = cfg_entry("src/rust/lib.rs", ".");
         ent.format = Some(vec![
             OutputFormat::Esm,
@@ -244,6 +263,7 @@ mod tests {
             allow_update_package_json: None,
         };
         let opts = generate_build_options(&cfg).unwrap();
+        drop(_guard);
         assert_eq!(
             opts.build_entry_points[0].format,
             vec![OutputFormat::Esm, OutputFormat::Commonjs]
@@ -252,6 +272,7 @@ mod tests {
 
     #[test]
     fn subpath_output_dir_joins_correctly() {
+        let _guard = CWD_TEST_MUTEX.lock().unwrap();
         let mut ent = cfg_entry("src/rust/lib.rs", "./sub");
         ent.format = Some(vec![OutputFormat::Esm]);
         let cfg = SuSeeConfig {
@@ -260,6 +281,7 @@ mod tests {
             allow_update_package_json: None,
         };
         let opts = generate_build_options(&cfg).unwrap();
+        drop(_guard);
         assert_eq!(
             opts.build_entry_points[0].output_directory_path,
             "build/sub"
