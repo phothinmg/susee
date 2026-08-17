@@ -187,21 +187,16 @@ pub fn generate_dependencies<P: AsRef<Path>>(
     let nodes = graph.node().to_vec();
     let warns = graph.warn().to_vec();
 
-    let entry_base = Path::new(entry)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or(entry)
-        .to_string();
+    // Compare full relative paths, not just file names, so that only the
+    // actual entry file is marked as `is_entry`. Using just the file name
+    // (e.g. "index.ts") would match every `index.ts` in the project.
+    let entry_normalized = entry.replace('\\', "/");
+    let is_entry_file = |file: &str| file.replace('\\', "/") == entry_normalized;
 
     let mut dep_files: Vec<DepsFile> = Vec::with_capacity(sorted.len());
 
     for file in sorted {
         let path = Path::new(&file);
-        let file_base = path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or(&file)
-            .to_string();
         let file_ext_str = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         let (content, bytes) = match read_file(&root, &file) {
@@ -215,7 +210,7 @@ pub fn generate_dependencies<P: AsRef<Path>>(
 
         let module_type = detect_module_type(&content, path);
         let is_jsx = is_jsx_content(&content, path);
-        let is_entry = entry_base == file_base;
+        let is_entry = is_entry_file(&file);
         let file_ext = ValidExts::from_path_ext(file_ext_str).unwrap_or(ValidExts::Ts);
 
         dep_files.push(DepsFile {

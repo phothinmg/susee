@@ -1,9 +1,6 @@
-use susee::dependencies::generate_dependencies;
+use susee::cli::susee_cli_build;
 
 fn main() {
-    let tree = generate_dependencies("node_src/index.ts", ".")
-        .expect("Fail to generate dependencies tree");
-    let tree_json =
-        serde_json::to_string_pretty(&tree).expect("failed to serialize dependencies tree");
-    std::fs::write("topo_2.json", tree_json).expect("failed to write topo_2.json");
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    susee_cli_build(&args);
 }

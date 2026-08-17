@@ -45,5 +45,11 @@
 		"skipLibCheck": true,
 		"allowJs": true
 	},
-	"include": ["src/nodejs/**/*", "__tests__/**/*", "build.ts", "aa.ts"]
+	"include": [
+		"src/nodejs/**/*",
+		"__tests__/**/*",
+		"build.ts",
+		"aa.ts",
+		"__local__/**/*"
+	]
 }
