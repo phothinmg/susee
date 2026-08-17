@@ -167,17 +167,6 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     let source_type = SourceType::from_path(Path::new(file_name))
         .unwrap_or_default()
         .with_module(true);
-    let allocator = Allocator::default();
-    let parser_return = Parser::new(&allocator, source_code, source_type).parse();
-    if !parser_return.diagnostics.is_empty() {
-        let msgs: Vec<String> = parser_return
-            .diagnostics
-            .iter()
-            .map(|e| format!("{e}"))
-            .collect();
-        return Err(format!("parse errors:\n{}", msgs.join("\n")));
-    }
-    let mut program = parser_return.program;
 
     // Base name of the entry (no extension) — used as the emitted file stem.
     let stem = Path::new(file_name)
@@ -188,17 +177,15 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
 
     // --- Emit JS ---
     //
-    // We run oxc's transformer to strip TypeScript-only constructs (type
-    // annotations, interfaces, type aliases, type-only imports, namespaces)
-    // and lower the syntax for the requested module kind. oxc 0.144 does not
-    // yet ship a full `transform-modules-commonjs` plugin, so for CommonJS we
-    // keep the ESM `import`/`export` syntax in the JS body (only `"use strict"`
-    // and `export =` → `module.exports` lowering are applied) — the file
-    // extension (`.cjs`) still conveys the intended format to consumers, and
-    // a future oxc release can fill in the missing CJS lowering.
+    // JS emit uses **swc** (`swc_core`): its `strip` pass removes all
+    // TypeScript-only constructs (type annotations, interfaces, type aliases,
+    // type-only imports, namespaces), and its `common_js` pass fully lowers
+    // ESM `import`/`export` to `require`/`exports` for CommonJS — matching
+    // what the upstream `ts6` compiler emits. For ESM the module syntax is
+    // preserved verbatim (only types are stripped).
     let js_ext = ".js";
     let _js_path = emit_path(&opts, &stem, js_ext);
-    let code = emit_js(&allocator, &mut program, &opts, Path::new(file_name));
+    let code = emit_js(source_code, file_name, &opts);
 
     // --- Emit .d.ts ---
     //
@@ -244,76 +231,106 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     })
 }
 
-/// Emit the JavaScript output for a parsed program.
+/// Emit the JavaScript output for `source_code`.
 ///
-/// This runs oxc's [`Transformer`] with the TypeScript preset enabled, which
-/// strips all type-only constructs (annotations, interfaces, type aliases,
-/// type-only imports, parameter types, `namespace` blocks) and lowers
-/// TypeScript-specific syntax to plain JavaScript. The transformed program
-/// is then pretty-printed with oxc's [`Codegen`].
+/// This uses **swc** (`swc_core`) for JS emit because oxc 0.144 lacks a full
+/// `transform-modules-commonjs` pass. The pipeline is:
 ///
-/// Module-kind selection (`Commonjs` vs `Esm`) is passed to the transformer
-/// via [`oxc::transformer::EnvOptions::module`]; oxc 0.144 only applies
-/// `"use strict"` / `export =` lowering for CommonJS — full ESM→CJS module
-/// lowering is not yet upstream, so the ESM `import`/`export` statements are
-/// preserved verbatim in the emitted body for both formats.
-fn emit_js<'a>(
-    allocator: &'a Allocator,
-    program: &mut oxc::ast::ast::Program<'a>,
-    opts: &CompilerOptions,
-    source_path: &Path,
-) -> String {
-    use oxc::codegen::{Codegen, CodegenOptions, IndentChar};
-    use oxc::semantic::SemanticBuilder;
-    use oxc::transformer::{EnvOptions, Module, TransformOptions, Transformer};
+/// 1. **Parse** the bundled TypeScript source with swc's TS-aware parser.
+/// 2. **Resolve** identifiers (swc requires a resolver pass before transforms).
+/// 3. **Strip** TypeScript-only constructs via `swc_ecma_transforms_typescript::strip`.
+/// 4. **Lower modules** — for `Commonjs`, run `swc_ecma_transforms_module::common_js`
+///    to convert `import`/`export` into `require`/`exports` (with `"use strict"`,
+///    `__esModule` marker, and getter-based named exports). For `Esm`, this
+///    step is skipped so ESM `import`/`export` syntax is preserved.
+/// 5. **Fix** the AST (swc's fixer repairs syntax damaged by the transforms).
+/// 6. **Codegen** the result back to a JS string.
+///
+/// The `.d.ts` emit still uses oxc (see [`emit_dts`]).
+fn emit_js(source_code: &str, file_name: &str, opts: &CompilerOptions) -> String {
+    use swc_core::common::{FileName, GLOBALS, Globals, Mark, SourceMap, sync::Lrc};
+    use swc_core::ecma::ast::EsVersion;
+    use swc_core::ecma::codegen::to_code_default;
+    use swc_core::ecma::parser::{Syntax, TsSyntax, parse_file_as_program};
+    use swc_core::ecma::transforms::base::{fixer, resolver};
+    use swc_core::ecma::transforms::typescript::strip;
 
-    // Build the semantic graph (scoping/symbols) the transformer needs.
-    let semantic = SemanticBuilder::new_compiler().build(program);
-    if !semantic.diagnostics.is_empty() {
-        let msgs: Vec<String> = semantic
-            .diagnostics
-            .iter()
-            .map(|e| format!("{e}"))
-            .collect();
-        eprintln!(
-            "[warn] semantic errors during JS emit:\n{}",
-            msgs.join("\n")
-        );
-    }
-    let scoping = semantic.semantic.into_scoping();
+    let cm: Lrc<SourceMap> = Default::default();
+    let fm = cm.new_source_file(
+        FileName::Custom(file_name.to_string()).into(),
+        source_code.to_string(),
+    );
 
-    // Configure the transform: TypeScript preset strips types; `env.module`
-    // selects the output module kind.
-    let module = match opts.module {
-        Some(ModuleKind::Commonjs) => Module::CommonJS,
-        _ => Module::Esm,
+    // 1. Parse as TypeScript (module mode — allows import/export).
+    let mut errors = Vec::new();
+    let program = parse_file_as_program(
+        &fm,
+        Syntax::Typescript(TsSyntax::default()),
+        EsVersion::latest(),
+        None,
+        &mut errors,
+    );
+    let program = match program {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("[warn] swc parse error during JS emit: {e:?}");
+            // Surface any recovered errors too.
+            for err in &errors {
+                eprintln!("[warn] swc recovered parse error: {err:?}");
+            }
+            return String::new();
+        }
     };
-    let env = EnvOptions {
-        module,
-        ..EnvOptions::default()
-    };
-    let transform_opts = TransformOptions {
-        env,
-        ..TransformOptions::default()
-    };
-    let ret = Transformer::new(allocator, source_path, &transform_opts)
-        .build_with_scoping(scoping, program);
-    if ret.diagnostics.has_errors() {
-        let msgs: Vec<String> = ret.diagnostics.iter().map(|e| format!("{e}")).collect();
-        eprintln!(
-            "[warn] transform errors during JS emit:\n{}",
-            msgs.join("\n")
-        );
+    if !errors.is_empty() {
+        let msgs: Vec<String> = errors.iter().map(|e| format!("{e:?}")).collect();
+        eprintln!("[warn] swc recovered parse errors:\n{}", msgs.join("\n"));
     }
 
-    Codegen::new()
-        .with_options(CodegenOptions {
-            indent_char: IndentChar::Space,
-            indent_width: 4,
-            ..CodegenOptions::default()
-        })
-        .build(program)
-        .code
+    // 2-6. Resolve → strip → (lower) → fix → codegen, all under a GLOBALS scope.
+    let is_commonjs = matches!(opts.module, Some(ModuleKind::Commonjs));
+    GLOBALS.set(&Globals::default(), || {
+        let unresolved = Mark::new();
+        let top_level = Mark::new();
+
+        let program = program
+            // 2. Resolver — assigns syntax contexts; required before transforms.
+            .apply(resolver(unresolved, top_level, true))
+            // 3. Strip TypeScript types.
+            .apply(strip(unresolved, top_level));
+
+        // 4. Lower ESM → CommonJS when requested.
+        //
+        // `common_js` uses swc runtime helpers, so it must run inside a
+        // `HELPERS.set(..)` closure — otherwise it panics with
+        // "perform this operation in the closure passed to `set`".
+        let program = if is_commonjs {
+            use swc_core::ecma::ast::Program;
+            use swc_core::ecma::transforms::base::helpers::{HELPERS, Helpers};
+            use swc_core::ecma::transforms::module::{common_js, util::Config};
+            // Clone the program into a Cell-like carrier because HELPERS.set
+            // takes a `FnOnce` returning `R` — we move the program in and pull
+            // it back out.
+            let mut out: Option<Program> = None;
+            HELPERS.set(&Helpers::new(true), || {
+                let p = program.apply(common_js(
+                    Default::default(),
+                    unresolved,
+                    Config::default(),
+                    Default::default(),
+                ));
+                out = Some(p);
+            });
+            out.expect("HELPERS.set closure did not run")
+        } else {
+            program
+        };
+
+        // 5. Fixer — repairs AST after transforms (e.g. dangling commas).
+        let program = program.apply(fixer::fixer(None));
+
+        // 6. Codegen.
+        to_code_default(cm.clone(), None, &program)
+    })
 }
 
 /// Emit the `.d.ts` declaration text for `source_code`.
