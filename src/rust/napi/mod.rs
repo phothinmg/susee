@@ -46,10 +46,13 @@
 //! - [`predicates`] — node-type predicates.
 //! - [`visitor`] — AST visitor that calls back into JS.
 
+pub mod build_driver;
+pub mod deps_files;
 pub mod parse;
 pub mod predicates;
 pub mod source_file;
 pub mod visitor;
 
+pub use build_driver::build_with_plugins;
 pub use parse::parse_source_file;
 pub use source_file::SourceFile;

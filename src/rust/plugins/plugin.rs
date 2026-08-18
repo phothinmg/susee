@@ -20,7 +20,11 @@ use super::types::PluginType;
 /// with a descriptive message. The dispatcher propagates the first error
 /// it sees, mirroring the TS behavior where a throwing `func` aborts the
 /// build.
-pub trait Plugin {
+///
+/// `Plugin` is `Send + Sync` so that plugin lists can cross the
+/// `spawn_blocking` boundary in the napi build driver (JS plugin
+/// callbacks are wrapped in `ThreadsafeFunction`, which is `Send + Sync`).
+pub trait Plugin: Send + Sync {
     /// Human-readable name used in profiling output. Mirrors
     /// `_plugin.name ?? "anonymous"` in the TS dispatcher. Default is
     /// `"anonymous"`.

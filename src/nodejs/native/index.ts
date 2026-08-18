@@ -121,3 +121,123 @@ export const nodeType = native.nodeType;
  *   the root). Return `true` to stop.
  */
 export const visit = native.visit;
+
+// ---------------------------------------------------------------------------
+// Build driver — run a build with JS plugins (sync or async).
+// ---------------------------------------------------------------------------
+
+/**
+ * A susee plugin entry: an object `{ type, async?, func, name? }` or a
+ * factory function `() => PluginObject`. Re-homed from `@suseejs/type`
+ * (no TS APIs). See `plugins.d.ts` for the full shapes.
+ */
+type SuseePluginEntry =
+	| {
+			type: "dependency" | "pre-process" | "post-process";
+			async?: boolean;
+			// deno-lint-ignore no-explicit-any
+			func: (...args: any[]) => unknown;
+			name?: string;
+	  }
+	| (() => {
+			type: "dependency" | "pre-process" | "post-process";
+			// deno-lint-ignore no-explicit-any
+			func: (...args: any[]) => unknown;
+			name?: string;
+	  });
+
+/**
+ * Normalize the user's `plugins[]` (object + factory forms) into the three
+ * parallel arrays the native `buildWithPlugins` expects:
+ * `[funcs[], names[]]` per stage.
+ *
+ * The native driver accepts `ThreadsafeFunction` params (Send+Sync) rather
+ * than napi `Object`s (which would make the async future non-Send). This
+ * wrapper flattens the user-facing `{ type, func, name }` shape into those
+ * arrays.
+ */
+function partitionPlugins(plugins: SuseePluginEntry[]): {
+	depsFuncs: Array<(depsFiles: unknown, ctx: unknown) => void>;
+	depsNames: (string | null)[];
+	preFuncs: Array<(code: string, entry: string) => string>;
+	preNames: (string | null)[];
+	postFuncs: Array<(code: string, entry: string) => string>;
+	postNames: (string | null)[];
+} {
+	const depsFuncs: Array<(depsFiles: unknown, ctx: unknown) => void> = [];
+	const depsNames: (string | null)[] = [];
+	const preFuncs: Array<(code: string, entry: string) => string> = [];
+	const preNames: (string | null)[] = [];
+	const postFuncs: Array<(code: string, entry: string) => string> = [];
+	const postNames: (string | null)[] = [];
+
+	for (const entry of plugins) {
+		const p = typeof entry === "function" ? entry() : entry;
+		switch (p.type) {
+			case "dependency": {
+				depsFuncs.push(p.func as (depsFiles: unknown, ctx: unknown) => void);
+				depsNames.push(p.name ?? null);
+				break;
+			}
+			case "pre-process": {
+				preFuncs.push(p.func as (code: string, entry: string) => string);
+				preNames.push(p.name ?? null);
+				break;
+			}
+			case "post-process": {
+				postFuncs.push(p.func as (code: string, entry: string) => string);
+				postNames.push(p.name ?? null);
+				break;
+			}
+		}
+	}
+	return { depsFuncs, depsNames, preFuncs, preNames, postFuncs, postNames };
+}
+
+/**
+ * Run a susee build from a config file with JS plugins.
+ *
+ * This is the JS-facing replacement for the TS `build()` API. It runs a
+ * full build (bundler + compiler) with JS-authored plugins hooked into
+ * the `dependency`, `pre-process`, and `post-process` stages. Both sync
+ * and async JS plugins are supported — async plugins (returning a
+ * Promise) are awaited automatically by the native runtime.
+ *
+ * @param configPath Path to a `susee.config.json`, or `null` for default
+ *   discovery (`susee.config.json` in the cwd).
+ * @param plugins Array of plugin objects `{ type, async?, func, name? }`
+ *   or factory functions `() => PluginObject`. May be empty.
+ * @returns A `Promise<void>` that resolves on success / rejects on error.
+ *
+ * @example
+ * ```js
+ * import { buildWithPlugins } from "susee/native";
+ * await buildWithPlugins(null, [
+ *   {
+ *     type: "post-process",
+ *     async: true,
+ *     name: "terser",
+ *     func: async (code, entry) => (await import("terser")).minify(code).code,
+ *   },
+ * ]);
+ * ```
+ */
+export async function buildWithPlugins(
+	configPath: string | null,
+	plugins: SuseePluginEntry[],
+): Promise<void> {
+	const { depsFuncs, depsNames, preFuncs, preNames, postFuncs, postNames } =
+		partitionPlugins(plugins);
+	// The native `buildWithPlugins` accepts the callbacks as
+	// ThreadsafeFunction params (Send+Sync) so the async future stays Send.
+	// napi coerces JS functions into TSFNs at the boundary.
+	return native.buildWithPlugins(
+		configPath,
+		depsFuncs,
+		depsNames,
+		preFuncs,
+		preNames,
+		postFuncs,
+		postNames,
+	);
+}

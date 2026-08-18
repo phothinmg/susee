@@ -63,8 +63,14 @@ pub mod dispatcher;
 pub mod plugin;
 pub mod types;
 
+#[cfg(feature = "napi")]
+pub mod js_plugin;
+
 pub use builtins::{MinifyPlugin, TreePlugin};
 pub use context::{DependencyPayload, PluginContext, PostProcessPayload, PreProcessPayload};
 pub use dispatcher::{dispatch_dependencies, dispatch_post_process, dispatch_pre_process};
 pub use plugin::{Plugin, PluginError};
 pub use types::PluginType;
+
+#[cfg(feature = "napi")]
+pub use js_plugin::JsPlugin;
