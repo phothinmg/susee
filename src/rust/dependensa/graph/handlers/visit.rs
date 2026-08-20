@@ -133,3 +133,93 @@ fn string_from_expression(expr: &Expression<'_>) -> Option<String> {
 fn string_literal_value(s: &StringLiteral<'_>) -> String {
     s.value.as_str().to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn collects_esm_import() {
+        let src = r#"import foo from "./foo";"#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs, vec!["./foo".to_string()]);
+    }
+
+    #[test]
+    fn collects_named_import() {
+        let src = r#"import { b } from "./b";"#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs, vec!["./b".to_string()]);
+    }
+
+    #[test]
+    fn collects_side_effect_import() {
+        let src = r#"import "./polyfill";"#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs, vec!["./polyfill".to_string()]);
+    }
+
+    #[test]
+    fn collects_dynamic_import() {
+        let src = r#"const m = await import("./dyn");"#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs, vec!["./dyn".to_string()]);
+    }
+
+    #[test]
+    fn collects_export_from() {
+        let src = r#"export { x } from "./mod";"#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs, vec!["./mod".to_string()]);
+    }
+
+    #[test]
+    fn collects_export_star() {
+        let src = r#"export * from "./mod";"#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs, vec!["./mod".to_string()]);
+    }
+
+    #[test]
+    fn collects_require_call() {
+        let src = r#"const fs = require("fs");"#;
+        let specs = collect_module_specifiers(src, Path::new("a.js"));
+        assert_eq!(specs, vec!["fs".to_string()]);
+    }
+
+    #[test]
+    fn collects_ts_import_equals_require() {
+        let src = r#"import fs = require("fs");"#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs, vec!["fs".to_string()]);
+    }
+
+    #[test]
+    fn collects_multiple_specifiers() {
+        let src = r#"
+            import a from "./a";
+            import b from "./b";
+            export { c } from "./c";
+            const d = require("./d");
+        "#;
+        let specs = collect_module_specifiers(src, Path::new("a.ts"));
+        assert_eq!(specs.len(), 4);
+        assert!(specs.contains(&"./a".to_string()));
+        assert!(specs.contains(&"./d".to_string()));
+    }
+
+    #[test]
+    fn ignores_non_string_dynamic_import() {
+        // numeric dynamic import argument should produce no specifier
+        let src = r#"const m = await import(42);"#;
+        // This may fail to parse or produce no specifiers; just ensure no panic.
+        let _ = collect_module_specifiers(src, Path::new("a.ts"));
+    }
+
+    #[test]
+    fn empty_source_no_specifiers() {
+        let specs = collect_module_specifiers("", Path::new("a.ts"));
+        assert!(specs.is_empty());
+    }
+}

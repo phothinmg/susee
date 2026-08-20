@@ -15,7 +15,7 @@ use oxc::ast::ast::{ExportDefaultDeclarationKind, ImportDeclarationSpecifier, Pr
 use super::helpers::{get_file_key, with_parsed_program};
 use super::types::{NamesSet, NamesSets};
 use super::unique_name::UniqueName;
-use crate::dependencies::types::{DepsFile, ValidExts};
+use crate::dependensa::{DepsFile, ValidExts};
 
 const EXPORT_DEFAULT_PREFIX_KEY: &str = "ExportDefault";
 const EXPORT_DEFAULT_PREFIX_VALUE: &str = "susee__exportDefault__";

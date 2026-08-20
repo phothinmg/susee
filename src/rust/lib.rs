@@ -11,8 +11,7 @@ pub mod api;
 pub mod bundler;
 pub mod cli;
 pub mod compiler;
-pub mod dependencies;
-pub mod graph;
+pub mod dependensa;
 pub mod plugins;
 
 #[cfg(feature = "napi")]

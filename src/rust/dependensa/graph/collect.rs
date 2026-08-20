@@ -1,7 +1,7 @@
 //! Recursively traverse files and collect local, node builtin, and npm dependencies.
 //!
 //! Ported from `deps/lib/collect.ts`. Instead of the TypeScript compiler API,
-//! this uses the oxc parser (via [`super::handlers::collect_module_specifiers`]).
+//! this uses the oxc parser (via [`super::parse::collect_module_specifiers`]).
 
 use std::collections::HashSet;
 use std::fs;
@@ -13,11 +13,19 @@ use super::resolve_ext::resolve_extension;
 use super::utils::{CollectedObject, is_node_builtin_module};
 
 /// Aggregated result of collecting dependencies from an entry file.
+///
+/// Returned by [`collect_dependencies`]. The vectors are parallel: each inner
+/// vector corresponds to the file at the same position in
+/// [`CollectState::dependencies`].
 #[derive(Debug, Clone)]
 pub struct CollectedDepsInfo {
+    /// One [`CollectedObject`](super::utils::CollectedObject) per visited file.
     pub dependencies: Vec<CollectedObject>,
+    /// Per-file npm module specifiers (parallel to `dependencies`).
     pub collected_npm_modules: Vec<Vec<String>>,
+    /// Per-file Node.js built-in module specifiers.
     pub collected_node_modules: Vec<Vec<String>>,
+    /// Per-file unresolved/unrecognized specifiers (warnings).
     pub collected_warning: Vec<Vec<String>>,
 }
 
@@ -229,4 +237,122 @@ fn normalize_path(p: &Path) -> PathBuf {
         buf.push(comp.as_os_str());
     }
     buf
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::dependensa::graph;
+    use crate::dependensa::graph::PathBuf;
+    use crate::dependensa::graph::collect::normalize_path;
+    use crate::dependensa::graph::collect_dependencies;
+    use crate::dependensa::graph::get_package_info;
+    use std::fs;
+    use std::path::Path;
+    use tempfile::tempdir;
+
+    #[test]
+    fn normalize_path_collapses_dots() {
+        let p = normalize_path(Path::new("/root/a/./b/../c.ts"));
+        assert_eq!(p, PathBuf::from("/root/a/c.ts"));
+    }
+
+    #[test]
+    fn normalize_path_relative_parent() {
+        let p = normalize_path(Path::new("a/b/../c.ts"));
+        assert_eq!(p, PathBuf::from("a/c.ts"));
+    }
+
+    #[test]
+    fn normalize_path_root_parent_kept() {
+        // `..` at root is dropped
+        let p = normalize_path(Path::new("/.."));
+        assert_eq!(p, PathBuf::from("/"));
+    }
+
+    #[test]
+    fn collect_visits_entry_and_deps() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+
+        fs::write(
+            root.join("a.ts"),
+            "import { b } from './b';\nimport * as fs from 'node:fs';\n",
+        )
+        .unwrap();
+        fs::write(root.join("b.ts"), "export const b = 1;\n").unwrap();
+        fs::write(
+            root.join("package.json"),
+            r#"{"type":"module","dependencies":{}}"#,
+        )
+        .unwrap();
+
+        let pkg = graph::get_package_info(root);
+        let info = collect_dependencies("a.ts", &pkg, root);
+
+        // two files visited: a.ts and b.ts
+        assert_eq!(info.dependencies.len(), 2);
+        // a.ts imports b (local) and node:fs (builtin)
+        let node_mods: Vec<String> = info
+            .collected_node_modules
+            .iter()
+            .flatten()
+            .cloned()
+            .collect();
+        assert!(node_mods.iter().any(|m| m == "node:fs"));
+    }
+
+    #[test]
+    fn collect_missing_entry_records_warning() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(root.join("package.json"), r#"{}"#).unwrap();
+
+        let pkg = get_package_info(root);
+        let info = collect_dependencies("nonexistent.ts", &pkg, root);
+
+        assert_eq!(info.dependencies.len(), 1);
+        assert!(info.collected_warning.iter().any(|w| !w.is_empty()));
+        assert!(info.dependencies[0].import_files.is_empty());
+    }
+
+    #[test]
+    fn collect_npm_modules_recorded() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(root.join("a.ts"), "import React from 'react';\n").unwrap();
+        fs::write(
+            root.join("package.json"),
+            r#"{"dependencies":{"react":"^18.0.0"}}"#,
+        )
+        .unwrap();
+
+        let pkg = get_package_info(root);
+        let info = collect_dependencies("a.ts", &pkg, root);
+
+        let npm: Vec<String> = info
+            .collected_npm_modules
+            .iter()
+            .flatten()
+            .cloned()
+            .collect();
+        assert!(npm.iter().any(|m| m == "react"));
+    }
+
+    #[test]
+    fn collect_warning_for_unknown_external() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(
+            root.join("a.ts"),
+            "import foo from 'some-unknown-package';\n",
+        )
+        .unwrap();
+        fs::write(root.join("package.json"), r#"{}"#).unwrap();
+
+        let pkg = get_package_info(root);
+        let info = collect_dependencies("a.ts", &pkg, root);
+
+        let warns: Vec<String> = info.collected_warning.iter().flatten().cloned().collect();
+        assert!(warns.iter().any(|w| w == "some-unknown-package"));
+    }
 }

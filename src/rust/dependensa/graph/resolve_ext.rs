@@ -10,6 +10,7 @@ const ALLOWED_EXTENSIONS: &[&str] = &["js", "cjs", "mjs", "ts", "mts", "cts", "j
 
 /// Result of resolving a module path.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ResolvedPath {
     /// The resolved absolute file path.
     pub result: PathBuf,
@@ -157,4 +158,80 @@ fn find_index_file(dir: &Path) -> Option<String> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn resolves_file_with_extension() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("foo.ts");
+        fs::write(&file, "export const x = 1;").unwrap();
+
+        let resolved = resolve_extension(&file).unwrap();
+        assert_eq!(resolved.result, file);
+        assert_eq!(resolved.ext, "ts");
+        assert!(!resolved.is_dir_path);
+    }
+
+    #[test]
+    fn resolves_missing_extension_from_directory() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("foo.ts");
+        fs::write(&file, "export const x = 1;").unwrap();
+
+        // request without extension
+        let req = dir.path().join("foo");
+        let resolved = resolve_extension(&req).unwrap();
+        assert_eq!(resolved.result, file);
+        assert_eq!(resolved.ext, "ts");
+    }
+
+    #[test]
+    fn resolves_directory_with_index() {
+        let dir = tempdir().unwrap();
+        let mod_dir = dir.path().join("mod");
+        fs::create_dir(&mod_dir).unwrap();
+        let index = mod_dir.join("index.ts");
+        fs::write(&index, "export const x = 1;").unwrap();
+
+        let resolved = resolve_extension(&mod_dir).unwrap();
+        assert_eq!(resolved.result, index);
+        assert!(resolved.is_dir_path);
+        assert_eq!(resolved.ext, "ts");
+    }
+
+    #[test]
+    fn directory_without_index_errors() {
+        let dir = tempdir().unwrap();
+        let mod_dir = dir.path().join("mod");
+        fs::create_dir(&mod_dir).unwrap();
+
+        let err = resolve_extension(&mod_dir).unwrap_err();
+        assert!(err.contains("no index file"));
+    }
+
+    #[test]
+    fn nonexistent_file_errors() {
+        let dir = tempdir().unwrap();
+        let req = dir.path().join("nope");
+        assert!(resolve_extension(&req).is_err());
+    }
+
+    #[test]
+    fn replaces_unsupported_extension() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("foo.ts");
+        fs::write(&file, "export const x = 1;").unwrap();
+
+        // request with a different (unsupported-ish) extension present on disk as .ts
+        let req = dir.path().join("foo.js");
+        let resolved = resolve_extension(&req).unwrap();
+        assert_eq!(resolved.ext, "ts");
+        assert_eq!(resolved.result, file);
+    }
 }

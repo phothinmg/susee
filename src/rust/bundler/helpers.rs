@@ -15,7 +15,7 @@ use oxc::allocator::Allocator;
 use oxc::parser::Parser;
 use oxc::span::SourceType;
 
-use crate::dependencies::types::{DependenciesTree, ModuleType};
+use crate::dependensa::{DependenciesTree, ModuleType, ValidExts};
 
 /// Parse `content` as TypeScript/JavaScript and call `f` with the resulting `Program`.
 ///
@@ -57,10 +57,9 @@ pub fn codegen_program(program: &oxc::ast::ast::Program<'_>) -> String {
 ///
 /// Mirrors `isJSON` from `helpers.ts`.
 pub fn is_json(tree: &DependenciesTree) -> bool {
-    tree.dep_files.iter().any(|f| {
-        f.file_ext == crate::dependencies::types::ValidExts::Json
-            && f.module_type == ModuleType::Json
-    })
+    tree.dep_files
+        .iter()
+        .any(|f| f.file_ext == ValidExts::Json && f.module_type == ModuleType::Json)
 }
 
 /// Replace the `.json` extension with `.ts` in a file path.

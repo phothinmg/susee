@@ -15,8 +15,8 @@
 use std::path::Path;
 use std::time::Instant;
 
-use crate::dependencies::generate_dependencies;
-use crate::dependencies::types::{DepsFile, ModuleType};
+use crate::dependensa::generate_dependencies;
+use crate::dependensa::{DepsFile, ModuleType};
 use crate::plugins::{
     DependencyPayload, Plugin, PluginContext, PreProcessPayload, dispatch_dependencies,
     dispatch_pre_process,

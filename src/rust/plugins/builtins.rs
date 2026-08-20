@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn tree_plugin_passes_through_unchanged() {
         use super::super::dispatcher::dispatch_dependencies;
-        use crate::dependencies::types::{DepsFile, ModuleType, ValidExts};
+        use crate::dependensa::{DepsFile, ModuleType, ValidExts};
         let p: Box<dyn Plugin> = Box::new(TreePlugin::new());
         let ctx = PluginContext::for_bundler("e.ts");
         let payload = DependencyPayload {

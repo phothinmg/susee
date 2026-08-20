@@ -6,10 +6,18 @@ use indexmap::IndexMap;
 use std::path::Path;
 
 /// A collected dependency entry.
+///
+/// Produced by the dependency collector for every file visited during the
+/// traversal. Each entry records the absolute file path, a traversal index,
+/// and the list of local-file dependencies discovered inside it.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct CollectedObject {
+    /// Absolute path of the visited file.
     pub file: String,
+    /// Zero-based index in traversal (insertion) order.
     pub index: usize,
+    /// Local relative imports discovered in `file` (e.g. `./foo`).
     pub import_files: Vec<String>,
 }
 
@@ -130,4 +138,81 @@ pub fn merge_string_arr(input: &[Vec<String>]) -> Vec<String> {
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn detects_bare_builtins() {
+        assert!(is_node_builtin_module("fs"));
+        assert!(is_node_builtin_module("path"));
+        assert!(is_node_builtin_module("crypto"));
+    }
+
+    #[test]
+    fn detects_node_prefixed_builtins() {
+        assert!(is_node_builtin_module("node:fs"));
+        assert!(is_node_builtin_module("node:path"));
+        assert!(is_node_builtin_module("node:fs/promises"));
+    }
+
+    #[test]
+    fn rejects_non_builtins() {
+        assert!(!is_node_builtin_module("react"));
+        assert!(!is_node_builtin_module("./foo"));
+        assert!(!is_node_builtin_module("node:nonexistent"));
+        assert!(!is_node_builtin_module("node:nonexistent/sub"));
+    }
+
+    #[test]
+    fn create_graph_relative_keys() {
+        let deps = vec![
+            CollectedObject {
+                file: "/root/src/a.ts".to_string(),
+                index: 0,
+                import_files: vec!["./b".to_string()],
+            },
+            CollectedObject {
+                file: "/root/src/b.ts".to_string(),
+                index: 1,
+                import_files: vec![],
+            },
+        ];
+        let graph = create_graph(&deps, Path::new("/root"));
+        assert_eq!(graph.len(), 2);
+        assert_eq!(
+            graph.get("src/a.ts").map(|v| v.as_slice()),
+            Some(["./b".to_string()].as_slice())
+        );
+        assert_eq!(
+            graph.get("src/b.ts").map(|v| v.as_slice()),
+            Some([].as_slice())
+        );
+    }
+
+    #[test]
+    fn merge_deduplicates_preserving_order() {
+        let input = vec![
+            vec!["a".to_string(), "b".to_string()],
+            vec!["b".to_string(), "c".to_string()],
+            vec!["a".to_string(), "d".to_string()],
+        ];
+        let merged = merge_string_arr(&input);
+        assert_eq!(merged, vec!["a", "b", "c", "d"]);
+    }
+
+    #[test]
+    fn merge_empty_input() {
+        let merged = merge_string_arr(&[]);
+        assert!(merged.is_empty());
+    }
+
+    #[test]
+    fn merge_all_empty_inner() {
+        let merged = merge_string_arr(&[vec![], vec![]]);
+        assert!(merged.is_empty());
+    }
 }

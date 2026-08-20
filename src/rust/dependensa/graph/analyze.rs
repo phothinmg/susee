@@ -15,10 +15,17 @@ pub struct CircularDependency {
 }
 
 /// Result of analyzing a dependency graph.
+///
+/// Produced by [`analyze_dependencies`]. Contains the list of detected
+/// circular dependencies, per-file dependency chains, and entry-to-leaf chains.
 #[derive(Debug, Clone)]
 pub struct DependencyAnalysis {
+    /// Circular dependency cycles found while traversing the graph.
     pub circular_dependencies: Vec<CircularDependency>,
+    /// For each file, the full DFS path from a root down to (and including)
+    /// that file.
     pub dependency_chains: IndexMap<String, Vec<String>>,
+    /// Chains that start at an entry node and end at a leaf node.
     pub entry_to_leaf_chains: Vec<Vec<String>>,
 }
 
@@ -125,5 +132,84 @@ pub fn analyze_dependencies(dep_obj: &IndexMap<String, Vec<String>>) -> Dependen
         circular_dependencies: unique_circular_deps,
         dependency_chains,
         entry_to_leaf_chains,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn map<I>(entries: I) -> IndexMap<String, Vec<String>>
+    where
+        I: IntoIterator<Item = (&'static str, Vec<&'static str>)>,
+    {
+        let mut m = IndexMap::new();
+        for (k, v) in entries {
+            m.insert(k.to_string(), v.into_iter().map(String::from).collect());
+        }
+        m
+    }
+
+    #[test]
+    fn no_cycle_simple_chain() {
+        let tree = map([("a", vec!["b"]), ("b", vec!["c"]), ("c", vec![])]);
+        let analysis = analyze_dependencies(&tree);
+        assert!(analysis.circular_dependencies.is_empty());
+    }
+
+    #[test]
+    fn detects_two_node_cycle() {
+        let tree = map([("a", vec!["b"]), ("b", vec!["a"])]);
+        let analysis = analyze_dependencies(&tree);
+        assert_eq!(analysis.circular_dependencies.len(), 1);
+        let cd = &analysis.circular_dependencies[0];
+        assert_eq!(cd.r#type, "circular");
+        // chain starts and ends at the same node
+        assert_eq!(cd.chain.first(), cd.chain.last());
+        assert!(cd.chain.len() >= 3);
+    }
+
+    #[test]
+    fn detects_self_cycle() {
+        let tree = map([("a", vec!["a"])]);
+        let analysis = analyze_dependencies(&tree);
+        assert_eq!(analysis.circular_dependencies.len(), 1);
+    }
+
+    #[test]
+    fn entry_to_leaf_chains_recorded() {
+        let tree = map([("a", vec!["b"]), ("b", vec!["c"]), ("c", vec![])]);
+        let analysis = analyze_dependencies(&tree);
+        assert!(!analysis.entry_to_leaf_chains.is_empty());
+        // one leaf -> one chain
+        let chain = &analysis.entry_to_leaf_chains[0];
+        assert_eq!(chain.first(), Some(&"a".to_string()));
+        assert_eq!(chain.last(), Some(&"c".to_string()));
+    }
+
+    #[test]
+    fn dependency_chains_cover_all_nodes() {
+        let tree = map([("a", vec!["b"]), ("b", vec![])]);
+        let analysis = analyze_dependencies(&tree);
+        assert!(analysis.dependency_chains.contains_key("a"));
+        assert!(analysis.dependency_chains.contains_key("b"));
+    }
+
+    #[test]
+    fn empty_graph() {
+        let tree = IndexMap::new();
+        let analysis = analyze_dependencies(&tree);
+        assert!(analysis.circular_dependencies.is_empty());
+        assert!(analysis.entry_to_leaf_chains.is_empty());
+        assert!(analysis.dependency_chains.is_empty());
+    }
+
+    #[test]
+    fn duplicate_cycles_deduplicated() {
+        // a -> b -> c -> b  (single cycle b<->c reachable from a)
+        let tree = map([("a", vec!["b"]), ("b", vec!["c"]), ("c", vec!["b"])]);
+        let analysis = analyze_dependencies(&tree);
+        // Only one distinct cycle should be reported.
+        assert_eq!(analysis.circular_dependencies.len(), 1);
     }
 }

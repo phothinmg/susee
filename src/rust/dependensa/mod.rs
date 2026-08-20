@@ -1,13 +1,5 @@
-//! Build the dependency tree from a project entry point.
-//!
-//! Ported from `node_src/dependencies/index.ts`.
-//!
-//! The original `generateDependencies` function:
-//! 1. Generates a dependency graph via `generateGraph`.
-//! 2. Topologically sorts the graph.
-//! 3. For each file in sort order, reads its content and determines its module
-//!    type (cjs / esm / json) and whether it contains JSX.
-//! 4. Runs `checkDuplicates` on the resulting tree and returns it.
+pub mod dep_tree;
+pub mod graph;
 
 use std::path::Path;
 
@@ -17,9 +9,9 @@ use oxc::ast_visit::Visit;
 use oxc::parser::Parser;
 use oxc::span::SourceType;
 
-use super::duplicates::check_duplicates;
-use super::types::{DependenciesTree, DepsFile, ModuleType, ValidExts};
-use crate::graph::dependensia;
+use dep_tree::duplicates::check_duplicates;
+pub use dep_tree::types::{DependenciesTree, DepsFile, ModuleType, ValidExts};
+pub use graph::{GraphObject, generate_graph, generate_graph_cwd};
 
 /// Detect whether a source file uses CommonJS or ESM syntax, mirroring
 /// `utils.checks.moduleType` from `node_src/helpers/utilities.ts`.
@@ -174,6 +166,44 @@ fn read_file(root: &Path, rel_path: &str) -> std::io::Result<(String, usize)> {
 /// oxc parses source directly inline. Duplicate checking is performed but
 /// does not exit the process; findings are discarded (callers may extend this
 /// to surface them).
+///
+/// # Examples
+///
+/// Build the dependency tree starting from `src/index.ts` in the current
+/// directory, then inspect each file's module type and JSX status:
+///
+/// ```no_run
+/// use dependensa::generate_dependencies;
+///
+/// let tree = generate_dependencies("src/index.ts", ".")?;
+///
+/// println!("entry: {}", tree.entry);
+///
+/// for dep in &tree.dep_files {
+///     println!(
+///         "{}  {:?}  bytes={}  jsx={}",
+///         dep.file, dep.module_type, dep.bytes, dep.is_jsx
+///     );
+/// }
+///
+/// // NPM packages referenced by the project
+/// for npm in &tree.npm {
+///     println!("npm: {}", npm);
+/// }
+/// # Ok::<(), std::io::Error>(())
+/// ```
+///
+/// Serialize the whole tree to JSON (the result implements
+/// `serde::Serialize`):
+///
+/// ```no_run
+/// use dependensa::generate_dependencies;
+///
+/// let tree = generate_dependencies("src/index.ts", ".")?;
+/// let json = serde_json::to_string_pretty(&tree)?;
+/// println!("{}", json);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 pub fn generate_dependencies<P: AsRef<Path>>(
     entry: &str,
     root: P,
@@ -181,7 +211,7 @@ pub fn generate_dependencies<P: AsRef<Path>>(
     let root = root.as_ref().to_path_buf();
 
     // 1. Build and sort the dependency graph.
-    let graph = dependensia(entry, &root)?;
+    let graph = generate_graph(entry, &root)?;
     let sorted = graph.sort();
     let npm = graph.npm().to_vec();
     let nodes = graph.node().to_vec();

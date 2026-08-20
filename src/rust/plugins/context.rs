@@ -6,7 +6,7 @@
 
 use crate::compiler::options::CompilerOptions;
 use crate::compiler::types::OutputFormat;
-use crate::dependencies::types::DepsFile;
+use crate::dependensa::DepsFile;
 
 /// Metadata passed to every plugin hook.
 ///
