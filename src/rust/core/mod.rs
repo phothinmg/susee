@@ -4,7 +4,6 @@ mod cli;
 mod compiler;
 mod config;
 mod dependensa;
-mod plugins;
 pub use build::build;
 pub use config::CompilerOptions;
 pub use config::OutputFormat;

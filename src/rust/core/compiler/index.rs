@@ -18,12 +18,10 @@
 //! needed.
 
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 
 use super::susee_compiler::{CompilerParams, susee_compiler};
 use crate::core::bundler::bundler;
 use crate::core::config::{BuildEntryPoint, BuildOptions, OutputFormat, get_compiler_options};
-use crate::core::plugins::{PluginContext, PostProcessPayload, dispatch_post_process};
 
 /// Emitted artifact paths, mirroring `files.OutFiles` from the TS helpers.
 ///
@@ -88,6 +86,7 @@ impl Compiler {
         point: &BuildEntryPoint,
         format: OutputFormat,
     ) -> std::io::Result<()> {
+        #[allow(unused_variables)]
         let is_main = point.is_main();
         let opts_builder = get_compiler_options(point.tsconfig_file_path.as_deref());
         let compiler_options = opts_builder.build(format, Some(&point.output_directory_path));
@@ -130,53 +129,53 @@ impl Compiler {
 
         // 5. Post-process plugins — run on the emitted JS code before
         //    writing files, mirroring step 5 in `compiler/index.ts`.
-        if !point.plugins.is_empty() {
-            let phase_start = Instant::now();
-            let scope = format!(
-                "compiler:{}",
-                Path::new(&point.entry)
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or(&point.entry)
-            );
-            let ctx = PluginContext::for_compiler(&point.entry, format, &compiler_options);
-            let payload = PostProcessPayload {
-                code: compiled_code,
-            };
-            let payload = dispatch_post_process(&point.plugins, &ctx, payload, &scope)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-            compiled_code = payload.code;
-            let _ = phase_start; // profiling happens inside the dispatcher.
-        }
+        // if !point.plugins.is_empty() {
+        //     let phase_start = Instant::now();
+        //     let scope = format!(
+        //         "compiler:{}",
+        //         Path::new(&point.entry)
+        //             .file_name()
+        //             .and_then(|n| n.to_str())
+        //             .unwrap_or(&point.entry)
+        //     );
+        //     let ctx = PluginContext::for_compiler(&point.entry, format, &compiler_options);
+        //     let payload = PostProcessPayload {
+        //         code: compiled_code,
+        //     };
+        //     let payload = dispatch_post_process(&point.plugins, &ctx, payload, &scope)
+        //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+        //     compiled_code = payload.code;
+        //     let _ = phase_start; // profiling happens inside the dispatcher.
+        // }
 
-        // 6. Record output paths for package.json updates.
-        if self.update() {
-            match format {
-                OutputFormat::Commonjs => {
-                    self.files.commonjs = Some(main_file_path.clone());
-                    if compiled.dts.is_some() {
-                        self.files.commonjs_types = Some(dts_file_path.clone());
-                    }
-                    if is_main && point.format.contains(&OutputFormat::Commonjs) {
-                        if let Some(c) = &self.files.commonjs {
-                            self.files.main = Some(c.clone());
-                        }
-                        if let Some(t) = &self.files.commonjs_types {
-                            self.files.types = Some(t.clone());
-                        }
-                    }
-                }
-                OutputFormat::Esm => {
-                    self.files.esm = Some(main_file_path.clone());
-                    if compiled.dts.is_some() {
-                        self.files.esm_types = Some(dts_file_path.clone());
-                    }
-                    if is_main && self.files.esm.is_some() {
-                        self.files.module = self.files.esm.clone();
-                    }
-                }
-            }
-        }
+        // // 6. Record output paths for package.json updates.
+        // if self.update() {
+        //     match format {
+        //         OutputFormat::Commonjs => {
+        //             self.files.commonjs = Some(main_file_path.clone());
+        //             if compiled.dts.is_some() {
+        //                 self.files.commonjs_types = Some(dts_file_path.clone());
+        //             }
+        //             if is_main && point.format.contains(&OutputFormat::Commonjs) {
+        //                 if let Some(c) = &self.files.commonjs {
+        //                     self.files.main = Some(c.clone());
+        //                 }
+        //                 if let Some(t) = &self.files.commonjs_types {
+        //                     self.files.types = Some(t.clone());
+        //                 }
+        //             }
+        //         }
+        //         OutputFormat::Esm => {
+        //             self.files.esm = Some(main_file_path.clone());
+        //             if compiled.dts.is_some() {
+        //                 self.files.esm_types = Some(dts_file_path.clone());
+        //             }
+        //             if is_main && self.files.esm.is_some() {
+        //                 self.files.module = self.files.esm.clone();
+        //             }
+        //         }
+        //     }
+        // }
 
         // 7. Write files.
         write_file(&main_file_path, &compiled_code)?;
@@ -592,7 +591,6 @@ mod tests {
             tsconfig_file_path: None,
             output_directory_path: "dist".to_string(),
             warning: false,
-            plugins: Vec::new(),
         };
         assert!(p.is_main());
         let mut p2 = BuildEntryPoint::default();

@@ -1,7 +1,6 @@
 // #![allow(dead_code)]
 use std::path::PathBuf;
 
-use crate::core::plugins::Plugin;
 use serde::{Deserialize, Serialize};
 
 /// Output module formats supported by the compiler.
@@ -76,10 +75,6 @@ pub struct BuildEntryPoint {
     pub output_directory_path: String,
     /// Whether to treat missing-dependency warnings as fatal.
     pub warning: bool,
-    // Plugins attached to this entry point, mirroring the `plugins` field
-    // on `BuildEntryPoint` in the TS config. Stored as trait objects so
-    // built-in and user plugins share one list.
-    pub plugins: Vec<Box<dyn Plugin>>,
 }
 
 impl std::fmt::Debug for BuildEntryPoint {
@@ -91,7 +86,6 @@ impl std::fmt::Debug for BuildEntryPoint {
             .field("tsconfig_file_path", &self.tsconfig_file_path)
             .field("output_directory_path", &self.output_directory_path)
             .field("warning", &self.warning)
-            // .field("plugins", &format!("<{} plugin(s)>", self.plugins.len()))
             .finish()
     }
 }
@@ -112,7 +106,6 @@ impl Default for BuildEntryPoint {
             tsconfig_file_path: None,
             output_directory_path: "dist".to_string(),
             warning: false,
-            plugins: Vec::new(),
         }
     }
 }
@@ -266,7 +259,6 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
             tsconfig_file_path,
             output_directory_path,
             warning,
-            plugins: Vec::new(),
         });
     }
 
@@ -305,13 +297,13 @@ pub fn read_config_file(path: &std::path::Path) -> Result<SuSeeConfig, String> {
 /// Returns `Ok(None)` when no config file is found (the caller decides how
 /// to handle that), and `Err(message)` when a config file is found but is
 /// invalid.
-pub fn final_susee_config() -> Result<Option<BuildOptions>, String> {
-    let Some(path) = get_susee_config_path() else {
-        return Ok(None);
-    };
-    let config = read_config_file(&path)?;
-    Ok(Some(generate_build_options(&config)?))
-}
+// pub fn final_susee_config() -> Result<Option<BuildOptions>, String> {
+//     let Some(path) = get_susee_config_path() else {
+//         return Ok(None);
+//     };
+//     let config = read_config_file(&path)?;
+//     Ok(Some(generate_build_options(&config)?))
+// }
 
 #[cfg(test)]
 mod tests {

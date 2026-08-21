@@ -31,7 +31,6 @@ fn build_options_from_cli(opts: &CliBuildOptions) -> BuildOptions {
         tsconfig_file_path: opts.tsconfig.clone(),
         output_directory_path: opts.out_dir.clone(),
         warning: opts.warning,
-        plugins: Vec::new(),
     };
     BuildOptions {
         build_entry_points: vec![entry],
