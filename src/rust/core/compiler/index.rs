@@ -75,7 +75,7 @@ impl Compiler {
             return Ok(cached.clone());
         }
         let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-        let code = bundler(&point.entry, &cwd, &point.plugins)?;
+        let code = bundler(&point.entry, &cwd)?;
         self.bundled_cache.insert(point.entry.clone(), code.clone());
         Ok(code)
     }

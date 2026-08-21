@@ -28,5 +28,5 @@ mod types;
 mod unique_name;
 mod unused_code;
 
-pub use index::{bundle, bundler};
+pub use index::bundler;
 pub use types::NamesSet;

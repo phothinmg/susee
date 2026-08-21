@@ -11,7 +11,7 @@ use oxc::span::SourceType;
 
 use dep_tree::duplicates::check_duplicates;
 pub use dep_tree::types::{DependenciesTree, DepsFile, ModuleType, ValidExts};
-pub use graph::{GraphObject, generate_graph, generate_graph_cwd};
+pub use graph::generate_graph;
 
 /// Detect whether a source file uses CommonJS or ESM syntax, mirroring
 /// `utils.checks.moduleType` from `node_src/helpers/utilities.ts`.

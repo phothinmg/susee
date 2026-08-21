@@ -3,10 +3,10 @@ use std::time::Instant;
 
 use crate::core::dependensa::generate_dependencies;
 use crate::core::dependensa::{DepsFile, ModuleType};
-use crate::core::plugins::{
-    DependencyPayload, Plugin, PluginContext, PreProcessPayload, dispatch_dependencies,
-    dispatch_pre_process,
-};
+// use crate::core::plugins::{
+//     DependencyPayload, Plugin, PluginContext, PreProcessPayload, dispatch_dependencies,
+//     dispatch_pre_process,
+// };
 
 use super::anonymous::anonymous_handler;
 use super::export_default::export_default_handler;
@@ -40,11 +40,7 @@ fn log_bundler_phase(entry: &str, phase: &str, start: Instant) {
 ///
 /// # Returns
 /// The bundled source code as a single string.
-pub fn bundler<P: AsRef<Path>>(
-    entry: &str,
-    root: P,
-    plugins: &[Box<dyn Plugin>],
-) -> std::io::Result<String> {
+pub fn bundler<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<String> {
     let bundler_start = Instant::now();
     let mut removed_statements: Vec<String> = Vec::new();
 
@@ -71,22 +67,22 @@ pub fn bundler<P: AsRef<Path>>(
     // 1.5. Dependency plugins — run after JSON resolution and before the
     //      CommonJS check, mirroring step 2 in `bundler/index.ts`. This is
     //      the "tree(ast) plugin" hook from the project notes.
-    if !plugins.is_empty() {
-        let phase_start = Instant::now();
-        let scope = format!(
-            "bundler:{}",
-            Path::new(entry)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or(entry)
-        );
-        let ctx = PluginContext::for_bundler(&tree.entry);
-        let payload = DependencyPayload { deps_files };
-        let payload = dispatch_dependencies(plugins, &ctx, payload, &scope)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-        deps_files = payload.deps_files;
-        log_bundler_phase(entry, "dependencyPlugins", phase_start);
-    }
+    // if !plugins.is_empty() {
+    //     let phase_start = Instant::now();
+    //     let scope = format!(
+    //         "bundler:{}",
+    //         Path::new(entry)
+    //             .file_name()
+    //             .and_then(|n| n.to_str())
+    //             .unwrap_or(entry)
+    //     );
+    //     let ctx = PluginContext::for_bundler(&tree.entry);
+    //     let payload = DependencyPayload { deps_files };
+    //     let payload = dispatch_dependencies(plugins, &ctx, payload, &scope)
+    //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    //     deps_files = payload.deps_files;
+    //     log_bundler_phase(entry, "dependencyPlugins", phase_start);
+    // }
 
     // 2. Check for CommonJS modules
     let has_commonjs = deps_files.iter().any(|f| f.module_type == ModuleType::Cjs);
@@ -190,22 +186,22 @@ pub fn bundler<P: AsRef<Path>>(
 
     // 10. Pre-process plugins — run on the final bundled content before
     //     returning, mirroring step 10 in `bundler/index.ts`.
-    if !plugins.is_empty() {
-        let phase_start = Instant::now();
-        let scope = format!(
-            "bundler:{}",
-            Path::new(entry)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or(entry)
-        );
-        let ctx = PluginContext::for_bundler(&tree.entry);
-        let payload = PreProcessPayload { content };
-        let payload = dispatch_pre_process(plugins, &ctx, payload, &scope)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-        content = payload.content;
-        log_bundler_phase(entry, "preProcessPlugins", phase_start);
-    }
+    // if !plugins.is_empty() {
+    //     let phase_start = Instant::now();
+    //     let scope = format!(
+    //         "bundler:{}",
+    //         Path::new(entry)
+    //             .file_name()
+    //             .and_then(|n| n.to_str())
+    //             .unwrap_or(entry)
+    //     );
+    //     let ctx = PluginContext::for_bundler(&tree.entry);
+    //     let payload = PreProcessPayload { content };
+    //     let payload = dispatch_pre_process(plugins, &ctx, payload, &scope)
+    //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    //     content = payload.content;
+    //     log_bundler_phase(entry, "preProcessPlugins", phase_start);
+    // }
 
     log_bundler_phase(entry, "total", bundler_start);
 
@@ -505,10 +501,10 @@ fn extract_default_name(import_str: &str, is_type: bool) -> Option<String> {
     Some(before_from.to_string())
 }
 
-/// Bundle a TypeScript/JavaScript project starting from `entry`.
-///
-/// Convenience wrapper around [`bundler`] that uses the current directory
-/// as the project root and no plugins.
-pub fn bundle(entry: &str) -> std::io::Result<String> {
-    bundler(entry, ".", &[])
-}
+// Bundle a TypeScript/JavaScript project starting from `entry`.
+//
+// Convenience wrapper around [`bundler`] that uses the current directory
+// as the project root and no plugins.
+// pub fn bundle(entry: &str) -> std::io::Result<String> {
+//     bundler(entry, ".")
+// }

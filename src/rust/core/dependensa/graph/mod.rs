@@ -205,30 +205,6 @@ fn path_relative(root: &Path, file: &Path) -> String {
         .replace('\\', "/")
 }
 
-/// Convenience wrapper: analyze using the current directory as root.
-///
-/// # Examples
-///
-/// ```no_run
-/// use GraphObject::generate_graph_cwd;
-///
-/// let deps = generate_graph_cwd("src/index.ts")?;
-///
-/// // List files that have no local-file imports
-/// for leaf in deps.leaf() {
-///     println!("leaf: {}", leaf);
-/// }
-///
-/// // Serialize the whole result to JSON (implements `serde::Serialize`)
-/// let json = serde_json::to_string_pretty(&deps)?;
-/// println!("{}", json);
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub fn generate_graph_cwd(entry: &str) -> std::io::Result<GraphObject> {
-    let root = std::env::current_dir()?;
-    generate_graph(entry, root)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

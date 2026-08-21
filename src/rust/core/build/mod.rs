@@ -20,20 +20,22 @@ pub fn susee_build(config: &SuSeeConfig) -> Result<(), String> {
 }
 
 pub fn build(config: Option<&SuSeeConfig>) {
-    let config_path = get_susee_config_path().expect("");
-    if fs::exists(&config_path).is_ok() {
-        let config_options = read_config_file(&config_path).expect("");
-        if let Err(e) = susee_build(&config_options) {
-            eprintln!("[Error] : {e}");
-            std::process::exit(1);
-        }
-    } else if let Some(config) = config {
+    if let Some(config) = config {
         if let Err(e) = susee_build(config) {
             eprintln!("[Error] : {e}");
             std::process::exit(1);
         }
     } else {
-        eprintln!("[Error] : no config file found and no config provided");
-        std::process::exit(1);
+        let config_path = get_susee_config_path().expect("");
+        if fs::exists(&config_path).is_ok() {
+            let config_options = read_config_file(&config_path).expect("");
+            if let Err(e) = susee_build(&config_options) {
+                eprintln!("[Error] : {e}");
+                std::process::exit(1);
+            }
+        } else {
+            eprintln!("[Error] : no config file found and no config provided");
+            std::process::exit(1);
+        }
     }
 }
