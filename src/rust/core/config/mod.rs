@@ -17,3 +17,4 @@ pub use ts_options::CompilerOptions;
 pub use ts_options::CompilerOptionsBuilder;
 pub use ts_options::ModuleKind;
 pub use ts_options::get_compiler_options;
+pub use ts_options::get_ts_config_path;

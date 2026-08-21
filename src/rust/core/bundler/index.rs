@@ -1,17 +1,3 @@
-//! Bundler entry point.
-//!
-//! Ported from `src/nodejs/bundler/index.ts`.
-//!
-//! The [`bundler`] function:
-//! 1. Generates the dependency tree via [`crate::dependencies::generate_dependencies`].
-//! 2. Resolves JSON modules.
-//! 3. Handles `export default` renaming.
-//! 4. Handles anonymous exports/imports.
-//! 5. Removes imports and exports from dependency files.
-//! 6. Merges removed import statements.
-//! 7. Merges all content into a single bundled string.
-//! 8. Cleans unused code.
-
 use std::path::Path;
 use std::time::Instant;
 
@@ -107,8 +93,7 @@ pub fn bundler<P: AsRef<Path>>(
     if has_commonjs {
         return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidData,
-            "Bundler found commonjs module/modules in dependencies tree. \
-             Please use \"@suseejs/commonjs-plugin\" to solve it.",
+            "Bundler found commonjs module/modules in dependencies tree, currently unsupported",
         ));
     }
 

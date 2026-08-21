@@ -46,8 +46,6 @@
 //! async wrappers if needed.
 //!
 //! ## Built-in plugins
-//! - [`MinifyPlugin`] — a `post-process` plugin that strips comments and
-//!   collapses whitespace (a minimal stand-in for a real minifier).
 //! - [`TreePlugin`] — a `dependency` plugin skeleton demonstrating the
 //!   tree/AST hook from the project notes.
 //!
@@ -66,7 +64,7 @@ pub mod types;
 #[cfg(feature = "napi")]
 pub mod js_plugin;
 
-pub use builtins::{MinifyPlugin, TreePlugin};
+pub use builtins::TreePlugin;
 pub use context::{DependencyPayload, PluginContext, PostProcessPayload, PreProcessPayload};
 pub use dispatcher::{dispatch_dependencies, dispatch_post_process, dispatch_pre_process};
 pub use plugin::{Plugin, PluginError};

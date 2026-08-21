@@ -183,9 +183,24 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     // ESM `import`/`export` to `require`/`exports` for CommonJS — matching
     // what the upstream `ts6` compiler emits. For ESM the module syntax is
     // preserved verbatim (only types are stripped).
+    //
+    // When `sourceMap` is enabled, the codegen captures swc's
+    // `(BytePos, LineCol)` mappings and `SourceMap::build_source_map` turns
+    // them into a real, VLQ-encoded v3 source map — replacing the placeholder
+    // string that previously stood in for it.
     let js_ext = ".js";
     let _js_path = emit_path(&opts, &stem, js_ext);
-    let code = emit_js(source_code, file_name, &opts);
+    let (mut code, map_json) = emit_js(source_code, file_name, &opts, opts.source_map);
+
+    // Mirror `tsc`'s emit: append a `//# sourceMappingURL=<stem>.js.map`
+    // comment so downstream tooling (and the driver's `.js.map` →
+    // `.cjs.map`/`.mjs.map` rewrite) can locate the sidecar map.
+    if opts.source_map {
+        if !code.ends_with('\n') {
+            code.push('\n');
+        }
+        code.push_str(&format!("//# sourceMappingURL={stem}.js.map\n"));
+    }
 
     // --- Emit .d.ts ---
     //
@@ -208,18 +223,11 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     let _ = &opts.target;
     let _ = &opts.lib;
 
-    // --- Emit source map (placeholder) ---
-    // oxc's codegen can produce source maps, but the TS port's map output is
-    // primarily consumed for the `//# sourceMappingURL=` comment. We emit
-    // a minimal map only when `sourceMap` is enabled so downstream tooling
-    // can find one; a full mapping pass can be layered in later.
-    let map = if opts.source_map {
-        Some(format!(
-            "{{\"version\":3,\"file\":\"{stem}.js\",\"sourceRoot\":\"\",\"sources\":[\"{file_name}\"],\"names\":[],\"mappings\":\"\"}}"
-        ))
-    } else {
-        None
-    };
+    // --- Source map ---
+    // `emit_js` already built a real, VLQ-encoded v3 map when `sourceMap`
+    // was enabled (using swc's `SourceMap::build_source_map`). The
+    // `//# sourceMappingURL=` comment was appended to `code` above.
+    let map = map_json;
 
     let (out_dir, file_name_out) = split_out_path(&_js_path.to_string_lossy());
     Ok(CompiledOutput {
@@ -244,13 +252,22 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
 ///    `__esModule` marker, and getter-based named exports). For `Esm`, this
 ///    step is skipped so ESM `import`/`export` syntax is preserved.
 /// 5. **Fix** the AST (swc's fixer repairs syntax damaged by the transforms).
-/// 6. **Codegen** the result back to a JS string.
+/// 6. **Codegen** the result back to a JS string. When `build_source_map` is
+///    `true`, the codegen drives swc's `JsWriter` with a `srcmap` sink and
+///    `SourceMap::build_source_map` turns the captured
+///    `(BytePos, LineCol)` tuples into a VLQ-encoded v3 source map, returned
+///    as the second tuple element.
 ///
 /// The `.d.ts` emit still uses oxc (see [`emit_dts`]).
-fn emit_js(source_code: &str, file_name: &str, opts: &CompilerOptions) -> String {
-    use swc_core::common::{FileName, GLOBALS, Globals, Mark, SourceMap, sync::Lrc};
+fn emit_js(
+    source_code: &str,
+    file_name: &str,
+    opts: &CompilerOptions,
+    build_source_map: bool,
+) -> (String, Option<String>) {
+    use swc_core::common::{FileName, GLOBALS, Globals, LineCol, Mark, SourceMap, sync::Lrc};
     use swc_core::ecma::ast::EsVersion;
-    use swc_core::ecma::codegen::to_code_default;
+    use swc_core::ecma::codegen::{Emitter, Node, text_writer::JsWriter};
     use swc_core::ecma::parser::{Syntax, TsSyntax, parse_file_as_program};
     use swc_core::ecma::transforms::base::{fixer, resolver};
     use swc_core::ecma::transforms::typescript::strip;
@@ -274,11 +291,10 @@ fn emit_js(source_code: &str, file_name: &str, opts: &CompilerOptions) -> String
         Ok(p) => p,
         Err(e) => {
             eprintln!("[warn] swc parse error during JS emit: {e:?}");
-            // Surface any recovered errors too.
             for err in &errors {
                 eprintln!("[warn] swc recovered parse error: {err:?}");
             }
-            return String::new();
+            return (String::new(), None);
         }
     };
     if !errors.is_empty() {
@@ -286,7 +302,6 @@ fn emit_js(source_code: &str, file_name: &str, opts: &CompilerOptions) -> String
         eprintln!("[warn] swc recovered parse errors:\n{}", msgs.join("\n"));
     }
 
-    // 2-6. Resolve → strip → (lower) → fix → codegen, all under a GLOBALS scope.
     let is_commonjs = matches!(opts.module, Some(ModuleKind::Commonjs));
     GLOBALS.set(&Globals::default(), || {
         let unresolved = Mark::new();
@@ -299,17 +314,11 @@ fn emit_js(source_code: &str, file_name: &str, opts: &CompilerOptions) -> String
             .apply(strip(unresolved, top_level));
 
         // 4. Lower ESM → CommonJS when requested.
-        //
-        // `common_js` uses swc runtime helpers, so it must run inside a
-        // `HELPERS.set(..)` closure — otherwise it panics with
-        // "perform this operation in the closure passed to `set`".
         let program = if is_commonjs {
             use swc_core::ecma::ast::Program;
             use swc_core::ecma::transforms::base::helpers::{HELPERS, Helpers};
             use swc_core::ecma::transforms::module::{common_js, util::Config};
-            // Clone the program into a Cell-like carrier because HELPERS.set
-            // takes a `FnOnce` returning `R` — we move the program in and pull
-            // it back out.
+
             let mut out: Option<Program> = None;
             HELPERS.set(&Helpers::new(true), || {
                 let p = program.apply(common_js(
@@ -329,7 +338,43 @@ fn emit_js(source_code: &str, file_name: &str, opts: &CompilerOptions) -> String
         let program = program.apply(fixer::fixer(None));
 
         // 6. Codegen.
-        to_code_default(cm.clone(), None, &program)
+        let mut buf = Vec::new();
+        let mut mappings: Vec<(swc_core::common::BytePos, LineCol)> = Vec::new();
+        {
+            let writer = if build_source_map {
+                JsWriter::new(cm.clone(), "\n", &mut buf, Some(&mut mappings))
+            } else {
+                JsWriter::new(cm.clone(), "\n", &mut buf, None)
+            };
+            let mut emitter = Emitter {
+                cfg: swc_core::ecma::codegen::Config::default(),
+                cm: cm.clone(),
+                comments: None,
+                wr: writer,
+            };
+            program.emit_with(&mut emitter).unwrap();
+        }
+        let code = String::from_utf8(buf).expect("codegen generated non-utf8 output");
+
+        let map_json = if build_source_map {
+            let sm = cm.build_source_map(
+                &mappings,
+                None,
+                swc_core::common::source_map::DefaultSourceMapGenConfig,
+            );
+            let mut out = Vec::new();
+            match sm.to_writer(&mut out) {
+                Ok(()) => Some(String::from_utf8(out).expect("source map is utf8")),
+                Err(e) => {
+                    eprintln!("[warn] failed to serialize source map: {e:?}");
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        (code, map_json)
     })
 }
 
@@ -601,5 +646,54 @@ mod tests {
             is_jsx: true,
         });
         assert!(res.is_ok(), "{:?}", res.err());
+    }
+
+    #[test]
+    fn source_map_disabled_by_default() {
+        let src = "export const value = 1;";
+        let o = opts(Some(ModuleKind::Es2020));
+        let out = susee_compiler(CompilerParams {
+            source_code: src,
+            file_name: "entry.ts",
+            compiler_options: &o,
+            is_jsx: false,
+        })
+        .unwrap();
+        assert!(out.map.is_none(), "expected no map by default");
+        assert!(
+            !out.code.contains("sourceMappingURL"),
+            "code should not reference a map when sourceMap is off: {}",
+            out.code
+        );
+    }
+
+    #[test]
+    fn source_map_emitted_when_enabled() {
+        let src = "export const value = 1;";
+        let mut o = opts(Some(ModuleKind::Es2020));
+        o.source_map = true;
+        let out = susee_compiler(CompilerParams {
+            source_code: src,
+            file_name: "entry.ts",
+            compiler_options: &o,
+            is_jsx: false,
+        })
+        .unwrap();
+        let map = out.map.expect("expected a source map");
+        // Real v3 map: version 3, the entry as a source, and non-empty
+        // VLQ mappings (the placeholder previously shipped empty mappings).
+        assert!(map.contains("\"version\":3"), "map was: {map}");
+        assert!(map.contains("\"sources\""), "map was: {map}");
+        assert!(
+            map.contains("\"mappings\":\"") && !map.contains("\"mappings\":\"\""),
+            "mappings must be non-empty, map was: {map}"
+        );
+        // The emitted JS must reference the sidecar map so the driver's
+        // `.js.map` → `.mjs.map`/`.cjs.map` rewrite can find it.
+        assert!(
+            out.code.contains("//# sourceMappingURL=entry.js.map"),
+            "code was: {}",
+            out.code
+        );
     }
 }

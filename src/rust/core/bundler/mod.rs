@@ -18,15 +18,15 @@
 //! - [`unused_code`] — unused code elimination.
 //! - [`index`] — [`bundler`] entry point.
 
-pub mod anonymous;
-pub mod export_default;
-pub mod helpers;
-pub mod index;
-pub mod remove;
-pub mod resolve_json;
-pub mod types;
-pub mod unique_name;
-pub mod unused_code;
+mod anonymous;
+mod export_default;
+mod helpers;
+mod index;
+mod remove;
+mod resolve_json;
+mod types;
+mod unique_name;
+mod unused_code;
 
 pub use index::{bundle, bundler};
 pub use types::NamesSet;

@@ -5,7 +5,7 @@
 //! This is the CLI surface — it exits the process on error. The
 //! programmatic API lives at [`crate::api`].
 
-use crate::core::api::build_from_config_file;
+use crate::core::build::build;
 
 use super::lib::fail::fail;
 
@@ -20,7 +20,5 @@ use super::lib::fail::fail;
 /// to use default `susee.config.json` discovery. Programmatic callers
 /// should use [`crate::api::build_from_config_file`] directly.
 pub fn cli_build() {
-    if let Err(e) = build_from_config_file(None) {
-        fail(&e);
-    }
+    build(None);
 }

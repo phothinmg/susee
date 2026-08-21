@@ -17,8 +17,7 @@
 //! - [`index`] — the [`Compiler`] driver that walks entry points and writes
 //!   files, mirroring the TS `Compiler` class.
 
-pub mod index;
-pub mod susee_compiler;
+mod index;
+mod susee_compiler;
 
 pub use index::Compiler;
-pub use susee_compiler::{CompiledOutput, susee_compiler};

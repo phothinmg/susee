@@ -180,7 +180,7 @@ pub struct SuSeeConfig {
 /// The TS version checks `susee.config.ts|js|mjs`; here we check the JSON
 /// form only.
 pub fn get_susee_config_path() -> Option<PathBuf> {
-    let candidates = ["susee.config.json"];
+    let candidates = ["susee.config.jsonc"];
     let cwd = std::env::current_dir().ok()?;
     for name in candidates {
         let p = cwd.join(name);
@@ -289,7 +289,12 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
 pub fn read_config_file(path: &std::path::Path) -> Result<SuSeeConfig, String> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| format!("failed to read {}: {e}", path.display()))?;
-    let config: SuSeeConfig = serde_json::from_str(&text)
+    // `susee.config.jsonc` may contain JSONC-style comments (`//` and
+    // `/* */`); strip them before handing the text to the strict
+    // `serde_json` parser, mirroring how `read_tsconfig` handles
+    // `tsconfig.json` with comments.
+    let clean = super::ts_options::strip_jsonc_comments(&text);
+    let config: SuSeeConfig = serde_json::from_str(&clean)
         .map_err(|e| format!("failed to parse {}: {e}", path.display()))?;
     Ok(config)
 }
@@ -306,4 +311,38 @@ pub fn final_susee_config() -> Result<Option<BuildOptions>, String> {
     };
     let config = read_config_file(&path)?;
     Ok(Some(generate_build_options(&config)?))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_config_file_strips_jsonc_comments() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("susee.config.jsonc");
+        std::fs::write(
+            &path,
+            r#"{
+                // Entry points for the build
+                "entryPoints": [
+                    {
+                        "entry": "src/index.ts",
+                        "exportPath": ".",
+                        /* ESM + CJS */ "format": ["esm", "commonjs"],
+                        "tsconfigFilePath": null,
+                        "warning": false
+                    }
+                ],
+                "outDir": "dist", // output directory
+                "allowUpdatePackageJson": true
+            }"#,
+        )
+        .unwrap();
+        let config = read_config_file(&path).unwrap();
+        assert_eq!(config.entry_points.len(), 1);
+        assert_eq!(config.entry_points[0].entry, "src/index.ts");
+        assert_eq!(config.out_dir.as_deref(), Some("dist"));
+        assert!(config.allow_update_package_json.unwrap_or(false));
+    }
 }

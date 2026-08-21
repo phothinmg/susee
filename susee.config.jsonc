@@ -16,5 +16,6 @@
 		}
 	],
 	"outDir": "out",
-	"allowUpdatePackageJson": true
+	"allowUpdatePackageJson": true,
+	"minify": true
 }

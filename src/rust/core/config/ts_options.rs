@@ -95,7 +95,7 @@ impl CompilerOptionsBuilder {
 /// If `custom_config_path` is given and exists, it is used. Otherwise we
 /// search the current directory for `tsconfig.json`. Mirrors
 /// `getTsConfigPath`.
-fn get_ts_config_path(custom_config_path: Option<&str>) -> Option<PathBuf> {
+pub fn get_ts_config_path(custom_config_path: Option<&str>) -> Option<PathBuf> {
     if let Some(custom) = custom_config_path {
         let p = Path::new(custom);
         if p.exists() {
@@ -103,14 +103,84 @@ fn get_ts_config_path(custom_config_path: Option<&str>) -> Option<PathBuf> {
         }
         eprintln!("> Given custom tsconfig file {custom} does not exist; falling back to defaults");
         return None;
-    }
-    let cwd = std::env::current_dir().ok()?;
-    let default = cwd.join("tsconfig.json");
-    if default.exists() {
-        Some(default)
     } else {
-        None
+        let cwd = std::env::current_dir().ok()?;
+        let default = cwd.join("tsconfig.json");
+        if default.exists() {
+            return Some(default);
+        } else {
+            None
+        }
     }
+}
+
+/// Strip JSONC line (`// ...`) and block (`/* ... */`) comments so a
+/// `tsconfig.json` (which TypeScript allows to contain comments) can be
+/// parsed by the strict `serde_json` parser.
+///
+/// This is a deliberately small scanner — it tracks whether the cursor is
+/// inside a string literal so that `//` or `/*` inside a string is not
+/// mistaken for a comment. It does not handle trailing commas (serde_json
+/// already rejects those, and tsconfig.json typically doesn't use them).
+pub(crate) fn strip_jsonc_comments(input: &str) -> String {
+    let bytes = input.as_bytes();
+    let mut out = String::with_capacity(input.len());
+    let mut i = 0;
+    let mut in_string = false;
+
+    while i < bytes.len() {
+        if in_string {
+            // Inside a string — copy until the closing unescaped `"`.
+            let c = bytes[i];
+            out.push(c as char);
+            if c == b'\\' && i + 1 < bytes.len() {
+                // Escaped char — copy the next byte verbatim.
+                out.push(bytes[i + 1] as char);
+                i += 2;
+                continue;
+            }
+            if c == b'"' {
+                in_string = false;
+            }
+            i += 1;
+            continue;
+        }
+
+        let c = bytes[i];
+
+        // String start.
+        if c == b'"' {
+            in_string = true;
+            out.push('"');
+            i += 1;
+            continue;
+        }
+
+        // Line comment `// ... \n`.
+        if c == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+            // Skip to end of line.
+            i += 2;
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            continue;
+        }
+
+        // Block comment `/* ... */`.
+        if c == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'*' {
+            i += 2;
+            while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                i += 1;
+            }
+            i += 2; // skip closing `*/`
+            continue;
+        }
+
+        out.push(c as char);
+        i += 1;
+    }
+
+    out
 }
 
 /// Read the `compilerOptions` block from a `tsconfig.json` file.
@@ -119,9 +189,14 @@ fn get_ts_config_path(custom_config_path: Option<&str>) -> Option<PathBuf> {
 /// understands and stores the rest in `raw`. Paths inside `tsconfig.json`
 /// (e.g. `outDir`) are resolved relative to the tsconfig directory, matching
 /// the TS `parseJsonConfigFileContent` behavior for the fields susee uses.
+///
+/// `tsconfig.json` may contain JSONC-style comments (`//` and `/* */`), which
+/// strict `serde_json` rejects. We strip those via [`strip_jsonc_comments`]
+/// before parsing — mirroring how `ts.readConfigFile` tolerates comments.
 fn read_tsconfig(path: &Path) -> Option<CompilerOptions> {
     let text = std::fs::read_to_string(path).ok()?;
-    let root: serde_json::Value = serde_json::from_str(&text).ok()?;
+    let clean = strip_jsonc_comments(&text);
+    let root: serde_json::Value = serde_json::from_str(&clean).ok()?;
     let co = root.get("compilerOptions")?;
     let mut opts = CompilerOptions::defaults();
     opts.raw = co.clone();
@@ -221,5 +296,43 @@ mod tests {
         assert_eq!(opts.jsx_import_source.as_deref(), Some("react"));
         assert_eq!(opts.lib, vec!["dom", "esnext"]);
         assert!(opts.source_map);
+    }
+
+    #[test]
+    fn read_tsconfig_handles_jsonc_comments() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("tsconfig.json");
+        std::fs::write(
+            &path,
+            r#"{
+                // This is a line comment
+                "compilerOptions": {
+                    "outDir": "build",
+                    /* block comment */ "sourceMap": true,
+                    "declaration": true, // trailing comment
+                    //"target": "es2022",
+                    "target": "esnext"
+                }
+            }"#,
+        )
+        .unwrap();
+        let opts = read_tsconfig(&path).unwrap();
+        assert!(opts.source_map, "source_map should be true with comments");
+        assert!(opts.declaration, "declaration should be true with comments");
+        assert_eq!(
+            opts.target, "esnext",
+            "commented-out target should be ignored"
+        );
+        assert!(opts.out_dir.ends_with("build"));
+    }
+
+    #[test]
+    fn strip_jsonc_preserves_strings_with_slashes() {
+        let input = r#"{"url": "https://example.com/path", "x": 1 // comment
+}"#;
+        let clean = strip_jsonc_comments(input);
+        let v: serde_json::Value = serde_json::from_str(&clean).unwrap();
+        assert_eq!(v["url"], "https://example.com/path");
+        assert_eq!(v["x"], 1);
     }
 }

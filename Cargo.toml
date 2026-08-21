@@ -15,15 +15,17 @@ serde_json = { version = "1.0.151", features = ["preserve_order"] }
 # napi boundary.
 # `async` enables the tokio runtime so the `#[napi] async fn` build driver
 # can await JS plugin callbacks (sync and async) via ThreadsafeFunction.
-napi = { version = "3", optional = true, default-features = false, features = ["napi9", "serde-json", "async"] }
-napi-derive = { version = "3", optional = true }
-swc_core = { version = "77.0.1", features = ["common", "ecma_ast", "ecma_parser", "ecma_parser_typescript", "ecma_codegen", "ecma_visit", "ecma_transforms_typescript", "ecma_transforms_module"] }
+# napi = { version = "3", optional = true, default-features = false, features = ["napi9", "serde-json", "async"] }
+# napi-derive = { version = "3", optional = true }
+swc_core = { version = "77.0.1", features = ["common", 
+"common_sourcemap", "ecma_ast", "ecma_parser", "ecma_parser_typescript", 
+"ecma_codegen", "ecma_visit", "ecma_transforms_typescript", "ecma_transforms_module","ecma_minifier"] }
 
-[features]
-default = []
-# Enable the N-API JS bridge (parse/visit/print + node predicates). Produces
-# a `cdylib` that Node loads as a native addon. See `src/rust/napi/`.
-napi = ["dep:napi", "dep:napi-derive"]
+# [features]
+# default = []
+# # Enable the N-API JS bridge (parse/visit/print + node predicates). Produces
+# # a `cdylib` that Node loads as a native addon. See `src/rust/napi/`.
+# napi = ["dep:napi", "dep:napi-derive"]
 
 [[bin]]
 name = "susee_main"
