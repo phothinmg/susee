@@ -14,7 +14,7 @@ use oxc::ast::ast::{ImportDeclarationSpecifier, Program, Statement};
 
 use super::helpers::with_parsed_program;
 use super::types::NamesSet;
-use crate::dependensa::{DepsFile, ModuleType, ValidExts};
+use crate::core::dependensa::{DepsFile, ModuleType, ValidExts};
 
 const JSON_PREFIX: &str = "__jsonModule__";
 

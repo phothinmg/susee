@@ -15,7 +15,7 @@ use oxc::allocator::Allocator;
 use oxc::parser::Parser;
 use oxc::span::SourceType;
 
-use crate::dependensa::{DependenciesTree, ModuleType, ValidExts};
+use crate::core::dependensa::{DependenciesTree, ModuleType, ValidExts};
 
 /// Parse `content` as TypeScript/JavaScript and call `f` with the resulting `Program`.
 ///

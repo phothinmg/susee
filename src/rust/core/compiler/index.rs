@@ -20,11 +20,24 @@
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use super::options::get_compiler_options;
 use super::susee_compiler::{CompilerParams, susee_compiler};
-use super::types::{BuildEntryPoint, BuildOptions, OutFiles, OutputFormat};
-use crate::bundler::bundler;
-use crate::plugins::{PluginContext, PostProcessPayload, dispatch_post_process};
+use crate::core::bundler::bundler;
+use crate::core::config::{BuildEntryPoint, BuildOptions, OutputFormat, get_compiler_options};
+use crate::core::plugins::{PluginContext, PostProcessPayload, dispatch_post_process};
+
+/// Emitted artifact paths, mirroring `files.OutFiles` from the TS helpers.
+///
+/// Each field is `Some(path)` once the corresponding output has been written.
+#[derive(Debug, Clone, Default)]
+pub struct OutFiles {
+    pub commonjs: Option<String>,
+    pub commonjs_types: Option<String>,
+    pub esm: Option<String>,
+    pub esm_types: Option<String>,
+    pub main: Option<String>,
+    pub module: Option<String>,
+    pub types: Option<String>,
+}
 
 /// Compiler for the Rust static-analysis engine.
 ///
@@ -506,8 +519,8 @@ fn pathdiff(p: &str, base: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cli::CWD_TEST_MUTEX;
-    use crate::compiler::types::{BuildEntryPoint, OutputFormat};
+    use crate::core::cli::CWD_TEST_MUTEX;
+    use crate::core::config::{BuildEntryPoint, OutputFormat};
 
     #[test]
     fn join_path_basic() {

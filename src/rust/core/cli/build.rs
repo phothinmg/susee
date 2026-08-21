@@ -5,7 +5,7 @@
 //! This is the CLI surface — it exits the process on error. The
 //! programmatic API lives at [`crate::api`].
 
-use crate::api::build_from_config_file;
+use crate::core::api::build_from_config_file;
 
 use super::lib::fail::fail;
 

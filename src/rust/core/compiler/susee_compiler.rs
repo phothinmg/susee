@@ -30,7 +30,7 @@ use oxc::allocator::Allocator;
 use oxc::parser::Parser;
 use oxc::span::SourceType;
 
-use super::options::{CompilerOptions, ModuleKind};
+use crate::core::config::{CompilerOptions, ModuleKind};
 
 /// Parameters for [`susee_compiler`], mirroring `CompilerPrams` from
 /// `suseeCompiler.ts`.

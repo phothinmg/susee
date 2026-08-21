@@ -1,22 +1,8 @@
-//! Compiler-option normalization.
-//!
-//! Ported from `src/nodejs/compiler/tsoptions.ts`.
-//!
-//! The TS version reads `tsconfig.json` via `@suseejs/ts6` and produces
-//! `ts6.CompilerOptions` for each output format. In Rust we keep a small,
-//! self-contained analogue: a [`CompilerOptions`] struct holding only the
-//! fields susee actually consumes (output dir, module kind, target, jsx,
-//! libs), plus a loader that reads a `tsconfig.json` with `serde_json` and
-//! merges user options over susee's defaults.
-//!
-//! This intentionally avoids the TS Transformer APIs (`ts.parseJsonConfigFileContent`
-//! etc.) that became unstable in TS7 — susee does its own emit via `oxc`.
-
+// #![allow(dead_code)]
 use std::path::{Path, PathBuf};
 
+use super::config_types::OutputFormat;
 use serde::{Deserialize, Serialize};
-
-use super::types::OutputFormat;
 
 /// Module kind, mirroring `ts.ModuleKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

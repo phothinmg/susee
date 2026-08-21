@@ -6,6 +6,13 @@
 			"format": ["esm", "commonjs"],
 			"tsconfigFilePath": null,
 			"warning": false
+		},
+		{
+			"entry": "src/nodejs/cli/index.ts",
+			"exportPath": "./cli",
+			"format": ["esm", "commonjs"],
+			"tsconfigFilePath": null,
+			"warning": false
 		}
 	],
 	"outDir": "out",

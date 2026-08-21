@@ -1,4 +1,4 @@
-use susee::api::build_from_config_file;
+use susee::build_from_config_file;
 
 fn main() {
     // Programmatic build from `susee.config.json` in the current directory.

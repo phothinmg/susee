@@ -4,9 +4,8 @@
 //! (`func(code, file?)`, `func(depsFiles, compilerOptions)`) with a single
 //! extensible context object.
 
-use crate::compiler::options::CompilerOptions;
-use crate::compiler::types::OutputFormat;
-use crate::dependensa::DepsFile;
+use crate::core::config::{CompilerOptions, OutputFormat};
+use crate::core::dependensa::DepsFile;
 
 /// Metadata passed to every plugin hook.
 ///

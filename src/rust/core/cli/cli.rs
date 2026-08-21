@@ -15,8 +15,8 @@
 
 use std::time::Instant;
 
-use crate::compiler::Compiler;
-use crate::compiler::types::{BuildEntryPoint, BuildOptions, OutputFormat};
+use crate::core::compiler::Compiler;
+use crate::core::config::{BuildEntryPoint, BuildOptions, OutputFormat};
 
 use super::lib::fail::fail;
 use super::lib::parse_argv::CliBuildOptions;

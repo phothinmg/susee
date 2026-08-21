@@ -18,11 +18,7 @@
 //!   files, mirroring the TS `Compiler` class.
 
 pub mod index;
-pub mod options;
 pub mod susee_compiler;
-pub mod types;
 
 pub use index::Compiler;
-pub use options::{CompilerOptions, ModuleKind, get_compiler_options};
 pub use susee_compiler::{CompiledOutput, susee_compiler};
-pub use types::{BuildEntryPoint, BuildOptions, OutFiles, OutputFormat};

@@ -87,7 +87,7 @@ pub fn dispatch_post_process(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dependensa::{DepsFile, ModuleType, ValidExts};
+    use crate::core::dependensa::{DepsFile, ModuleType, ValidExts};
 
     /// A plugin that appends a marker to every dep file's content.
     struct AppendDep;

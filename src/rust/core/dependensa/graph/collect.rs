@@ -241,11 +241,11 @@ fn normalize_path(p: &Path) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use crate::dependensa::graph;
-    use crate::dependensa::graph::PathBuf;
-    use crate::dependensa::graph::collect::normalize_path;
-    use crate::dependensa::graph::collect_dependencies;
-    use crate::dependensa::graph::get_package_info;
+    use crate::core::dependensa::graph;
+    use crate::core::dependensa::graph::PathBuf;
+    use crate::core::dependensa::graph::collect::normalize_path;
+    use crate::core::dependensa::graph::collect_dependencies;
+    use crate::core::dependensa::graph::get_package_info;
     use std::fs;
     use std::path::Path;
     use tempfile::tempdir;

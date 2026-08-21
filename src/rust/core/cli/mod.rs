@@ -19,13 +19,11 @@
 
 pub mod build;
 pub mod cli;
-pub mod config;
 pub mod index;
 pub mod lib;
 
 pub use build::cli_build;
 pub use cli::cli_compiler_compile;
-pub use config::{SuSeeConfig, final_susee_config, generate_build_options};
 pub use index::{cli_init, susee_cli_build};
 pub use lib::{get_default_options, parse_args, print_help};
 

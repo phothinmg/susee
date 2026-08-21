@@ -16,6 +16,16 @@
 				"types": "./out/index.d.cts",
 				"default": "./out/index.cjs"
 			}
+		},
+		"./cli": {
+			"import": {
+				"types": "./out/cli/index.d.mts",
+				"default": "./out/cli/index.mjs"
+			},
+			"require": {
+				"types": "./out/cli/index.d.cts",
+				"default": "./out/cli/index.cjs"
+			}
 		}
 	},
 	"bin": {

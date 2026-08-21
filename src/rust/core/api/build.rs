@@ -12,10 +12,10 @@
 use std::path::Path;
 use std::time::Instant;
 
-use crate::cli::config::{
+use crate::core::compiler::Compiler;
+use crate::core::config::{
     SuSeeConfig, generate_build_options, get_susee_config_path, read_config_file,
 };
-use crate::compiler::Compiler;
 
 /// Run a susee build from an in-memory [`SuSeeConfig`].
 ///
@@ -123,13 +123,12 @@ pub fn build_from_config_file(path: Option<&str>) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cli::config::EntryPoint;
-    use crate::compiler::types::OutputFormat;
+    use crate::core::config::{EntryPoint, OutputFormat};
 
     /// `build()` changes `current_dir` and the cli module's tests resolve
     /// paths relative to the workspace cwd, so we share the cli module's
     /// `CWD_TEST_MUTEX` to avoid races.
-    use crate::cli::CWD_TEST_MUTEX;
+    use crate::core::cli::CWD_TEST_MUTEX;
 
     fn make_config(entry: &str) -> SuSeeConfig {
         SuSeeConfig {

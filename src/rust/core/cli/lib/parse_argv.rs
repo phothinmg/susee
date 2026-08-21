@@ -16,7 +16,7 @@
 use std::path::Path;
 
 use super::fail::fail;
-use crate::compiler::types::OutputFormat;
+use crate::core::config::OutputFormat;
 
 /// Raw parsed options, mirroring `CliOptions` from `parse_argv.ts`.
 #[derive(Debug, Clone, Default)]
