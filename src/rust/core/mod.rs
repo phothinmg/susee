@@ -1,6 +1,5 @@
 mod build;
 mod bundler;
-mod cli;
 mod compiler;
 mod config;
 mod dependensa;
