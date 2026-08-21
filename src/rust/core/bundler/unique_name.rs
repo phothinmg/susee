@@ -62,10 +62,10 @@ impl UniqueName {
         name
     }
 
-    /// Get the prefix for a key, mirroring `getPrefix`.
-    pub fn get_prefix(&self, key: &str) -> Option<&str> {
-        self.stored_prefix.get(key).map(|(p, _)| p.as_str())
-    }
+    // Get the prefix for a key, mirroring `getPrefix`.
+    // pub fn get_prefix(&self, key: &str) -> Option<&str> {
+    //     self.stored_prefix.get(key).map(|(p, _)| p.as_str())
+    // }
 }
 
 #[cfg(test)]

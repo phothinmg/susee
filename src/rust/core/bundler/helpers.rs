@@ -97,20 +97,20 @@ pub fn get_file_key(file_path: &str) -> String {
 /// For relative specifiers (`./` or `../`) the path is resolved relative to
 /// `containing_file` and normalized. For absolute specifiers starting with
 /// `/` the path is normalized. Otherwise the specifier is returned as-is.
-pub fn get_module_key_from_specifier(spec: &str, containing_file: &str) -> String {
-    if spec.starts_with('.') || spec.starts_with('/') {
-        let base_dir = Path::new(containing_file)
-            .parent()
-            .unwrap_or_else(|| Path::new(""));
-        let joined = base_dir.join(spec);
-        // Normalize: remove `.` and `..` components
-        let resolved = normalize_path(&joined);
-        // Strip extension and handle index
-        get_file_key(&resolved)
-    } else {
-        spec.to_string()
-    }
-}
+// pub fn get_module_key_from_specifier(spec: &str, containing_file: &str) -> String {
+//     if spec.starts_with('.') || spec.starts_with('/') {
+//         let base_dir = Path::new(containing_file)
+//             .parent()
+//             .unwrap_or_else(|| Path::new(""));
+//         let joined = base_dir.join(spec);
+//         // Normalize: remove `.` and `..` components
+//         let resolved = normalize_path(&joined);
+//         // Strip extension and handle index
+//         get_file_key(&resolved)
+//     } else {
+//         spec.to_string()
+//     }
+// }
 
 /// Normalize a relative path by collapsing `.` and `..` components.
 fn normalize_path(p: &Path) -> String {

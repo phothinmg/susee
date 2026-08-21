@@ -11,6 +11,7 @@ pub struct NamesSet {
     pub base: String,
     pub file: String,
     pub new_name: String,
+    #[allow(dead_code)]
     pub is_ed: bool,
 }
 
