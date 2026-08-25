@@ -149,33 +149,33 @@ impl Compiler {
         // }
 
         // // 6. Record output paths for package.json updates.
-        // if self.update() {
-        //     match format {
-        //         OutputFormat::Commonjs => {
-        //             self.files.commonjs = Some(main_file_path.clone());
-        //             if compiled.dts.is_some() {
-        //                 self.files.commonjs_types = Some(dts_file_path.clone());
-        //             }
-        //             if is_main && point.format.contains(&OutputFormat::Commonjs) {
-        //                 if let Some(c) = &self.files.commonjs {
-        //                     self.files.main = Some(c.clone());
-        //                 }
-        //                 if let Some(t) = &self.files.commonjs_types {
-        //                     self.files.types = Some(t.clone());
-        //                 }
-        //             }
-        //         }
-        //         OutputFormat::Esm => {
-        //             self.files.esm = Some(main_file_path.clone());
-        //             if compiled.dts.is_some() {
-        //                 self.files.esm_types = Some(dts_file_path.clone());
-        //             }
-        //             if is_main && self.files.esm.is_some() {
-        //                 self.files.module = self.files.esm.clone();
-        //             }
-        //         }
-        //     }
-        // }
+        if self.update() {
+            match format {
+                OutputFormat::Commonjs => {
+                    self.files.commonjs = Some(main_file_path.clone());
+                    if compiled.dts.is_some() {
+                        self.files.commonjs_types = Some(dts_file_path.clone());
+                    }
+                    if is_main && point.format.contains(&OutputFormat::Commonjs) {
+                        if let Some(c) = &self.files.commonjs {
+                            self.files.main = Some(c.clone());
+                        }
+                        if let Some(t) = &self.files.commonjs_types {
+                            self.files.types = Some(t.clone());
+                        }
+                    }
+                }
+                OutputFormat::Esm => {
+                    self.files.esm = Some(main_file_path.clone());
+                    if compiled.dts.is_some() {
+                        self.files.esm_types = Some(dts_file_path.clone());
+                    }
+                    if is_main && self.files.esm.is_some() {
+                        self.files.module = self.files.esm.clone();
+                    }
+                }
+            }
+        }
 
         // 7. Write files.
         write_file(&main_file_path, &compiled_code)?;

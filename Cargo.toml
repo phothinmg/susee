@@ -5,9 +5,12 @@ edition = "2024"
 
 [dependencies]
 indexmap = { version = "2", features = ["serde"] }
-oxc = { version = "0.144.0", features = ["serialize", "ast_visit", "codegen", "semantic", "isolated_declarations"] }
+oxc = { version = "0.147.0", features = ["full"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.151", features = ["preserve_order"] }
+tempfile = "3"
+# Ensure the sourcemap feature is enabled here
+# oxc_codegen = { version = "0.147.0", features = ["sourcemap"] } 
 
 # N-API bindings for the JS bridge. Gated behind the `napi` feature so the
 # rlib (used by the `susee_main` CLI binary) does not pull in node headers.
@@ -17,9 +20,6 @@ serde_json = { version = "1.0.151", features = ["preserve_order"] }
 # can await JS plugin callbacks (sync and async) via ThreadsafeFunction.
 # napi = { version = "3", optional = true, default-features = false, features = ["napi9", "serde-json", "async"] }
 # napi-derive = { version = "3", optional = true }
-swc_core = { version = "77.0.1", features = ["common", 
-"common_sourcemap", "ecma_ast", "ecma_parser", "ecma_parser_typescript", 
-"ecma_codegen", "ecma_visit", "ecma_transforms_typescript", "ecma_transforms_module","ecma_minifier"] }
 
 # [features]
 # default = []
@@ -36,7 +36,7 @@ name = "susee"
 path = "src/rust/lib.rs"
 # `rlib` for the CLI binary + integration tests; `cdylib` for the Node
 # native addon (only built when the `napi` feature is on).
-crate-type = ["rlib", "cdylib"]
+# crate-type = ["rlib", "cdylib"]
 
-[dev-dependencies]
-tempfile = "3"
+# [dev-dependencies]
+# tempfile = "3"

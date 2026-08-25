@@ -19,6 +19,7 @@
 //! - [`index`] — [`bundler`] entry point.
 
 mod anonymous;
+mod commonjs_handler;
 mod export_default;
 mod helpers;
 mod index;

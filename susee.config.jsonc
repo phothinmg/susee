@@ -1,21 +1,14 @@
 {
 	"entryPoints": [
+		// main entry point
 		{
 			"entry": "src/nodejs/index.ts",
 			"exportPath": ".",
 			"format": ["esm", "commonjs"],
 			"tsconfigFilePath": null,
 			"warning": false
-		},
-		{
-			"entry": "src/nodejs/cli/index.ts",
-			"exportPath": "./cli",
-			"format": ["esm", "commonjs"],
-			"tsconfigFilePath": null,
-			"warning": false
 		}
 	],
 	"outDir": "out",
-	"allowUpdatePackageJson": true,
-	"minify": true
+	"allowUpdatePackageJson": true
 }

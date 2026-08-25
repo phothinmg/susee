@@ -30,6 +30,7 @@ use oxc::allocator::Allocator;
 use oxc::parser::Parser;
 use oxc::span::SourceType;
 
+use super::source_map::{sm_commonjs, sm_esm};
 use crate::core::config::{CompilerOptions, ModuleKind};
 
 /// Parameters for [`susee_compiler`], mirroring `CompilerPrams` from
@@ -159,6 +160,9 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
         is_jsx,
     } = params;
 
+    // let tem_dir = "susee_temp";
+    // std::fs::create_dir(tem_dir).ok();
+
     let opts = jsx_compiler_options(source_code, compiler_options, is_jsx)?;
 
     // Determine the source type from the entry path (handles .tsx → TSX).
@@ -177,17 +181,19 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
 
     // --- Emit JS ---
     //
-    // JS emit uses **swc** (`swc_core`): its `strip` pass removes all
-    // TypeScript-only constructs (type annotations, interfaces, type aliases,
-    // type-only imports, namespaces), and its `common_js` pass fully lowers
-    // ESM `import`/`export` to `require`/`exports` for CommonJS — matching
-    // what the upstream `ts6` compiler emits. For ESM the module syntax is
-    // preserved verbatim (only types are stripped).
+    // JS emit is handled entirely with **oxc** APIs via the sibling modules
+    // [`super::cjs`] and [`super::esm`]:
     //
-    // When `sourceMap` is enabled, the codegen captures swc's
-    // `(BytePos, LineCol)` mappings and `SourceMap::build_source_map` turns
-    // them into a real, VLQ-encoded v3 source map — replacing the placeholder
-    // string that previously stood in for it.
+    // * `Commonjs` — [`super::cjs::emit_cjs`] strips TypeScript types with
+    //   oxc's transformer and then lowers `import`/`export` to
+    //   `require`/`module.exports` with inlined interop helpers, matching
+    //   the upstream `ts6` CommonJS output.
+    // * `Es2020` — [`super::esm::emit_esm`] runs oxc's transformer (type
+    //   stripping only) and preserves ESM `import`/`export` syntax verbatim.
+    //
+    // When `sourceMap` is enabled, a real VLQ-encoded v3 source map is built
+    // with oxc's `Codegen` (`CodegenOptions::source_map_path`) — see
+    // [`emit_js`].
     let js_ext = ".js";
     let _js_path = emit_path(&opts, &stem, js_ext);
     let (mut code, map_json) = emit_js(source_code, file_name, &opts, opts.source_map);
@@ -224,8 +230,8 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     let _ = &opts.lib;
 
     // --- Source map ---
-    // `emit_js` already built a real, VLQ-encoded v3 map when `sourceMap`
-    // was enabled (using swc's `SourceMap::build_source_map`). The
+    // `emit_js` already built a real, VLQ-encoded v3 map with oxc's
+    // `Codegen` when `sourceMap` was enabled. The
     // `//# sourceMappingURL=` comment was appended to `code` above.
     let map = map_json;
 
@@ -241,141 +247,53 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
 
 /// Emit the JavaScript output for `source_code`.
 ///
-/// This uses **swc** (`swc_core`) for JS emit because oxc 0.144 lacks a full
-/// `transform-modules-commonjs` pass. The pipeline is:
+/// This uses **oxc** APIs only, delegating the module-format-specific work to
+/// the sibling modules [`super::cjs`] and [`super::esm`]:
 ///
-/// 1. **Parse** the bundled TypeScript source with swc's TS-aware parser.
-/// 2. **Resolve** identifiers (swc requires a resolver pass before transforms).
-/// 3. **Strip** TypeScript-only constructs via `swc_ecma_transforms_typescript::strip`.
-/// 4. **Lower modules** — for `Commonjs`, run `swc_ecma_transforms_module::common_js`
-///    to convert `import`/`export` into `require`/`exports` (with `"use strict"`,
-///    `__esModule` marker, and getter-based named exports). For `Esm`, this
-///    step is skipped so ESM `import`/`export` syntax is preserved.
-/// 5. **Fix** the AST (swc's fixer repairs syntax damaged by the transforms).
-/// 6. **Codegen** the result back to a JS string. When `build_source_map` is
-///    `true`, the codegen drives swc's `JsWriter` with a `srcmap` sink and
-///    `SourceMap::build_source_map` turns the captured
-///    `(BytePos, LineCol)` tuples into a VLQ-encoded v3 source map, returned
-///    as the second tuple element.
+/// 1. **Code** — [`super::cjs::emit_cjs`] for `Commonjs` (TypeScript type
+///    stripping via oxc's transformer, then ESM→CJS lowering with inlined
+///    interop helpers), or [`super::esm::emit_esm`] for `Es2020` (type
+///    stripping only, ESM syntax preserved).
+/// 2. **Source map** — when `build_source_map` is `true`, the original source
+///    is parsed with oxc and printed with [`oxc::codegen::Codegen`] configured
+///    with [`oxc::codegen::CodegenOptions::source_map_path`]. oxc's
+///    [`SourcemapBuilder`] turns the captured `(Span, generated line/col)`
+///    tuples into a real VLQ-encoded v3 source map, returned as the second
+///    tuple element (the same v3 shape the previous swc path produced).
 ///
-/// The `.d.ts` emit still uses oxc (see [`emit_dts`]).
+/// The `.d.ts` emit also uses oxc (see [`emit_dts`]).
 fn emit_js(
     source_code: &str,
     file_name: &str,
     opts: &CompilerOptions,
     build_source_map: bool,
 ) -> (String, Option<String>) {
-    use swc_core::common::{FileName, GLOBALS, Globals, LineCol, Mark, SourceMap, sync::Lrc};
-    use swc_core::ecma::ast::EsVersion;
-    use swc_core::ecma::codegen::{Emitter, Node, text_writer::JsWriter};
-    use swc_core::ecma::parser::{Syntax, TsSyntax, parse_file_as_program};
-    use swc_core::ecma::transforms::base::{fixer, resolver};
-    use swc_core::ecma::transforms::typescript::strip;
+    use oxc::span::SourceType;
 
-    let cm: Lrc<SourceMap> = Default::default();
-    let fm = cm.new_source_file(
-        FileName::Custom(file_name.to_string()).into(),
-        source_code.to_string(),
-    );
+    // 1. Emit the JS code via the format-specific oxc pipeline.
+    let source_type = SourceType::from_path(std::path::Path::new(file_name))
+        .unwrap_or_default()
+        .with_module(true);
 
-    // 1. Parse as TypeScript (module mode — allows import/export).
-    let mut errors = Vec::new();
-    let program = parse_file_as_program(
-        &fm,
-        Syntax::Typescript(TsSyntax::default()),
-        EsVersion::latest(),
-        None,
-        &mut errors,
-    );
-    let program = match program {
-        Ok(p) => p,
-        Err(e) => {
-            eprintln!("[warn] swc parse error during JS emit: {e:?}");
-            for err in &errors {
-                eprintln!("[warn] swc recovered parse error: {err:?}");
-            }
-            return (String::new(), None);
+    let code = match opts.module {
+        Some(ModuleKind::Commonjs) => {
+            super::cjs::emit_cjs(source_code, source_type, Some(file_name.to_string()))
         }
+        _ => super::esm::emit_esm(source_code, source_type, Some(file_name.to_string())),
     };
-    if !errors.is_empty() {
-        let msgs: Vec<String> = errors.iter().map(|e| format!("{e:?}")).collect();
-        eprintln!("[warn] swc recovered parse errors:\n{}", msgs.join("\n"));
-    }
 
-    let is_commonjs = matches!(opts.module, Some(ModuleKind::Commonjs));
-    GLOBALS.set(&Globals::default(), || {
-        let unresolved = Mark::new();
-        let top_level = Mark::new();
-
-        let program = program
-            // 2. Resolver — assigns syntax contexts; required before transforms.
-            .apply(resolver(unresolved, top_level, true))
-            // 3. Strip TypeScript types.
-            .apply(strip(unresolved, top_level));
-
-        // 4. Lower ESM → CommonJS when requested.
-        let program = if is_commonjs {
-            use swc_core::ecma::ast::Program;
-            use swc_core::ecma::transforms::base::helpers::{HELPERS, Helpers};
-            use swc_core::ecma::transforms::module::{common_js, util::Config};
-
-            let mut out: Option<Program> = None;
-            HELPERS.set(&Helpers::new(true), || {
-                let p = program.apply(common_js(
-                    Default::default(),
-                    unresolved,
-                    Config::default(),
-                    Default::default(),
-                ));
-                out = Some(p);
-            });
-            out.expect("HELPERS.set closure did not run")
+    // 2. Build the source map
+    let map_json = if build_source_map {
+        if opts.module == Some(ModuleKind::Commonjs) {
+            sm_commonjs(&code, file_name)
         } else {
-            program
-        };
-
-        // 5. Fixer — repairs AST after transforms (e.g. dangling commas).
-        let program = program.apply(fixer::fixer(None));
-
-        // 6. Codegen.
-        let mut buf = Vec::new();
-        let mut mappings: Vec<(swc_core::common::BytePos, LineCol)> = Vec::new();
-        {
-            let writer = if build_source_map {
-                JsWriter::new(cm.clone(), "\n", &mut buf, Some(&mut mappings))
-            } else {
-                JsWriter::new(cm.clone(), "\n", &mut buf, None)
-            };
-            let mut emitter = Emitter {
-                cfg: swc_core::ecma::codegen::Config::default(),
-                cm: cm.clone(),
-                comments: None,
-                wr: writer,
-            };
-            program.emit_with(&mut emitter).unwrap();
+            sm_esm(&code, file_name)
         }
-        let code = String::from_utf8(buf).expect("codegen generated non-utf8 output");
+    } else {
+        None
+    };
 
-        let map_json = if build_source_map {
-            let sm = cm.build_source_map(
-                &mappings,
-                None,
-                swc_core::common::source_map::DefaultSourceMapGenConfig,
-            );
-            let mut out = Vec::new();
-            match sm.to_writer(&mut out) {
-                Ok(()) => Some(String::from_utf8(out).expect("source map is utf8")),
-                Err(e) => {
-                    eprintln!("[warn] failed to serialize source map: {e:?}");
-                    None
-                }
-            }
-        } else {
-            None
-        };
-
-        (code, map_json)
-    })
+    (code, map_json)
 }
 
 /// Emit the `.d.ts` declaration text for `source_code`.
