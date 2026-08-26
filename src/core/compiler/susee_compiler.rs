@@ -39,6 +39,8 @@ use crate::core::config::{CompilerOptions, ModuleKind};
 pub struct CompilerParams<'a> {
     pub source_code: &'a str,
     pub file_name: &'a str,
+    pub temp_dir: &'a str,
+    pub export_path: String,
     pub compiler_options: &'a CompilerOptions,
     pub is_jsx: bool,
 }
@@ -153,21 +155,22 @@ fn emit_path(opts: &CompilerOptions, file_name: &str, ext: &str) -> PathBuf {
 /// [`super::index::Compiler`] driver). It returns the emitted `code`,
 /// optional `dts`, optional `map`, and the resolved `file_name`/`out_dir`.
 pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, String> {
+    use super::dts::generate_dts_with_tsc;
     let CompilerParams {
         source_code,
         file_name,
+        temp_dir,
+        export_path,
         compiler_options,
         is_jsx,
     } = params;
-
-    // let tem_dir = "susee_temp";
-    // std::fs::create_dir(tem_dir).ok();
 
     let opts = jsx_compiler_options(source_code, compiler_options, is_jsx)?;
 
     // Determine the source type from the entry path (handles .tsx → TSX).
     // Force module mode so ESM `import`/`export` statements parse even when
     // the file extension alone wouldn't imply a module.
+    #[allow(unused_variables)]
     let source_type = SourceType::from_path(Path::new(file_name))
         .unwrap_or_default()
         .with_module(true);
@@ -215,7 +218,7 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     // mirrors TypeScript's `--isolatedDeclarations` emit: it produces a
     // declaration-only AST that the codegen turns into clean `.d.ts` text.
     let dts = if opts.declaration {
-        let decl = emit_dts(source_code, source_type);
+        let decl = generate_dts_with_tsc(source_code, temp_dir, file_name, stem, export_path);
         if decl.trim().is_empty() {
             None
         } else {
@@ -321,6 +324,7 @@ fn emit_js(
 /// `void` for plain functions. `IsolatedDeclarations` then sees explicit
 /// annotations and emits clean `declare function f(): Promise<void>;`
 /// lines without diagnostics.
+#[allow(unused)]
 fn emit_dts(source_code: &str, source_type: SourceType) -> String {
     use oxc::codegen::Codegen;
     use oxc::isolated_declarations::{IsolatedDeclarations, IsolatedDeclarationsOptions};
@@ -452,6 +456,8 @@ mod tests {
             file_name: "entry.ts",
             compiler_options: &o,
             is_jsx: false,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         })
         .unwrap();
         assert!(!out.code.contains("type Foo"));
@@ -469,6 +475,8 @@ mod tests {
             file_name: "entry.ts",
             compiler_options: &o,
             is_jsx: false,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         })
         .unwrap();
         let dts = out.dts.expect("expected dts");
@@ -493,6 +501,8 @@ mod tests {
             file_name: "entry.ts",
             compiler_options: &o,
             is_jsx: false,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         })
         .unwrap();
         let dts = out.dts.expect("expected dts");
@@ -513,6 +523,8 @@ mod tests {
             file_name: "entry.ts",
             compiler_options: &o,
             is_jsx: false,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         })
         .unwrap();
         let dts = out.dts.expect("expected dts");
@@ -531,6 +543,8 @@ mod tests {
             file_name: "entry.ts",
             compiler_options: &o,
             is_jsx: false,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         })
         .unwrap();
         let dts = out.dts.expect("expected dts");
@@ -549,6 +563,8 @@ mod tests {
             file_name: "entry.tsx",
             compiler_options: &o,
             is_jsx: true,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         });
         assert!(res.is_err());
     }
@@ -562,6 +578,8 @@ mod tests {
             file_name: "entry.tsx",
             compiler_options: &o,
             is_jsx: true,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         });
         assert!(res.is_ok(), "{:?}", res.err());
     }
@@ -575,6 +593,8 @@ mod tests {
             file_name: "entry.ts",
             compiler_options: &o,
             is_jsx: false,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         })
         .unwrap();
         assert!(out.map.is_none(), "expected no map by default");
@@ -595,6 +615,8 @@ mod tests {
             file_name: "entry.ts",
             compiler_options: &o,
             is_jsx: false,
+            temp_dir: ".susee",
+            export_path: ".".to_string(),
         })
         .unwrap();
         let map = out.map.expect("expected a source map");

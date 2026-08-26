@@ -17,11 +17,11 @@
 //! to `async` here. A future N-API layer can expose async wrappers if
 //! needed.
 
-use std::path::{Path, PathBuf};
-
+use super::dts::write_file;
 use super::susee_compiler::{CompilerParams, susee_compiler};
 use crate::core::bundler::bundler;
 use crate::core::config::{BuildEntryPoint, BuildOptions, OutputFormat, get_compiler_options};
+use std::path::{Path, PathBuf};
 
 /// Emitted artifact paths, mirroring `files.OutFiles` from the TS helpers.
 ///
@@ -85,6 +85,7 @@ impl Compiler {
         &mut self,
         point: &BuildEntryPoint,
         format: OutputFormat,
+        temp_dir: &str,
     ) -> std::io::Result<()> {
         #[allow(unused_variables)]
         let is_main = point.is_main();
@@ -103,6 +104,8 @@ impl Compiler {
             file_name: &point.entry,
             compiler_options: &compiler_options,
             is_jsx,
+            temp_dir,
+            export_path: point.export_path.to_string(),
         })
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
@@ -198,6 +201,8 @@ impl Compiler {
     ///
     /// Mirrors the `compile()` method of the TS `Compiler` class.
     pub fn compile(&mut self) -> std::io::Result<()> {
+        let temp_dir = ".susee_temp";
+        std::fs::create_dir_all(temp_dir).ok();
         clear_folder(&self.object.out_dir)?;
         // Iterate by index so we can borrow `self.object` for the entry
         // point while borrowing `self` mutably for `compile_format`. We
@@ -214,12 +219,13 @@ impl Compiler {
             // conflict without cloning the plugin list.
             let point = std::mem::take(&mut self.object.build_entry_points[idx]);
             for format in &formats {
-                self.compile_format(&point, *format)?;
+                self.compile_format(&point, *format, temp_dir)?;
             }
             // Restore the entry point (its plugins are untouched by
             // `compile_format`, which only reads them).
             self.object.build_entry_points[idx] = point;
         }
+        std::fs::remove_dir_all(temp_dir).ok();
         Ok(())
     }
 }
@@ -252,19 +258,6 @@ fn clear_folder(dir: &str) -> std::io::Result<()> {
         }
     }
     Ok(())
-}
-
-/// Write `content` to `file_path`, creating parent directories as needed.
-/// Mirrors `files.writeFile` (minus the delete-first step, which is
-/// redundant because `fs::write` truncates).
-fn write_file(file_path: &str, content: &str) -> std::io::Result<()> {
-    let p = Path::new(file_path);
-    if let Some(parent) = p.parent() {
-        if !parent.as_os_str().is_empty() && !parent.exists() {
-            std::fs::create_dir_all(parent)?;
-        }
-    }
-    std::fs::write(p, content)
 }
 
 /// Check whether the bundled code contains JSX syntax, mirroring

@@ -29,11 +29,11 @@ tempfile = "3"
 
 [[bin]]
 name = "susee_main"
-path = "src/rust/main.rs"
+path = "src/main.rs"
 
 [lib]
 name = "susee"
-path = "src/rust/lib.rs"
+path = "src/lib.rs"
 # `rlib` for the CLI binary + integration tests; `cdylib` for the Node
 # native addon (only built when the `napi` feature is on).
 # crate-type = ["rlib", "cdylib"]
