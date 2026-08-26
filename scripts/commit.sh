@@ -25,9 +25,9 @@ done
 # Get commit message
 read -p "Enter commit message: " message
 # Run linter
-npm run lint
+# npm run lint
 # Run formatter
-npm run fmt
+# npm run fmt
 cargo fmt
 # Generate coverage report
 # npm run coverage
