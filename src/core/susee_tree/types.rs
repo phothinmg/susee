@@ -1,13 +1,6 @@
-//! Shared types for the dependency collection pipeline.
-//!
-//! Ported from the `@suseejs/type` definitions used by
-//! `node_src/dependencies/index.ts` and `node_src/dependencies/duplicates.ts`.
-
 use serde::{Deserialize, Serialize};
 
 /// File extensions considered valid for JS/TS/JSON modules.
-///
-/// Mirrors `ValidExts` from `@suseejs/type`.
 ///
 /// Serialized as a string with a leading dot (e.g. `".ts"`) to match the
 /// TypeScript `fileExt` field in `DepsFile`.
@@ -85,30 +78,42 @@ impl ValidExts {
 }
 
 /// The module system a file uses.
-///
-/// Mirrors `moduleType` on `DepsFile` from `@suseejs/type`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ModuleType {
     Cjs,
     Esm,
+    Cts,
     Json,
 }
 
 impl ModuleType {
-    #[allow(dead_code)]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Cjs => "cjs",
             Self::Esm => "esm",
+            Self::Cts => "cts",
             Self::Json => "json",
         }
     }
 }
-
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ProjectType {
+    TS,
+    JS,
+    MIXED,
+}
+impl ProjectType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::JS => "js",
+            Self::TS => "ts",
+            Self::MIXED => "mixed",
+        }
+    }
+}
 /// A single dependency file entry in the dependency tree.
-///
-/// Mirrors `DepsFile` from `@suseejs/type`.
 ///
 /// All JSON fields use `snake_case` (e.g. `module_type`, `file_ext`,
 /// `is_jsx`, `is_entry`) for a consistent naming convention.
@@ -132,8 +137,6 @@ pub struct DepsFile {
 
 /// The full dependency tree built from a project entry point.
 ///
-/// Mirrors `DependenciesTree` from `@suseejs/type`.
-///
 /// All JSON fields use `snake_case` for a consistent naming convention.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DependenciesTree {
@@ -147,4 +150,5 @@ pub struct DependenciesTree {
     pub warns: Vec<String>,
     /// The sorted list of dependency files.
     pub dep_files: Vec<DepsFile>,
+    pub project_type: ProjectType,
 }

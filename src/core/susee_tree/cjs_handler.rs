@@ -1,20 +1,3 @@
-//! CommonJS → ESM conversion handler.
-//!
-//! Ported from `src/nodejs/bundler/lib/commonjs_handler.ts`.
-//!
-//! Converts CommonJS `require()` calls and `module.exports` / `exports.x`
-//! patterns into ESM `import` / `export` statements so the rest of the
-//! bundler pipeline (which assumes ESM) can process them.
-//!
-//! Two sub-handlers are applied in sequence (mirroring the TS port):
-//! 1. [`commonjs_exports_handler`] — rewrites `exports.foo = …` and
-//!    `module.exports = …` into `export` declarations.
-//! 2. [`commonjs_imports_handler`] — rewrites `const x = require("…")` into
-//!    `import` declarations.
-//!
-//! After both run, the `module_type` of each processed file is flipped to
-//! [`ModuleType::Esm`].
-
 use std::collections::HashSet;
 
 use oxc::ast::ast::{
@@ -23,8 +6,8 @@ use oxc::ast::ast::{
 use oxc::ast_visit::Visit;
 use oxc::span::{GetSpan, Span};
 
-use super::helpers::with_parsed_program;
-use crate::core::dependensa::{DepsFile, ModuleType, ValidExts};
+use super::types::{DepsFile, ModuleType, ValidExts};
+use super::utils::with_parsed_program;
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -512,18 +495,23 @@ fn commonjs_exports_handler(dep: &DepsFile) -> String {
 /// 3. Flip `module_type` to `Esm` for every processed file.
 ///
 /// Non-CJS files are passed through unchanged.
-pub fn commonjs_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
+pub fn cjs_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
     // Phase 1: exports
     let mut phase1 = Vec::with_capacity(deps.len());
     for dep in &deps {
         if is_commonjs_js_or_cjs(dep) {
             let content = strip_empty_semicolon_lines(&commonjs_exports_handler(dep));
+            let (file, file_ext) = if dep.file_ext == ValidExts::Cjs {
+                (rename_cjs_to_js(&dep.file), ValidExts::Js)
+            } else {
+                (dep.file.clone(), dep.file_ext)
+            };
             phase1.push(DepsFile {
-                file: dep.file.clone(),
+                file,
                 content,
                 bytes: dep.bytes,
                 module_type: ModuleType::Esm,
-                file_ext: dep.file_ext,
+                file_ext,
                 is_jsx: dep.is_jsx,
                 is_entry: dep.is_entry,
             });
@@ -541,12 +529,17 @@ pub fn commonjs_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
             && has_require_call(&dep.content)
         {
             let content = strip_empty_semicolon_lines(&commonjs_imports_handler(dep));
+            let (file, file_ext) = if dep.file_ext == ValidExts::Cjs {
+                (rename_cjs_to_js(&dep.file), ValidExts::Js)
+            } else {
+                (dep.file.clone(), dep.file_ext)
+            };
             phase2.push(DepsFile {
-                file: dep.file.clone(),
+                file,
                 content,
                 bytes: dep.bytes,
                 module_type: ModuleType::Esm,
-                file_ext: dep.file_ext,
+                file_ext,
                 is_jsx: dep.is_jsx,
                 is_entry: dep.is_entry,
             });
@@ -556,6 +549,15 @@ pub fn commonjs_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
     }
 
     phase2
+}
+
+/// Replace a `.cjs` extension in a file path with `.js`.
+fn rename_cjs_to_js(file: &str) -> String {
+    if let Some(stem) = file.strip_suffix(".cjs") {
+        format!("{stem}.js")
+    } else {
+        file.to_string()
+    }
 }
 
 /// Quick check whether source text contains a top-level `require(` call.
@@ -730,7 +732,7 @@ mod tests {
     #[test]
     fn test_commonjs_handler_converts_module_exports() {
         let dep = make_cjs_dep("mod.js", "module.exports = { foo: 1 };");
-        let result = commonjs_handler(vec![dep]);
+        let result = cjs_handler(vec![dep]);
         assert_eq!(result.len(), 1);
         assert!(result[0].content.contains("export default"));
         assert_eq!(result[0].module_type, ModuleType::Esm);
@@ -739,7 +741,7 @@ mod tests {
     #[test]
     fn test_commonjs_handler_converts_exports_property() {
         let dep = make_cjs_dep("mod.js", "exports.foo = 1;");
-        let result = commonjs_handler(vec![dep]);
+        let result = cjs_handler(vec![dep]);
         assert_eq!(result.len(), 1);
         assert!(result[0].content.contains("export"));
         assert_eq!(result[0].module_type, ModuleType::Esm);
@@ -751,7 +753,7 @@ mod tests {
             "mod.js",
             "const fs = require(\"node:fs\");\nmodule.exports = { read: fs.readFileSync };",
         );
-        let result = commonjs_handler(vec![dep]);
+        let result = cjs_handler(vec![dep]);
         assert_eq!(result.len(), 1);
         assert!(result[0].content.contains("import"));
         assert_eq!(result[0].module_type, ModuleType::Esm);
@@ -760,7 +762,7 @@ mod tests {
     #[test]
     fn test_commonjs_handler_passes_through_esm() {
         let dep = make_esm_dep("mod.ts", "export const x = 1;");
-        let result = commonjs_handler(vec![dep]);
+        let result = cjs_handler(vec![dep]);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].content, "export const x = 1;");
         assert_eq!(result[0].module_type, ModuleType::Esm);
@@ -777,7 +779,7 @@ mod tests {
             is_jsx: false,
             is_entry: false,
         };
-        let result = commonjs_handler(vec![dep]);
+        let result = cjs_handler(vec![dep]);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].content, "{\"x\":1}");
         assert_eq!(result[0].module_type, ModuleType::Json);
@@ -789,7 +791,7 @@ mod tests {
             "mod.js",
             "const { readFileSync } = require(\"fs\");\nmodule.exports = { readFileSync };",
         );
-        let result = commonjs_handler(vec![dep]);
+        let result = cjs_handler(vec![dep]);
         assert_eq!(result.len(), 1);
         assert!(result[0].content.contains("import"));
     }
@@ -797,7 +799,7 @@ mod tests {
     #[test]
     fn test_commonjs_handler_default_export_hoisted_to_end() {
         let dep = make_cjs_dep("mod.js", "module.exports = 42;\nexports.foo = 1;");
-        let result = commonjs_handler(vec![dep]);
+        let result = cjs_handler(vec![dep]);
         // Default export (module.exports = ...) should be after named export
         let default_pos = result[0].content.find("export default");
         let named_pos = result[0].content.find("export const foo");

@@ -1,13 +1,10 @@
 //! Unique name generator.
-//!
-//! Ported from `src/nodejs/bundler/lib/uniqueName.ts`.
 
 use std::collections::HashMap;
 
 /// A unique name generator that produces deterministic, collision-free names
 /// by combining a per-key prefix with an incrementing counter.
-///
-/// Mirrors the `UniqueName` class in `uniqueName.ts`.
+
 #[derive(Debug, Clone)]
 pub struct UniqueName {
     /// Maps `key` → `(prefix, count)`.
