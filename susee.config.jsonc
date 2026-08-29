@@ -16,6 +16,6 @@
 			"warning": false
 		}
 	],
-	"outDir": "out",
+	"outDir": "test_out",
 	"allowUpdatePackageJson": false
 }

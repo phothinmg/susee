@@ -4,7 +4,6 @@ use crate::core::susee_tree::susee_tree;
 use crate::core::susee_types::ProjectType;
 use crate::core::susee_utils::{is_non_local_import, merge_content, merge_imports_statement};
 use std::path::Path;
-use std::time::Instant;
 
 pub struct BundleResult {
     pub bundled_code: String,
@@ -13,7 +12,6 @@ pub struct BundleResult {
 
 //
 pub fn bundler<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<BundleResult> {
-    let bundler_start = Instant::now();
     let tree = susee_tree(entry, root)?;
     let project_type = tree.project_type;
     // Check for warnings.
@@ -57,7 +55,6 @@ pub fn bundler<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<BundleRe
     // Pretty-print the bundled output by round-tripping it through oxc's
     // codegen, which re-indents and normalizes formatting.
     content = pretty_print(&content, file);
-    susee_log::bundle_time(bundler_start);
     Ok(BundleResult {
         bundled_code: content,
         project_type,

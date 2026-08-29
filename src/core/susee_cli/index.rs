@@ -57,16 +57,16 @@ const CONFIG_TEMPLATE: &str = r#"{
 /// and writes `susee.config.ts|js|mjs`; the Rust CLI uses JSON, so this
 /// writes `susee.config.json` non-interactively.
 pub fn cli_init() {
-    let config_path = PathBuf::from("susee.config.json");
+    let config_path = PathBuf::from("susee.config.jsonc");
     if config_path.exists() {
-        fail("susee.config.json already exists in the current directory");
+        fail("susee.config.jsonc already exists in the current directory");
     }
     if let Err(e) = std::fs::write(&config_path, CONFIG_TEMPLATE) {
-        fail(&format!("failed to write susee.config.json: {e}"));
+        fail(&format!("failed to write susee.config.jsonc: {e}"));
     }
-    println!("Done! Susee config file susee.config.json is created at project root");
+    println!("Done! Susee config file susee.config.jsonc is created at project root");
 }
-
+#[allow(unused)]
 /// Top-level CLI entry point.
 ///
 /// Mirrors `suseeCliBuild()` from `index.ts`. Reads the raw argv from
@@ -79,7 +79,15 @@ pub fn susee_cli_build() {
         .skip(1) // skip the program name, like `process.argv.slice(2)`
         .map(|s| s.to_string_lossy().into_owned())
         .collect();
+    susee_cli_build_with_args(raw_args);
+}
 
+/// Top-level CLI entry point with explicit args.
+///
+/// Used by the Node.js (napi) binding where `process.argv` includes both
+/// the Node executable and the script path, so `std::env::args().skip(1)`
+/// would be incorrect. The JS side passes `process.argv.slice(2)` here.
+pub fn susee_cli_build_with_args(raw_args: Vec<String>) {
     let (args, profile) = extract_profile_flag(&raw_args);
     if profile {
         set_profile_enabled(true);
@@ -115,8 +123,13 @@ pub fn susee_cli_build() {
         }
     }
 
-    // `susee build --help` / `-h`
-    if args.len() == 1 && args[0] == "--help" || args[0] == "-h" {
+    // `susee build --help` / `susee build -h` / `susee --help <anything>` etc.
+    // (Bug 10 fix: original `args.len() == 1 && ... || ...` had precedence
+    //  issues and the len==1 case was already handled above — this is dead
+    //  code. The real `build -h` path is the `args.len() > 1 && args[0] ==
+    //  "build"` branch below, which `parse_args` handles.)
+    let has_help = args.iter().any(|a| a == "--help" || a == "-h");
+    if has_help {
         print_help();
         return;
     }

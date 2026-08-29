@@ -2,4 +2,4 @@ mod cli_options;
 mod cli_utils;
 mod index;
 
-pub use index::susee_cli_build;
+pub use index::susee_cli_build_with_args;

@@ -118,6 +118,7 @@ pub enum ProjectType {
     MIXED,
 }
 impl ProjectType {
+    #[allow(unused)]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::JS => "js",

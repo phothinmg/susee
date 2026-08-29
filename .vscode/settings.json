@@ -26,6 +26,8 @@
 		"config": ".rubocop.yml"
 	},
 	"cSpell.words": [
+		"androideabi",
+		"armv",
 		"aunused",
 		"cdylib",
 		"codegen",
@@ -37,10 +39,13 @@
 		"finalizer",
 		"getset",
 		"giscus",
+		"gnueabihf",
 		"iface",
 		"indexmap",
+		"inlines",
 		"jconfig",
 		"Moji",
+		"msvc",
 		"napi",
 		"nique",
 		"nonymous",
@@ -49,7 +54,10 @@
 		"rlib",
 		"serde",
 		"susee",
+		"suseejs",
+		"topo",
 		"tsoptions",
-		"ushared"
+		"ushared",
+		"wasip"
 	]
 }

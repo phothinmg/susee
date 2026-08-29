@@ -1,12 +1,14 @@
 // #![allow(dead_code)]
 use std::path::PathBuf;
 
+use napi_derive::napi;
 use serde::{Deserialize, Serialize};
 
 /// Output module formats supported by the compiler.
 ///
 /// Mirrors `OutputFormat = ("commonjs" | "esm")[]` from the TS config.
 /// Serialized as lowercase strings to match the JSON config form.
+#[napi]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OutputFormat {
@@ -144,6 +146,7 @@ impl Default for BuildOptions {
 ///
 /// JSON field names use camelCase to match the TS `SuSeeConfig` interface
 /// (e.g. `entryPoints`, `exportPath`).
+#[napi(object)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EntryPoint {
@@ -158,6 +161,7 @@ pub struct EntryPoint {
 }
 
 /// The raw susee config, mirroring `SuSeeConfig`.
+#[napi(object)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SuSeeConfig {
