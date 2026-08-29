@@ -6,8 +6,8 @@ use oxc::ast::ast::{
 use oxc::ast_visit::Visit;
 use oxc::span::{GetSpan, Span};
 
-use super::types::{DepsFile, ModuleType, ValidExts};
-use super::utils::with_parsed_program;
+use crate::core::susee_types::{DepsFile, ModuleType, ValidExts};
+use crate::core::susee_utils::with_parsed_program;
 
 // ---------------------------------------------------------------------------
 // Shared helpers

@@ -1,0 +1,726 @@
+//! Anonymous export/import normalization hook.
+//!
+//! Mirrors `src/bundler/lib/anonymous.ts` from the TypeScript implementation.
+//!
+//! When a file has an anonymous default export such as:
+//! ```ts
+//! export default () => 42;
+//! export default function () { return 1; }
+//! export default class {}
+//! export default { foo: 1 };
+//! export default 42;
+//! export default "hello";
+//! export default [1, 2, 3];
+//! ```
+//! the bundler cannot reference the export by name. This hook assigns a
+//! unique name (`susee__anonymous__<file>_<n>`) to the anonymous declaration,
+//! rewrites the export to use that name, and then updates all importing files
+//! to use the new name instead of their original default import binding.
+//!
+//! ## Pipeline
+//!
+//! 1. **`anonymous_export_handler`** — Scan every file for anonymous default
+//!    exports and assign unique names. Record the mapping `(file_stem → new_name)`
+//!    in `anonymous_export_name_map`.
+//! 2. **`anonymous_import_handler`** — Scan every file for default imports
+//!    whose source module's file stem matches an entry in
+//!    `anonymous_export_name_map`. Record the mapping `(local_name, file → new_name)`
+//!    in `anonymous_import_name_map`.
+//! 3. **`anonymous_call_expression_handler`** — Rename all references (call
+//!    expressions, property access, new expressions, export specifiers) that
+//!    use the old default-import binding to the new anonymous export name.
+//!
+//! All three sub-handlers operate on source text via AST round-tripping, the
+//! same span-replacement strategy used by `apply_renames` in
+//! `susee_utils::apply_renames`.
+
+use std::path::Path;
+
+use oxc::ast::ast::{
+    ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportSpecifier, Expression,
+    ImportDeclaration, ImportDeclarationSpecifier, ModuleExportName, Program, Statement,
+};
+use oxc::ast_visit::Visit;
+use oxc::span::{GetSpan, Span};
+
+use crate::core::susee_types::DepsFile;
+use crate::core::susee_unique_name::UniqueName;
+use crate::core::susee_utils::with_parsed_program;
+
+/// The prefix used for all anonymous export names, matching the TS
+/// implementation (`uniqueName.setPrefix({ key: "AnonymousName", value: "susee__anonymous__" })`).
+const ANONYMOUS_PREFIX_KEY: &str = "AnonymousName";
+const ANONYMOUS_PREFIX_VALUE: &str = "susee__anonymous__";
+
+/// Extract the file stem (basename without extension) from a file path.
+///
+/// Mirrors `path.basename(file).split(".")[0]` from the TS implementation.
+fn file_stem(file: &str) -> String {
+    Path::new(file)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("anon")
+        .to_string()
+}
+
+/// Extract the module specifier string from an import declaration.
+///
+/// Returns the raw string inside the quotes, e.g. `"./foo"` → `./foo`.
+fn import_source(decl: &ImportDeclaration<'_>) -> String {
+    decl.source.value.as_str().to_string()
+}
+
+// ---------------------------------------------------------------------------
+// Data: name maps
+// ---------------------------------------------------------------------------
+
+/// A mapping from an anonymous export's file stem to the generated name.
+#[derive(Debug, Clone)]
+struct ExportNameEntry {
+    /// The file stem (basename without extension) of the exporting file.
+    file: String,
+    /// The generated unique name.
+    new_name: String,
+}
+
+/// A mapping from a default import's local binding name to the generated
+/// anonymous export name, scoped to the importing file.
+#[derive(Debug, Clone)]
+struct ImportNameEntry {
+    /// The importing file path.
+    file: String,
+    /// The original local binding name used in `import X from "..."`.
+    base: String,
+    /// The anonymous export name to replace it with.
+    new_name: String,
+}
+
+/// Mutable state shared across the three sub-handlers.
+struct AnonymousState {
+    unique: UniqueName,
+    export_map: Vec<ExportNameEntry>,
+    import_map: Vec<ImportNameEntry>,
+}
+
+impl AnonymousState {
+    fn new() -> Self {
+        let mut unique = UniqueName::new();
+        unique.set_prefix(ANONYMOUS_PREFIX_KEY, ANONYMOUS_PREFIX_VALUE);
+        Self {
+            unique,
+            export_map: Vec::new(),
+            import_map: Vec::new(),
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 1. Anonymous export handler
+// ---------------------------------------------------------------------------
+
+/// Check whether an `ExportDefaultDeclaration` has an anonymous declaration
+/// (function or class without a name).
+fn is_anonymous_function_or_class<'a>(
+    decl: &ExportDefaultDeclaration<'a>,
+) -> (bool, Option<&'a str>) {
+    match &decl.declaration {
+        ExportDefaultDeclarationKind::FunctionDeclaration(func) => (func.id.is_none(), None),
+        ExportDefaultDeclarationKind::ClassDeclaration(cls) => (cls.id.is_none(), None),
+        _ => (false, None),
+    }
+}
+
+/// Collect byte-offset spans to replace for the anonymous export handler.
+///
+/// Returns a list of `(start_offset, end_offset, replacement_text)` tuples.
+/// For anonymous function/class declarations, the replacement inserts a name
+/// identifier after the `function`/`class` keyword. For expression default
+/// exports (arrow, object, array, string, number, etc.), the entire
+/// `export default <expr>;` statement is replaced with
+/// `const <name> = <expr>; export default <name>;`.
+fn collect_export_spans(
+    program: &Program<'_>,
+    source_text: &str,
+    state: &mut AnonymousState,
+    file: &str,
+) -> Vec<(usize, usize, String)> {
+    let stem = file_stem(file);
+    let mut spans: Vec<(usize, usize, String)> = Vec::new();
+
+    for stmt in &program.body {
+        if let Statement::ExportDefaultDeclaration(export_decl) = stmt {
+            let (is_anon, _) = is_anonymous_function_or_class(export_decl);
+            if is_anon {
+                // `export default function() {}` or `export default class {}`
+                let new_name = state.unique.get_name(ANONYMOUS_PREFIX_KEY, &stem);
+                state.export_map.push(ExportNameEntry {
+                    file: stem.clone(),
+                    new_name: new_name.clone(),
+                });
+
+                // We need to find the position to insert the name — right
+                // after `function ` or `class ` (or `function* ` / `async function `).
+                // The span of the declaration covers the whole
+                // `function () {}` / `class {}` part. We insert the name
+                // right after the keyword.
+                let decl_span = export_decl.declaration.span();
+                let decl_text = decl_span.source_text(source_text);
+
+                // Find the keyword end position.
+                let keyword_end = find_keyword_end(decl_text);
+                if let Some(kw_end) = keyword_end {
+                    let abs_insert = decl_span.start as usize + kw_end;
+                    // Insert ` <name>` after the keyword.
+                    spans.push((abs_insert, abs_insert, format!(" {new_name}")));
+                }
+            } else {
+                // Check for expression-type default exports
+                let expr_span = match &export_decl.declaration {
+                    ExportDefaultDeclarationKind::ArrowFunctionExpression(_)
+                    | ExportDefaultDeclarationKind::ObjectExpression(_)
+                    | ExportDefaultDeclarationKind::ArrayExpression(_)
+                    | ExportDefaultDeclarationKind::StringLiteral(_)
+                    | ExportDefaultDeclarationKind::NumericLiteral(_)
+                    | ExportDefaultDeclarationKind::BooleanLiteral(_)
+                    | ExportDefaultDeclarationKind::NullLiteral(_)
+                    | ExportDefaultDeclarationKind::Identifier(_)
+                    | ExportDefaultDeclarationKind::TemplateLiteral(_)
+                    | ExportDefaultDeclarationKind::FunctionExpression(_)
+                    | ExportDefaultDeclarationKind::ClassExpression(_) => {
+                        Some(export_decl.declaration.span())
+                    }
+                    _ => None,
+                };
+
+                if let Some(expr_span) = expr_span {
+                    let new_name = state.unique.get_name(ANONYMOUS_PREFIX_KEY, &stem);
+                    state.export_map.push(ExportNameEntry {
+                        file: stem.clone(),
+                        new_name: new_name.clone(),
+                    });
+
+                    let expr_text = expr_span.source_text(source_text);
+                    let replacement =
+                        format!("const {new_name} = {expr_text};\nexport default {new_name};");
+                    // Replace the entire `export default <expr>;` statement
+                    let stmt_span = export_decl.span;
+                    spans.push((
+                        stmt_span.start as usize,
+                        stmt_span.end as usize,
+                        replacement,
+                    ));
+                }
+            }
+        }
+    }
+
+    spans
+}
+
+/// Find the byte offset right after the leading keyword (`function`, `function*`,
+/// `async function`, `class`, `abstract class`) in a declaration text.
+///
+/// Returns the position immediately after the keyword (before any following
+/// whitespace), so that inserting ` <name>` at this offset produces
+/// `function <name>() {}` / `class <name> {}` with the correct single space.
+fn find_keyword_end(text: &str) -> Option<usize> {
+    let trimmed = text.trim_start();
+    let leading_ws = text.len() - trimmed.len();
+
+    // Check for `async function` or `function` or `class`
+    for keyword in ["async function", "function", "class", "abstract class"] {
+        if trimmed.starts_with(keyword) {
+            return Some(leading_ws + keyword.len());
+        }
+    }
+
+    // Check for generator: `function*`
+    if trimmed.starts_with("function*") {
+        return Some(leading_ws + "function*".len());
+    }
+
+    None
+}
+
+/// Process a single file for anonymous default exports.
+fn anonymous_export_handler(dep: &DepsFile, state: &mut AnonymousState) -> String {
+    with_parsed_program(&dep.file, &dep.content, |program| {
+        let source_text = program.source_text;
+        let mut spans = collect_export_spans(program, source_text, state, &dep.file);
+
+        if spans.is_empty() {
+            return dep.content.clone();
+        }
+
+        // Sort spans by start offset descending (right to left).
+        spans.sort_by_key(|(start, _, _)| std::cmp::Reverse(*start));
+
+        // Remove duplicate spans (same start+end).
+        spans.dedup_by(|a, b| a.0 == b.0 && a.1 == b.1);
+
+        let mut result = dep.content.clone();
+        for (start, end, replacement) in &spans {
+            if *start <= result.len() && *end <= result.len() && *start <= *end {
+                result.replace_range(*start..*end, replacement);
+            }
+        }
+
+        result
+    })
+}
+
+// ---------------------------------------------------------------------------
+// 2. Anonymous import handler
+// ---------------------------------------------------------------------------
+
+/// Collect import rename mappings for default imports whose source file stem
+/// matches an anonymous export.
+fn collect_import_mappings(program: &Program<'_>, state: &mut AnonymousState, file: &str) {
+    for stmt in &program.body {
+        if let Statement::ImportDeclaration(import_decl) = stmt {
+            let source = import_source(import_decl);
+            let import_stem = file_stem(&source);
+
+            // Check if this source module has an anonymous export mapping.
+            let Some(mapping) = state.export_map.iter().find(|m| m.file == import_stem) else {
+                continue;
+            };
+
+            // Check for a default import specifier.
+            if let Some(specifiers) = &import_decl.specifiers {
+                for spec in specifiers {
+                    if let ImportDeclarationSpecifier::ImportDefaultSpecifier(default_spec) = spec {
+                        let local_name = default_spec.local.name.as_str().to_string();
+                        state.import_map.push(ImportNameEntry {
+                            file: file.to_string(),
+                            base: local_name,
+                            new_name: mapping.new_name.clone(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Process a single file for anonymous default imports and rename them.
+fn anonymous_import_handler(dep: &DepsFile, state: &mut AnonymousState) -> String {
+    with_parsed_program(&dep.file, &dep.content, |program| {
+        // First, collect the import mappings for this file.
+        collect_import_mappings(program, state, &dep.file);
+
+        // Now collect spans to replace — the default import specifier's
+        // local name should be renamed to the anonymous export name.
+        let mut spans: Vec<(usize, usize, String)> = Vec::new();
+
+        for stmt in &program.body {
+            if let Statement::ImportDeclaration(import_decl) = stmt {
+                let source = import_source(import_decl);
+                let import_stem = file_stem(&source);
+
+                let Some(mapping) = state.export_map.iter().find(|m| m.file == import_stem) else {
+                    continue;
+                };
+
+                if let Some(specifiers) = &import_decl.specifiers {
+                    for spec in specifiers {
+                        if let ImportDeclarationSpecifier::ImportDefaultSpecifier(default_spec) =
+                            spec
+                        {
+                            let local_span = default_spec.local.span;
+                            spans.push((
+                                local_span.start as usize,
+                                local_span.end as usize,
+                                mapping.new_name.clone(),
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+
+        if spans.is_empty() {
+            return dep.content.clone();
+        }
+
+        spans.sort_by_key(|(start, _, _)| std::cmp::Reverse(*start));
+        spans.dedup_by(|a, b| a.0 == b.0 && a.1 == b.1);
+
+        let mut result = dep.content.clone();
+        for (start, end, replacement) in &spans {
+            if *start <= result.len() && *end <= result.len() && *start <= *end {
+                result.replace_range(*start..*end, replacement);
+            }
+        }
+
+        result
+    })
+}
+
+// ---------------------------------------------------------------------------
+// 3. Anonymous call-expression handler
+// ---------------------------------------------------------------------------
+
+/// Collect all identifier reference spans that should be renamed because they
+/// refer to a renamed default import binding.
+struct ReferenceCollector<'a> {
+    import_map: &'a [ImportNameEntry],
+    file: &'a str,
+    spans: Vec<(Span, String)>,
+}
+
+impl<'a> ReferenceCollector<'a> {
+    fn find_mapping(&self, name: &str) -> Option<&str> {
+        self.import_map
+            .iter()
+            .find(|m| m.file == self.file && m.base == name)
+            .map(|m| m.new_name.as_str())
+    }
+}
+
+impl<'a, 'ast> Visit<'ast> for ReferenceCollector<'a> {
+    fn visit_call_expression(&mut self, it: &oxc::ast::ast::CallExpression<'ast>) {
+        if let Expression::Identifier(ident) = &it.callee {
+            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
+                // Replace just the identifier span, not the whole call.
+                self.spans.push((ident.span, new_name.to_string()));
+            }
+        }
+        oxc::ast_visit::walk::walk_call_expression(self, it);
+    }
+
+    fn visit_static_member_expression(&mut self, it: &oxc::ast::ast::StaticMemberExpression<'ast>) {
+        if let Expression::Identifier(ident) = &it.object {
+            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
+                self.spans.push((ident.span, new_name.to_string()));
+            }
+        }
+        oxc::ast_visit::walk::walk_static_member_expression(self, it);
+    }
+
+    fn visit_new_expression(&mut self, it: &oxc::ast::ast::NewExpression<'ast>) {
+        if let Expression::Identifier(ident) = &it.callee {
+            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
+                self.spans.push((ident.span, new_name.to_string()));
+            }
+        }
+        oxc::ast_visit::walk::walk_new_expression(self, it);
+    }
+
+    fn visit_export_named_declaration(&mut self, it: &oxc::ast::ast::ExportNamedDeclaration<'ast>) {
+        for spec in &it.specifiers {
+            self.check_export_specifier(spec);
+        }
+        oxc::ast_visit::walk::walk_export_named_declaration(self, it);
+    }
+
+    fn visit_export_from_declaration(&mut self, it: &oxc::ast::ast::ExportFromDeclaration<'ast>) {
+        for spec in &it.specifiers {
+            self.check_export_specifier(spec);
+        }
+        oxc::ast_visit::walk::walk_export_from_declaration(self, it);
+    }
+}
+
+impl<'a> ReferenceCollector<'a> {
+    fn check_export_specifier(&mut self, spec: &ExportSpecifier<'_>) {
+        // `export { local as exported }` — rename `local` if it matches.
+        if let ModuleExportName::IdentifierReference(ident) = &spec.local {
+            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
+                self.spans.push((ident.span, new_name.to_string()));
+            }
+        }
+    }
+}
+
+/// Process a single file to rename all references to renamed default imports.
+fn anonymous_call_expression_handler(dep: &DepsFile, state: &AnonymousState) -> String {
+    with_parsed_program(&dep.file, &dep.content, |program| {
+        let mut collector = ReferenceCollector {
+            import_map: &state.import_map,
+            file: &dep.file,
+            spans: Vec::new(),
+        };
+        collector.visit_program(program);
+
+        if collector.spans.is_empty() {
+            return dep.content.clone();
+        }
+
+        let mut spans = collector.spans;
+        spans.sort_by_key(|(span, _)| std::cmp::Reverse(span.start));
+        spans.dedup_by(|a, b| a.0 == b.0);
+
+        let mut result = dep.content.clone();
+        for (span, new_name) in &spans {
+            let start = span.start as usize;
+            let end = span.end as usize;
+            if start <= result.len() && end <= result.len() && start <= end {
+                result.replace_range(start..end, new_name);
+            }
+        }
+
+        result
+    })
+}
+
+// ---------------------------------------------------------------------------
+// Public entry point
+// ---------------------------------------------------------------------------
+
+/// Normalize anonymous default exports and imports across a set of
+/// dependency files.
+///
+/// This is the Rust counterpart of `anonymousHandler` from
+/// `src/bundler/lib/anonymous.ts`. It runs three sub-handlers in sequence:
+///
+/// 1. `anonymous_export_handler` — name anonymous default exports
+/// 2. `anonymous_import_handler` — rename default imports from anonymous modules
+/// 3. `anonymous_call_expression_handler` — rename all references to those imports
+///
+/// The state (export/import name maps + unique name generator) is reset at
+/// the start of each call, matching `resetAnonymousState()` in the TS version.
+pub fn anonymous_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
+    let mut state = AnonymousState::new();
+
+    // Phase 1: Name anonymous default exports.
+    let phase1: Vec<DepsFile> = deps
+        .iter()
+        .map(|dep| {
+            let content = anonymous_export_handler(dep, &mut state);
+            DepsFile {
+                file: dep.file.clone(),
+                content,
+                bytes: 0, // recalculated below
+                module_type: dep.module_type,
+                file_ext: dep.file_ext,
+                is_jsx: dep.is_jsx,
+                is_entry: dep.is_entry,
+            }
+        })
+        .collect();
+
+    // Phase 2: Rename default imports from anonymous modules.
+    let phase2: Vec<DepsFile> = phase1
+        .iter()
+        .map(|dep| {
+            let content = anonymous_import_handler(dep, &mut state);
+            DepsFile {
+                file: dep.file.clone(),
+                content,
+                bytes: 0,
+                module_type: dep.module_type,
+                file_ext: dep.file_ext,
+                is_jsx: dep.is_jsx,
+                is_entry: dep.is_entry,
+            }
+        })
+        .collect();
+
+    // Phase 3: Rename all references to renamed imports.
+    let phase3: Vec<DepsFile> = phase2
+        .iter()
+        .map(|dep| {
+            let content = anonymous_call_expression_handler(dep, &state);
+            let bytes = content.len();
+            DepsFile {
+                file: dep.file.clone(),
+                content,
+                bytes,
+                module_type: dep.module_type,
+                file_ext: dep.file_ext,
+                is_jsx: dep.is_jsx,
+                is_entry: dep.is_entry,
+            }
+        })
+        .collect();
+
+    phase3
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::susee_utils::make_dep;
+
+    #[test]
+    fn names_anonymous_default_arrow_export() {
+        let deps = vec![make_dep("src/anon.ts", "export default () => 42;\n")];
+        let result = anonymous_handler(deps);
+        assert_eq!(result.len(), 1);
+        let content = &result[0].content;
+        // Should contain a const declaration with the anonymous name.
+        assert!(content.contains("const susee__anonymous__anon_"));
+        // Should contain `export default <name>`.
+        assert!(
+            content.contains("export default susee__anonymous__anon_"),
+            "content was: {content}"
+        );
+        // Should not contain the original anonymous arrow export.
+        assert!(!content.contains("export default () => 42"));
+    }
+
+    #[test]
+    fn names_anonymous_default_function_export() {
+        let deps = vec![make_dep(
+            "src/anon.ts",
+            "export default function() { return 1; }\n",
+        )];
+        let result = anonymous_handler(deps);
+        let content = &result[0].content;
+        // The function should now have a name.
+        assert!(content.contains("susee__anonymous__anon_"));
+        // Should still have the function body.
+        assert!(content.contains("return 1;"));
+        assert!(content.contains("export default function susee__anonymous__anon_"));
+    }
+
+    #[test]
+    fn names_anonymous_default_class_export() {
+        let deps = vec![make_dep("src/anon.ts", "export default class {}\n")];
+        let result = anonymous_handler(deps);
+        let content = &result[0].content;
+        assert!(content.contains("susee__anonymous__anon_"));
+        assert!(
+            content.contains("export default class susee__anonymous__anon_"),
+            "content was: {content}"
+        );
+    }
+
+    #[test]
+    fn names_anonymous_default_object_export() {
+        let deps = vec![make_dep("src/anon.ts", "export default { foo: 1 };\n")];
+        let result = anonymous_handler(deps);
+        let content = &result[0].content;
+        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("export default susee__anonymous__anon_"));
+        assert!(content.contains("{ foo: 1 }"));
+    }
+
+    #[test]
+    fn names_anonymous_default_array_export() {
+        let deps = vec![make_dep("src/anon.ts", "export default [1, 2, 3];\n")];
+        let result = anonymous_handler(deps);
+        let content = &result[0].content;
+        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("[1, 2, 3]"));
+    }
+
+    #[test]
+    fn names_anonymous_default_string_export() {
+        let deps = vec![make_dep("src/anon.ts", "export default \"hello\";\n")];
+        let result = anonymous_handler(deps);
+        let content = &result[0].content;
+        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("\"hello\""));
+    }
+
+    #[test]
+    fn names_anonymous_default_number_export() {
+        let deps = vec![make_dep("src/anon.ts", "export default 42;\n")];
+        let result = anonymous_handler(deps);
+        let content = &result[0].content;
+        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("42"));
+    }
+
+    #[test]
+    fn preserves_named_default_exports() {
+        let deps = vec![make_dep(
+            "src/named.ts",
+            "export default function hello() { return 1; }\n",
+        )];
+        let result = anonymous_handler(deps);
+        let content = &result[0].content;
+        // Named exports should not be renamed by the anonymous handler.
+        assert!(content.contains("function hello()"));
+        assert!(!content.contains("susee__anonymous__"));
+    }
+
+    #[test]
+    fn no_changes_when_no_anonymous_exports() {
+        let src = "export const x = 1;\nexport function foo() { return x; }\n";
+        let deps = vec![make_dep("src/normal.ts", src)];
+        let result = anonymous_handler(deps);
+        assert_eq!(result[0].content, src);
+    }
+
+    #[test]
+    fn rewrites_default_import_from_anonymous_module() {
+        // File A: anonymous default export
+        let dep_a = make_dep("src/anon.ts", "export default () => 42;\n");
+        // File B: imports the anonymous default export
+        let dep_b = make_dep("src/main.ts", "import myFn from \"./anon\";\nmyFn();\n");
+
+        let result = anonymous_handler(vec![dep_a, dep_b]);
+        let main_content = &result[1].content;
+
+        // The import should use the new anonymous name.
+        assert!(
+            main_content.contains("import susee__anonymous__anon_"),
+            "content was: {main_content}"
+        );
+        // The call should also be renamed.
+        assert!(
+            main_content.contains("susee__anonymous__anon_"),
+            "content was: {main_content}"
+        );
+        // The old name should be gone.
+        assert!(!main_content.contains("myFn"));
+    }
+
+    #[test]
+    fn rewrites_property_access_on_anonymous_import() {
+        let dep_a = make_dep("src/anon.ts", "export default { foo: 1 };\n");
+        let dep_b = make_dep("src/main.ts", "import obj from \"./anon\";\nobj.foo;\n");
+
+        let result = anonymous_handler(vec![dep_a, dep_b]);
+        let main_content = &result[1].content;
+
+        assert!(
+            main_content.contains("susee__anonymous__anon_"),
+            "content was: {main_content}"
+        );
+        assert!(!main_content.contains("obj"));
+    }
+
+    #[test]
+    fn rewrites_new_expression_on_anonymous_import() {
+        let dep_a = make_dep("src/anon.ts", "export default class {}\n");
+        let dep_b = make_dep("src/main.ts", "import Ctor from \"./anon\";\nnew Ctor();\n");
+
+        let result = anonymous_handler(vec![dep_a, dep_b]);
+        let main_content = &result[1].content;
+
+        assert!(
+            main_content.contains("susee__anonymous__anon_"),
+            "content was: {main_content}"
+        );
+        assert!(
+            main_content.contains("new susee__anonymous__anon_"),
+            "content was: {main_content}"
+        );
+    }
+
+    #[test]
+    fn rewrites_re_export_of_anonymous_import() {
+        let dep_a = make_dep("src/anon.ts", "export default () => 42;\n");
+        let dep_b = make_dep(
+            "src/main.ts",
+            "import myFn from \"./anon\";\nexport { myFn };\n",
+        );
+
+        let result = anonymous_handler(vec![dep_a, dep_b]);
+        let main_content = &result[1].content;
+
+        assert!(
+            main_content.contains("susee__anonymous__anon_"),
+            "content was: {main_content}"
+        );
+        assert!(!main_content.contains("myFn"));
+    }
+}

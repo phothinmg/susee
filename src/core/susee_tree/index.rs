@@ -1,19 +1,15 @@
 use super::cjs_handler::cjs_handler;
 use super::cts_handler::cts_handler;
-use super::types::{DependenciesTree, DepsFile, ModuleType, ProjectType, ValidExts};
-use super::utils::{detect_module_type, is_jsx_content, read_file};
+use super::json_handler::json_handler;
 use crate::core::susee_log;
+use crate::core::susee_types::{
+    DepReturns, DependenciesTree, DepsFile, ModuleType, ProjectType, ValidExts,
+};
+use crate::core::susee_utils::{detect_module_type, is_jsx_content, read_file};
 use colored::*;
 use dependensa::generate_graph;
 use std::path::Path;
 //
-#[derive(serde::Serialize)]
-struct DepReturns {
-    pub npm: Vec<String>,
-    pub nodes: Vec<String>,
-    pub warns: Vec<String>,
-    pub dep_files: Vec<DepsFile>,
-}
 
 fn get_deps<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DepReturns> {
     let root = root.as_ref().to_path_buf();
@@ -106,6 +102,11 @@ fn has_js_extensions(dep_files: &[DepsFile]) -> bool {
         .iter()
         .any(|dep| js_extensions.contains(&dep.file_ext))
 }
+fn has_json(dep_files: &[DepsFile]) -> bool {
+    dep_files
+        .iter()
+        .any(|dep| dep.module_type == ModuleType::Json)
+}
 /// Tree for bundler
 pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DependenciesTree> {
     let deps = get_deps(entry, root).expect(&"Error generating dependency files".magenta());
@@ -129,16 +130,26 @@ pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Depen
             let message = "Bundling the CTS module type (CommonJS in TypeScript) is experimental; be careful with complex import/export.";
             susee_log::warning(message);
             let cts_handled = cts_handler(dep_files);
+            let dep_files = if has_json(&cts_handled) {
+                json_handler(cts_handled)
+            } else {
+                cts_handled
+            };
             return Ok(DependenciesTree {
                 entry: entry.to_string(),
                 npm,
                 nodes,
                 warns,
-                dep_files: cts_handled,
+                dep_files,
                 project_type: ProjectType::TS,
             });
         }
         // Only ESM found
+        let dep_files = if has_json(&dep_files) {
+            json_handler(dep_files)
+        } else {
+            dep_files
+        };
         return Ok(DependenciesTree {
             entry: entry.to_string(),
             npm,
@@ -161,16 +172,26 @@ pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Depen
             let message = "Bundling the CommonJS module type is experimental; be careful with complex import/export.";
             susee_log::warning(message);
             let cjs_handled = cjs_handler(dep_files);
+            let dep_files = if has_json(&cjs_handled) {
+                json_handler(cjs_handled)
+            } else {
+                cjs_handled
+            };
             return Ok(DependenciesTree {
                 entry: entry.to_string(),
                 npm,
                 nodes,
                 warns,
-                dep_files: cjs_handled,
+                dep_files,
                 project_type: ProjectType::JS,
             });
         }
         // Only ESM found
+        let dep_files = if has_json(&dep_files) {
+            json_handler(dep_files)
+        } else {
+            dep_files
+        };
         return Ok(DependenciesTree {
             entry: entry.to_string(),
             npm,
@@ -194,6 +215,11 @@ pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Depen
             susee_log::error(info, cause, e);
         }
         // Only ESM found
+        let dep_files = if has_json(&dep_files) {
+            json_handler(dep_files)
+        } else {
+            dep_files
+        };
         return Ok(DependenciesTree {
             entry: entry.to_string(),
             npm,
