@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
 use crate::core::susee_log;
-use crate::core::susee_types::{DepsFile, FileInfo, NameToFileMap, NamesSet};
-use crate::core::susee_unique_name::UniqueName;
-use crate::core::susee_utils::{apply_renames, collect_root_bindings};
+use crate::core::susee_types::{DepsFile, NameToFileMap, NamesSet};
+use crate::core::susee_unique_name::{UniqueName, sigil};
+use crate::core::susee_utils::{
+    apply_renames, collect_top_level_declaration_names, with_parsed_program,
+};
 
 /// Detect cross-file duplicate top-level declaration names and rename them.
 ///
@@ -11,21 +13,36 @@ use crate::core::susee_utils::{apply_renames, collect_root_bindings};
 /// further: instead of just reporting and exiting, it renames the colliding
 /// names to unique alternatives so that bundling can proceed.
 ///
-/// Only root-scope (top-level) bindings are checked — nested scopes are
-/// file-local and cannot collide across files.
+/// Only root-scope (top-level) **declarations** are checked — import bindings
+/// are excluded so that an `import { a } from './a'` in one file is not treated
+/// as a duplicate of `export const a` in another file. Renaming import
+/// bindings would decouple them from their source and break the bundle.
+/// Nested scopes are file-local and cannot collide across files.
 pub fn check_duplicates(dep_files: Vec<DepsFile>) -> Vec<DepsFile> {
-    // 1. Collect root-scope binding names per file.
-    let file_infos: Vec<FileInfo> = dep_files.iter().map(collect_root_bindings).collect();
+    // 1. Collect top-level declaration names per file (excluding imports).
+    //    We walk the AST directly rather than using the semantic scope's
+    //    `iter_bindings_in(root)` because the latter also returns import-
+    //    introduced bindings, which must NOT be treated as declarations.
+    let file_decl_names: Vec<Vec<String>> = dep_files
+        .iter()
+        .map(|dep| {
+            with_parsed_program(&dep.file, &dep.content, |program| {
+                collect_top_level_declaration_names(program)
+                    .into_iter()
+                    .map(|(name, _)| name)
+                    .collect()
+            })
+        })
+        .collect();
 
-    // 2. Build a map: name → list of (file_index, symbol_ids) that declare it
-    //    at root scope.
+    // 2. Build a map: name → list of file indices that declare it at root scope.
     let mut name_to_files: NameToFileMap = HashMap::new();
-    for (file_idx, info) in file_infos.iter().enumerate() {
-        for (name, symbol_id) in &info.root_symbols {
+    for (file_idx, names) in file_decl_names.iter().enumerate() {
+        for name in names {
             name_to_files
                 .entry(name.clone())
                 .or_default()
-                .push((file_idx, vec![*symbol_id]));
+                .push((file_idx, vec![]));
         }
     }
 
@@ -59,7 +76,7 @@ pub fn check_duplicates(dep_files: Vec<DepsFile>) -> Vec<DepsFile> {
 
     // 5. Build rename maps per file using UniqueName.
     let mut unique = UniqueName::new();
-    unique.set_prefix("Duplicates", "susee__duplicate__");
+    unique.set_prefix("Duplicates", sigil::DUPLICATE);
     // rename_map[file_idx][original_name] = new_name
     let mut rename_maps: Vec<HashMap<String, String>> =
         (0..dep_files.len()).map(|_| HashMap::new()).collect();
@@ -68,10 +85,13 @@ pub fn check_duplicates(dep_files: Vec<DepsFile>) -> Vec<DepsFile> {
 
     for (name, entries) in &duplicates {
         for (file_idx, symbol_ids) in entries {
-            // Use the file path as the `input` to get_name so that the
-            // generated name is deterministic and unique per (name, file).
+            // Use the original declaration `name` as the base for the
+            // generated identifier so the result is readable (e.g.
+            // `_ushared$1`). The per-category counter disambiguates
+            // the same name appearing in multiple files. `UniqueName`
+            // sanitizes the input into a valid JS identifier tail.
             let file_path = &dep_files[*file_idx].file;
-            let new_name = unique.get_name("Duplicates", file_path);
+            let new_name = unique.get_name("Duplicates", name);
             rename_maps[*file_idx].insert(name.clone(), new_name.clone());
             _names_sets.push(NamesSet {
                 base: name.clone(),
@@ -79,9 +99,6 @@ pub fn check_duplicates(dep_files: Vec<DepsFile>) -> Vec<DepsFile> {
                 new_name: new_name.clone(),
                 is_ed: true,
             });
-            // Mark all symbol IDs for this name in this file.
-            // (Typically there's one symbol per name per scope, but TS merging
-            // can create multiple.)
             let _ = symbol_ids;
         }
     }
@@ -141,12 +158,15 @@ mod tests {
             make_dep("src/b.ts", "export const shared = 2;\n"),
         ];
         let result = check_duplicates(deps);
-        // Both "shared" should have been renamed (to different names).
-        assert!(!result[0].content.contains("shared"));
-        assert!(!result[1].content.contains("shared"));
-        // The reference `useShared` contains "Shared" but not "shared" as a standalone.
+        // Both `shared` declarations should have been renamed (to different names).
+        assert!(!result[0].content.contains("const shared"));
+        assert!(!result[1].content.contains("const shared"));
+        // The reference `useShared` contains "Shared" but not "shared" as a declaration.
         // The function name itself is unique, so it should be unchanged.
-        assert!(result[0].content.contains("useShared") || result[0].content.contains("susee"));
+        assert!(result[0].content.contains("useShared"));
+        // The renamed declarations should use the duplicate sigil (`_u`).
+        assert!(result[0].content.contains("_ushared$"));
+        assert!(result[1].content.contains("_ushared$"));
     }
 
     #[test]
@@ -175,7 +195,12 @@ mod tests {
         ];
         let result = check_duplicates(deps);
         // Both declaration and export specifier should be renamed.
-        assert!(!result[0].content.contains("shared"));
-        assert!(!result[1].content.contains("shared"));
+        assert!(!result[0].content.contains("const shared"));
+        assert!(!result[1].content.contains("const shared"));
+        assert!(!result[0].content.contains("export { shared"));
+        assert!(!result[1].content.contains("export { shared"));
+        // The renamed identifiers should use the duplicate sigil (`_u`).
+        assert!(result[0].content.contains("_ushared$"));
+        assert!(result[1].content.contains("_ushared$"));
     }
 }

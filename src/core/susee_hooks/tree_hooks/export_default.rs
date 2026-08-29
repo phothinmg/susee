@@ -9,7 +9,7 @@
 //! export default foo;  // re-export of a local binding
 //! ```
 //! the bundler renames the symbol to a unique name
-//! (`susee__exportDefault__<base>_<n>`) so that when multiple files are
+//! (`_d<base>$<n>`) so that when multiple files are
 //! bundled together, there are no name collisions between default exports
 //! from different modules.
 //!
@@ -35,13 +35,12 @@ use oxc::ast_visit::Visit;
 use oxc::span::Span;
 
 use crate::core::susee_types::DepsFile;
-use crate::core::susee_unique_name::UniqueName;
+use crate::core::susee_unique_name::{UniqueName, sigil};
 use crate::core::susee_utils::with_parsed_program;
 
-/// The prefix used for named default exports, matching the TS
-/// implementation (`uniqueName.setPrefix({ key: "ExportDefault", value: "susee__exportDefault__" })`).
+/// The category key for named default exports, mirroring the TS
+/// implementation (`uniqueName.setPrefix({ key: "ExportDefault", ... })`).
 const EXPORT_DEFAULT_PREFIX_KEY: &str = "ExportDefault";
-const EXPORT_DEFAULT_PREFIX_VALUE: &str = "susee__exportDefault__";
 
 // ---------------------------------------------------------------------------
 // Path utilities (mirrors helpers.ts)
@@ -108,7 +107,7 @@ struct ExportDefaultEntry {
     /// The original declaration name (e.g. `hello` in
     /// `export default function hello()`).
     base: String,
-    /// The generated unique name (e.g. `susee__exportDefault__hello_1`).
+    /// The generated unique name (e.g. `_dhello$1`).
     new_name: String,
 }
 
@@ -134,7 +133,7 @@ struct ExportDefaultState {
 impl ExportDefaultState {
     fn new() -> Self {
         let mut unique = UniqueName::new();
-        unique.set_prefix(EXPORT_DEFAULT_PREFIX_KEY, EXPORT_DEFAULT_PREFIX_VALUE);
+        unique.set_prefix(EXPORT_DEFAULT_PREFIX_KEY, sigil::DEFAULT);
         Self {
             unique,
             export_map: Vec::new(),
@@ -660,14 +659,11 @@ mod tests {
         let content = &result[0].content;
         // The function declaration should be renamed.
         assert!(
-            content.contains("export default function susee__exportDefault__hello_"),
+            content.contains("export default function _dhello$"),
             "content was: {content}"
         );
         // The local call should be renamed too.
-        assert!(
-            content.contains("susee__exportDefault__hello_"),
-            "content was: {content}"
-        );
+        assert!(content.contains("_dhello$"), "content was: {content}");
         // The old name should not appear as a standalone call.
         assert!(!content.contains("hello()"));
     }
@@ -681,13 +677,10 @@ mod tests {
         let result = export_default_handler(deps);
         let content = &result[0].content;
         assert!(
-            content.contains("export default class susee__exportDefault__Hello_"),
+            content.contains("export default class _dHello$"),
             "content was: {content}"
         );
-        assert!(
-            content.contains("new susee__exportDefault__Hello_"),
-            "content was: {content}"
-        );
+        assert!(content.contains("new _dHello$"), "content was: {content}");
         assert!(!content.contains("Hello()"));
     }
 
@@ -699,9 +692,9 @@ mod tests {
         )];
         let result = export_default_handler(deps);
         let content = &result[0].content;
-        // `export default foo` should become `export default susee__exportDefault__foo_1`
+        // `export default foo` should become `export default _dfoo$1`
         assert!(
-            content.contains("export default susee__exportDefault__foo_"),
+            content.contains("export default _dfoo$"),
             "content was: {content}"
         );
     }
@@ -717,12 +710,12 @@ mod tests {
         let main_content = &result[1].content;
         // The import should use the new name.
         assert!(
-            main_content.contains("import susee__exportDefault__hello_"),
+            main_content.contains("import _dhello$"),
             "content was: {main_content}"
         );
         // The call should be renamed too.
         assert!(
-            main_content.contains("susee__exportDefault__hello_"),
+            main_content.contains("_dhello$"),
             "content was: {main_content}"
         );
         // The old name should be gone.
@@ -743,7 +736,11 @@ mod tests {
             content.contains("function hello()"),
             "content was: {content}"
         );
-        assert!(!content.contains("susee__exportDefault__"));
+        // No generated default-export name (`_d<base>$<n>`) should appear.
+        assert!(
+            !content.contains("_dhello$"),
+            "entry file should not be renamed: {content}"
+        );
     }
 
     #[test]

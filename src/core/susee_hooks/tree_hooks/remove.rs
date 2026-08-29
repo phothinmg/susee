@@ -482,6 +482,7 @@ pub fn remove_handler(deps: Vec<DepsFile>) -> (Vec<DepsFile>, Vec<RemovedImport>
 
 /// Convenience wrapper that only returns the processed files (discards the
 /// removed import list). Useful when the caller doesn't need to re-emit imports.
+#[allow(dead_code)]
 pub fn remove_handler_simple(deps: Vec<DepsFile>) -> Vec<DepsFile> {
     remove_handler(deps).0
 }

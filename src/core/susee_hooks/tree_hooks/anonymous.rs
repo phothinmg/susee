@@ -13,7 +13,7 @@
 //! export default [1, 2, 3];
 //! ```
 //! the bundler cannot reference the export by name. This hook assigns a
-//! unique name (`susee__anonymous__<file>_<n>`) to the anonymous declaration,
+//! unique name (`_a<file>$<n>`) to the anonymous declaration,
 //! rewrites the export to use that name, and then updates all importing files
 //! to use the new name instead of their original default import binding.
 //!
@@ -44,13 +44,12 @@ use oxc::ast_visit::Visit;
 use oxc::span::{GetSpan, Span};
 
 use crate::core::susee_types::DepsFile;
-use crate::core::susee_unique_name::UniqueName;
+use crate::core::susee_unique_name::{UniqueName, sigil};
 use crate::core::susee_utils::with_parsed_program;
 
-/// The prefix used for all anonymous export names, matching the TS
-/// implementation (`uniqueName.setPrefix({ key: "AnonymousName", value: "susee__anonymous__" })`).
+/// The category key used for all anonymous export names, mirroring the TS
+/// implementation (`uniqueName.setPrefix({ key: "AnonymousName", ... })`).
 const ANONYMOUS_PREFIX_KEY: &str = "AnonymousName";
-const ANONYMOUS_PREFIX_VALUE: &str = "susee__anonymous__";
 
 /// Extract the file stem (basename without extension) from a file path.
 ///
@@ -105,7 +104,7 @@ struct AnonymousState {
 impl AnonymousState {
     fn new() -> Self {
         let mut unique = UniqueName::new();
-        unique.set_prefix(ANONYMOUS_PREFIX_KEY, ANONYMOUS_PREFIX_VALUE);
+        unique.set_prefix(ANONYMOUS_PREFIX_KEY, sigil::ANONYMOUS);
         Self {
             unique,
             export_map: Vec::new(),
@@ -554,10 +553,10 @@ mod tests {
         assert_eq!(result.len(), 1);
         let content = &result[0].content;
         // Should contain a const declaration with the anonymous name.
-        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("const _aanon$"));
         // Should contain `export default <name>`.
         assert!(
-            content.contains("export default susee__anonymous__anon_"),
+            content.contains("export default _aanon$"),
             "content was: {content}"
         );
         // Should not contain the original anonymous arrow export.
@@ -573,10 +572,10 @@ mod tests {
         let result = anonymous_handler(deps);
         let content = &result[0].content;
         // The function should now have a name.
-        assert!(content.contains("susee__anonymous__anon_"));
+        assert!(content.contains("_aanon$"));
         // Should still have the function body.
         assert!(content.contains("return 1;"));
-        assert!(content.contains("export default function susee__anonymous__anon_"));
+        assert!(content.contains("export default function _aanon$"));
     }
 
     #[test]
@@ -584,9 +583,9 @@ mod tests {
         let deps = vec![make_dep("src/anon.ts", "export default class {}\n")];
         let result = anonymous_handler(deps);
         let content = &result[0].content;
-        assert!(content.contains("susee__anonymous__anon_"));
+        assert!(content.contains("_aanon$"));
         assert!(
-            content.contains("export default class susee__anonymous__anon_"),
+            content.contains("export default class _aanon$"),
             "content was: {content}"
         );
     }
@@ -596,8 +595,8 @@ mod tests {
         let deps = vec![make_dep("src/anon.ts", "export default { foo: 1 };\n")];
         let result = anonymous_handler(deps);
         let content = &result[0].content;
-        assert!(content.contains("const susee__anonymous__anon_"));
-        assert!(content.contains("export default susee__anonymous__anon_"));
+        assert!(content.contains("const _aanon$"));
+        assert!(content.contains("export default _aanon$"));
         assert!(content.contains("{ foo: 1 }"));
     }
 
@@ -606,7 +605,7 @@ mod tests {
         let deps = vec![make_dep("src/anon.ts", "export default [1, 2, 3];\n")];
         let result = anonymous_handler(deps);
         let content = &result[0].content;
-        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("const _aanon$"));
         assert!(content.contains("[1, 2, 3]"));
     }
 
@@ -615,7 +614,7 @@ mod tests {
         let deps = vec![make_dep("src/anon.ts", "export default \"hello\";\n")];
         let result = anonymous_handler(deps);
         let content = &result[0].content;
-        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("const _aanon$"));
         assert!(content.contains("\"hello\""));
     }
 
@@ -624,7 +623,7 @@ mod tests {
         let deps = vec![make_dep("src/anon.ts", "export default 42;\n")];
         let result = anonymous_handler(deps);
         let content = &result[0].content;
-        assert!(content.contains("const susee__anonymous__anon_"));
+        assert!(content.contains("const _aanon$"));
         assert!(content.contains("42"));
     }
 
@@ -638,7 +637,7 @@ mod tests {
         let content = &result[0].content;
         // Named exports should not be renamed by the anonymous handler.
         assert!(content.contains("function hello()"));
-        assert!(!content.contains("susee__anonymous__"));
+        assert!(!content.contains("_a"));
     }
 
     #[test]
@@ -661,12 +660,12 @@ mod tests {
 
         // The import should use the new anonymous name.
         assert!(
-            main_content.contains("import susee__anonymous__anon_"),
+            main_content.contains("import _aanon$"),
             "content was: {main_content}"
         );
         // The call should also be renamed.
         assert!(
-            main_content.contains("susee__anonymous__anon_"),
+            main_content.contains("_aanon$"),
             "content was: {main_content}"
         );
         // The old name should be gone.
@@ -682,7 +681,7 @@ mod tests {
         let main_content = &result[1].content;
 
         assert!(
-            main_content.contains("susee__anonymous__anon_"),
+            main_content.contains("_aanon$"),
             "content was: {main_content}"
         );
         assert!(!main_content.contains("obj"));
@@ -697,11 +696,11 @@ mod tests {
         let main_content = &result[1].content;
 
         assert!(
-            main_content.contains("susee__anonymous__anon_"),
+            main_content.contains("_aanon$"),
             "content was: {main_content}"
         );
         assert!(
-            main_content.contains("new susee__anonymous__anon_"),
+            main_content.contains("new _aanon$"),
             "content was: {main_content}"
         );
     }
@@ -718,9 +717,33 @@ mod tests {
         let main_content = &result[1].content;
 
         assert!(
-            main_content.contains("susee__anonymous__anon_"),
+            main_content.contains("_aanon$"),
             "content was: {main_content}"
         );
         assert!(!main_content.contains("myFn"));
+    }
+
+    #[test]
+    fn preserves_body_through_full_pipeline() {
+        // Regression: the anonymous handler and export-default handler must
+        // not double-rename an anonymous default export. The export-default
+        // handler runs first (named exports only); the anonymous handler
+        // then names the anonymous one. The body must survive both.
+        let src = "import ts6 from \"@suseejs/ts6\";\nexport default function (\n\tcontent: string,\n\tfile: string,\n\tcompilerOptions: ts6.CompilerOptions,\n) {\n\treturn content;\n}\n";
+        let dep = make_dep("src/unusedCode.ts", src);
+        // export_default first (named only — this anonymous one is skipped).
+        let phase1 =
+            crate::core::susee_hooks::tree_hooks::export_default::export_default_handler(vec![dep]);
+        // anonymous second — names the anonymous function.
+        let phase2 = anonymous_handler(phase1);
+        // remove handler — strips export/default keywords.
+        let (phase3, _) = crate::core::susee_hooks::tree_hooks::remove::remove_handler(phase2);
+        let content = &phase3[0].content;
+        assert!(
+            content.contains("return content;"),
+            "body lost after full pipeline: {content}"
+        );
+        // The anonymous name should NOT be wrapped in an export-default name.
+        assert!(!content.contains("_d_a"), "double rename: {content}");
     }
 }

@@ -2,9 +2,10 @@
 //!
 
 use std::collections::HashMap;
+use std::fs;
 use std::path::Path;
 
-use oxc::ast::ast::{BindingPattern, Program, Statement};
+use oxc::ast::ast::{BindingPattern, Declaration, Program, Statement};
 use oxc::parser::Parser;
 use oxc::semantic::SemanticBuilder;
 use oxc::span::{GetSpan, SourceType, Span};
@@ -280,10 +281,49 @@ pub fn collect_top_level_declaration_names(program: &Program<'_>) -> Vec<(String
             Statement::TSEnumDeclaration(enum_decl) => {
                 names.push((enum_decl.id.name.as_str().to_string(), enum_decl.id.span));
             }
+            // `export const/function/class/type/interface/enum …` — peel off
+            // the `export` wrapper and collect the inner declaration's name(s).
+            Statement::ExportDeclaration(export_decl) => {
+                collect_declaration_names(&export_decl.declaration, &mut names);
+            }
             _ => {}
         }
     }
     names
+}
+
+/// Collect declaration names from a `Declaration` (the inner part of an
+/// `export <Declaration>` statement).
+fn collect_declaration_names(decl: &Declaration<'_>, names: &mut Vec<(String, Span)>) {
+    match decl {
+        Declaration::VariableDeclaration(var_decl) => {
+            for declarator in &var_decl.declarations {
+                if let BindingPattern::BindingIdentifier(id) = &declarator.id {
+                    names.push((id.name.as_str().to_string(), id.span));
+                }
+            }
+        }
+        Declaration::FunctionDeclaration(func) => {
+            if let Some(id) = &func.id {
+                names.push((id.name.as_str().to_string(), id.span));
+            }
+        }
+        Declaration::ClassDeclaration(cls) => {
+            if let Some(id) = &cls.id {
+                names.push((id.name.as_str().to_string(), id.span));
+            }
+        }
+        Declaration::TSTypeAliasDeclaration(type_alias) => {
+            names.push((type_alias.id.name.as_str().to_string(), type_alias.id.span));
+        }
+        Declaration::TSInterfaceDeclaration(iface) => {
+            names.push((iface.id.name.as_str().to_string(), iface.id.span));
+        }
+        Declaration::TSEnumDeclaration(enum_decl) => {
+            names.push((enum_decl.id.name.as_str().to_string(), enum_decl.id.span));
+        }
+        _ => {}
+    }
 }
 
 pub fn make_dep(file: &str, content: &str) -> DepsFile {
@@ -775,4 +815,21 @@ pub fn merge_imports_statement(imports: &[String]) -> Vec<String> {
 
     merged.sort();
     merged
+}
+
+//---------------------------------------
+// Compiler
+//------------------------------
+
+/// Write `content` to `file_path`, creating parent directories as needed.
+/// Mirrors `files.writeFile` (minus the delete-first step, which is
+/// redundant because `fs::write` truncates).
+pub fn write_file(file_path: &str, content: &str) -> std::io::Result<()> {
+    let p = Path::new(file_path);
+    if let Some(parent) = p.parent() {
+        if !parent.as_os_str().is_empty() && !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    fs::write(p, content)
 }

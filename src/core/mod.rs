@@ -1,3 +1,7 @@
+pub mod susee_build;
+pub mod susee_bundler;
+pub mod susee_compiler;
+pub mod susee_config;
 pub mod susee_hooks;
 pub mod susee_log;
 pub mod susee_tree;

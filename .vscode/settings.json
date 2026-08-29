@@ -26,15 +26,23 @@
 		"config": ".rubocop.yml"
 	},
 	"cSpell.words": [
+		"cdylib",
+		"codegen",
 		"contentinfo",
 		"dependensa",
 		"execjs",
+		"finalizer",
 		"getset",
 		"giscus",
 		"iface",
+		"indexmap",
 		"Moji",
+		"napi",
 		"noopener",
 		"repositoryformatversion",
-		"susee"
+		"rlib",
+		"serde",
+		"susee",
+		"tsoptions"
 	]
 }

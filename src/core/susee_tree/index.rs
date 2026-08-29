@@ -6,7 +6,6 @@ use crate::core::susee_types::{
     DepReturns, DependenciesTree, DepsFile, ModuleType, ProjectType, ValidExts,
 };
 use crate::core::susee_utils::{detect_module_type, is_jsx_content, read_file};
-use colored::*;
 use dependensa::generate_graph;
 use std::path::Path;
 //
@@ -109,7 +108,7 @@ fn has_json(dep_files: &[DepsFile]) -> bool {
 }
 /// Tree for bundler
 pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DependenciesTree> {
-    let deps = get_deps(entry, root).expect(&"Error generating dependency files".magenta());
+    let deps = get_deps(entry, root)?;
     let npm = deps.npm;
     let nodes = deps.nodes;
     let warns = deps.warns;

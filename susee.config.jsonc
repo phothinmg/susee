@@ -2,13 +2,13 @@
 	"entryPoints": [
 		// main entry point
 		{
-			"entry": "__local__/cjs/index.cjs",
+			"entry": "__local__/ts/index.ts",
 			"exportPath": ".",
 			"format": ["esm", "commonjs"],
 			"tsconfigFilePath": null,
 			"warning": false
 		}
 	],
-	"outDir": "_out",
+	"outDir": "out",
 	"allowUpdatePackageJson": false
 }

@@ -7,15 +7,15 @@
 //! can be merged with the rest of the dependency tree. This handler:
 //!
 //! 1. **`resolve_json_handler`** — Converts each JSON dep into
-//!    `const __jsonModule__<key> = {...}; export default __jsonModule__<key>`
+//!    `const _j<key>$<n> = {...}; export default _j<key>$<n>`
 //!    and changes `module_type` to `Esm`.
 //! 2. **`json_module_import_handler`** — Rewrites default imports from JSON
 //!    modules (e.g. `import cfg from "./config.json"` →
-//!    `import __jsonModule__config from "./config.json"`). Named and namespace
+//!    `import _jconfig$1 from "./config.json"`). Named and namespace
 //!    imports are left unchanged.
 //! 3. **`json_module_call_expression_handler`** — Rewrites all references to
 //!    the old local binding (call expressions, property access, new
-//!    expressions, export specifiers) to use the new `__jsonModule__` name.
+//!    expressions, export specifiers) to use the new `_j` name.
 //!
 //! All sub-handlers operate on source text via AST round-tripping, the same
 //! span-replacement strategy used by `apply_renames` in `susee_utils::apply_renames`.
@@ -32,7 +32,11 @@ use oxc::span::Span;
 use crate::core::susee_types::{DepsFile, ModuleType, ValidExts};
 use crate::core::susee_utils::with_parsed_program;
 
-const JSON_PREFIX: &str = "__jsonModule__";
+/// The category sigil for JSON module default exports.
+///
+/// Generated names follow the form `_j<key>$<n>`, consistent with the
+/// shared [`UniqueName`](crate::core::susee_unique_name::UniqueName) scheme.
+const JSON_SIGIL: &str = "j";
 
 // ---------------------------------------------------------------------------
 // Path utilities (mirrors helpers.ts)
@@ -68,12 +72,12 @@ fn file_stem(file: &str) -> String {
         .to_string()
 }
 
-/// Convert a string into a valid JS identifier prefixed with `__jsonModule__`.
+/// Convert a string into a valid JS identifier tail for a JSON module name.
 ///
-/// Mirrors `toIdentifier` from `resolveJSON.ts`: replaces non-alphanumeric
-/// characters with `_`, and prepends `_` if the result doesn't start with a
-/// valid identifier start character.
-fn to_identifier(input: &str) -> String {
+/// The result is meant to be used as `_j<tail>$<n>`: non-alphanumeric
+/// characters are replaced with `_`, and a leading `_` is added if the
+/// result doesn't start with a valid identifier start character.
+fn to_identifier_tail(input: &str) -> String {
     let cleaned: String = input
         .chars()
         .map(|c| {
@@ -89,10 +93,18 @@ fn to_identifier(input: &str) -> String {
         .next()
         .is_some_and(|c| c.is_ascii_alphabetic() || c == '_' || c == '$');
     if starts_valid {
-        format!("{JSON_PREFIX}{cleaned}")
+        cleaned
+    } else if cleaned.is_empty() {
+        "_".to_string()
     } else {
-        format!("{JSON_PREFIX}_{cleaned}")
+        format!("_{cleaned}")
     }
+}
+
+/// Build a JSON module variable name of the form `_j<tail>$<count>`.
+fn json_module_name(file_key: &str, count: usize) -> String {
+    let tail = to_identifier_tail(file_key);
+    format!("_{JSON_SIGIL}{tail}${count}")
 }
 
 /// Convert JSON content into an ESM module string.
@@ -118,7 +130,7 @@ fn to_json_module_code(var_name: &str, content: &str, file: &str) -> String {
 struct JsonExportEntry {
     /// The file stem (basename without extension) of the JSON file.
     file: String,
-    /// The generated variable name (e.g. `__jsonModule__config`).
+    /// The generated variable name (e.g. `_jconfig$1`).
     new_name: String,
 }
 
@@ -175,7 +187,7 @@ fn is_json_module(dep: &DepsFile) -> bool {
 /// Convert JSON dependency files into ESM modules.
 ///
 /// Mirrors `resolveJSONHandler` from `resolveJSON.ts`. Each JSON file is
-/// replaced with `const __jsonModule__<key> = {...}; export default __jsonModule__<key>`
+/// replaced with `const _j<key>$<n> = {...}; export default _j<key>$<n>`
 /// and its `module_type` is changed to `Esm`. Non-JSON files are passed through
 /// unchanged.
 fn resolve_json_handler(deps: Vec<DepsFile>, state: &mut JsonState) -> Vec<DepsFile> {
@@ -190,14 +202,9 @@ fn resolve_json_handler(deps: Vec<DepsFile>, state: &mut JsonState) -> Vec<DepsF
 
             let stem = file_stem(&dep.file);
             let file_key = get_file_key(&dep.file);
-            let key_name = to_identifier(&file_key);
-            let count = *scoped_name_count.get(&key_name).unwrap_or(&0);
-            let json_var_name = if count == 0 {
-                key_name.clone()
-            } else {
-                format!("{key_name}_{}", count + 1)
-            };
-            scoped_name_count.insert(key_name, count + 1);
+            let count = *scoped_name_count.get(&file_key).unwrap_or(&0) + 1;
+            let json_var_name = json_module_name(&file_key, count);
+            scoped_name_count.insert(file_key, count);
 
             state.export_map.push(JsonExportEntry {
                 file: stem,
@@ -233,7 +240,7 @@ fn import_source(decl: &ImportDeclaration<'_>) -> String {
 ///
 /// Mirrors `jsonModuleImportHandler` from `resolveJSON.ts`. For each
 /// `import X from "./foo.json"`, if `foo` matches a JSON export mapping,
-/// the local binding `X` is renamed to `__jsonModule__foo` and the mapping
+/// the local binding `X` is renamed to `_jfoo$1` and the mapping
 /// is recorded for the call-expression handler. Named and namespace imports
 /// are left unchanged.
 fn json_module_import_handler(dep: &DepsFile, state: &mut JsonState) -> String {
@@ -491,9 +498,9 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].module_type, ModuleType::Esm);
         let content = &result[0].content;
-        assert!(content.contains("const __jsonModule__"));
+        assert!(content.contains("const _j"));
         assert!(content.contains(r#""app":"bundler""#));
-        assert!(content.contains("export default __jsonModule__"));
+        assert!(content.contains("export default _j"));
     }
 
     #[test]
@@ -508,14 +515,11 @@ mod tests {
 
         // The import should use the new JSON module name.
         assert!(
-            main_content.contains("import __jsonModule__"),
+            main_content.contains("import _j"),
             "content was: {main_content}"
         );
         // The property access should be rewritten.
-        assert!(
-            main_content.contains("__jsonModule__"),
-            "content was: {main_content}"
-        );
+        assert!(main_content.contains("_j"), "content was: {main_content}");
         // The old name should be gone.
         assert!(!main_content.contains("cfg"));
     }
@@ -578,17 +582,24 @@ mod tests {
     }
 
     #[test]
-    fn to_identifier_replaces_invalid_chars() {
-        assert_eq!(to_identifier("config"), "__jsonModule__config");
-        assert_eq!(to_identifier("foo/bar"), "__jsonModule__foo_bar");
-        assert_eq!(to_identifier("123bad"), "__jsonModule___123bad");
+    fn to_identifier_tail_replaces_invalid_chars() {
+        assert_eq!(to_identifier_tail("config"), "config");
+        assert_eq!(to_identifier_tail("foo/bar"), "foo_bar");
+        assert_eq!(to_identifier_tail("123bad"), "_123bad");
+        assert_eq!(to_identifier_tail(""), "_");
+    }
+
+    #[test]
+    fn json_module_name_uses_j_sigil() {
+        assert_eq!(json_module_name("config", 1), "_jconfig$1");
+        assert_eq!(json_module_name("foo/bar", 2), "_jfoo_bar$2");
     }
 
     #[test]
     fn to_json_module_code_produces_valid_esm() {
-        let code = to_json_module_code("__jsonModule__config", r#"{"a":1}"#, "config.json");
-        assert!(code.contains("const __jsonModule__config = {\"a\":1};"));
-        assert!(code.contains("export default __jsonModule__config"));
+        let code = to_json_module_code("_jconfig$1", r#"{"a":1}"#, "config.json");
+        assert!(code.contains(r#"const _jconfig$1 = {"a":1};"#));
+        assert!(code.contains("export default _jconfig$1"));
     }
 
     #[test]
