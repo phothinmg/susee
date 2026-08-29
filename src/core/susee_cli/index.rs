@@ -131,3 +131,35 @@ pub fn susee_cli_build() {
 
     fail("Unknown CLI usage");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Note: `package_version()` reads from `package.json` in the current
+    // working directory. Since tests run in parallel and `set_current_dir`
+    // is process-global, we cannot reliably test it with temp directories.
+    // We test only the pure-function aspects that don't depend on cwd.
+
+    #[test]
+    fn config_template_is_valid_json() {
+        // Verify that the config template is valid JSON by parsing it.
+        let config_text = CONFIG_TEMPLATE.trim_start();
+        let parsed: Result<serde_json::Value, _> = serde_json::from_str(config_text);
+        assert!(parsed.is_ok(), "CONFIG_TEMPLATE should be valid JSON");
+
+        // Verify it has the expected structure.
+        let config = parsed.unwrap();
+        assert!(config.get("entryPoints").is_some());
+        assert!(config.get("outDir").is_some());
+    }
+
+    #[test]
+    fn config_template_has_entry_points() {
+        let parsed: serde_json::Value = serde_json::from_str(CONFIG_TEMPLATE).unwrap();
+        let entries = parsed["entryPoints"].as_array().unwrap();
+        assert!(!entries.is_empty());
+        assert!(entries[0]["entry"].is_string());
+        assert!(entries[0]["exportPath"].is_string());
+    }
+}

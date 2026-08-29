@@ -229,3 +229,143 @@ pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Depen
         });
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_dep(file: &str, mt: ModuleType, ext: ValidExts) -> DepsFile {
+        DepsFile {
+            file: file.to_string(),
+            content: "export const x = 1;".to_string(),
+            bytes: 20,
+            module_type: mt,
+            file_ext: ext,
+            is_jsx: false,
+            is_entry: false,
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // has_esm / has_cjs / has_cts
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn has_esm_detects_esm_file() {
+        let deps = vec![make_dep("a.ts", ModuleType::Esm, ValidExts::Ts)];
+        assert!(has_esm(&deps));
+    }
+
+    #[test]
+    fn has_esm_false_without_esm() {
+        let deps = vec![make_dep("a.cjs", ModuleType::Cjs, ValidExts::Cjs)];
+        assert!(!has_esm(&deps));
+    }
+
+    #[test]
+    fn has_cjs_detects_cjs_file() {
+        let deps = vec![make_dep("a.cjs", ModuleType::Cjs, ValidExts::Cjs)];
+        assert!(has_cjs(&deps));
+    }
+
+    #[test]
+    fn has_cjs_false_without_cjs() {
+        let deps = vec![make_dep("a.ts", ModuleType::Esm, ValidExts::Ts)];
+        assert!(!has_cjs(&deps));
+    }
+
+    #[test]
+    fn has_cts_detects_cts_file() {
+        let deps = vec![make_dep("a.cts", ModuleType::Cts, ValidExts::Cts)];
+        assert!(has_cts(&deps));
+    }
+
+    #[test]
+    fn has_cts_false_without_cts() {
+        let deps = vec![make_dep("a.ts", ModuleType::Esm, ValidExts::Ts)];
+        assert!(!has_cts(&deps));
+    }
+
+    // -----------------------------------------------------------------------
+    // has_ts_extensions / has_js_extensions
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn has_ts_extensions_detects_ts() {
+        let deps = vec![make_dep("a.ts", ModuleType::Esm, ValidExts::Ts)];
+        assert!(has_ts_extensions(&deps));
+    }
+
+    #[test]
+    fn has_ts_extensions_detects_tsx() {
+        let deps = vec![make_dep("a.tsx", ModuleType::Esm, ValidExts::Tsx)];
+        assert!(has_ts_extensions(&deps));
+    }
+
+    #[test]
+    fn has_ts_extensions_detects_cts() {
+        let deps = vec![make_dep("a.cts", ModuleType::Cts, ValidExts::Cts)];
+        assert!(has_ts_extensions(&deps));
+    }
+
+    #[test]
+    fn has_ts_extensions_false_for_js() {
+        let deps = vec![make_dep("a.js", ModuleType::Esm, ValidExts::Js)];
+        assert!(!has_ts_extensions(&deps));
+    }
+
+    #[test]
+    fn has_js_extensions_detects_js() {
+        let deps = vec![make_dep("a.js", ModuleType::Esm, ValidExts::Js)];
+        assert!(has_js_extensions(&deps));
+    }
+
+    #[test]
+    fn has_js_extensions_detects_cjs() {
+        let deps = vec![make_dep("a.cjs", ModuleType::Cjs, ValidExts::Cjs)];
+        assert!(has_js_extensions(&deps));
+    }
+
+    #[test]
+    fn has_js_extensions_false_for_ts() {
+        let deps = vec![make_dep("a.ts", ModuleType::Esm, ValidExts::Ts)];
+        assert!(!has_js_extensions(&deps));
+    }
+
+    // -----------------------------------------------------------------------
+    // has_json
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn has_json_detects_json_module() {
+        let deps = vec![make_dep("a.json", ModuleType::Json, ValidExts::Json)];
+        assert!(has_json(&deps));
+    }
+
+    #[test]
+    fn has_json_false_without_json() {
+        let deps = vec![make_dep("a.ts", ModuleType::Esm, ValidExts::Ts)];
+        assert!(!has_json(&deps));
+    }
+
+    // -----------------------------------------------------------------------
+    // susee_tree integration
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn susee_tree_returns_err_for_missing_entry() {
+        let dir = tempfile::tempdir().unwrap();
+        let result = susee_tree("nonexistent.ts", dir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn susee_tree_builds_ts_project() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("index.ts"), "export const x = 1;").unwrap();
+        let result = susee_tree("index.ts", dir.path()).unwrap();
+        assert_eq!(result.project_type, ProjectType::TS);
+        assert_eq!(result.entry, "index.ts");
+        assert!(!result.dep_files.is_empty());
+    }
+}

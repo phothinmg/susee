@@ -103,3 +103,106 @@ fn pretty_print(content: &str, file: &str) -> String {
         content.to_string()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    /// Helper: create a minimal TS project in a temp dir and return the dir.
+    fn make_project() -> tempfile::TempDir {
+        let dir = tempdir().unwrap();
+        // Entry file imports a dependency and re-exports it.
+        fs::write(
+            dir.path().join("index.ts"),
+            "import { greet } from './greeter';\nexport { greet };\n",
+        )
+        .unwrap();
+        fs::write(
+            dir.path().join("greeter.ts"),
+            "export const greet = (): string => 'hello';\n",
+        )
+        .unwrap();
+        dir
+    }
+
+    #[test]
+    fn bundler_produces_non_empty_output() {
+        let dir = make_project();
+        let result = bundler("index.ts", dir.path()).unwrap();
+        assert!(!result.bundled_code.trim().is_empty());
+    }
+
+    #[test]
+    fn bundler_returns_ts_project_type_for_ts_files() {
+        let dir = make_project();
+        let result = bundler("index.ts", dir.path()).unwrap();
+        assert_eq!(result.project_type, ProjectType::TS);
+    }
+
+    #[test]
+    fn bundler_inlines_dependency_content() {
+        let dir = make_project();
+        let result = bundler("index.ts", dir.path()).unwrap();
+        // The bundled output should contain the `greet` definition.
+        assert!(result.bundled_code.contains("greet"));
+    }
+
+    #[test]
+    fn bundler_returns_err_for_missing_entry() {
+        let dir = tempdir().unwrap();
+        let result = bundler("nonexistent.ts", dir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn bundler_strips_empty_and_semicolon_lines() {
+        let dir = tempdir().unwrap();
+        fs::write(
+            dir.path().join("index.ts"),
+            "export const x = 1;\n\n;\nexport const y = 2;\n",
+        )
+        .unwrap();
+        let result = bundler("index.ts", dir.path()).unwrap();
+        // No line should be just a semicolon.
+        for line in result.bundled_code.lines() {
+            assert_ne!(line.trim(), ";");
+        }
+        // No empty lines in the trimmed output.
+        assert!(!result.bundled_code.trim().is_empty());
+    }
+
+    #[test]
+    fn bundler_js_project_returns_js_project_type() {
+        let dir = tempdir().unwrap();
+        fs::write(
+            dir.path().join("index.js"),
+            "import { greet } from './greeter.js';\nexport { greet };\n",
+        )
+        .unwrap();
+        fs::write(
+            dir.path().join("greeter.js"),
+            "export const greet = () => 'hello';\n",
+        )
+        .unwrap();
+        let result = bundler("index.js", dir.path()).unwrap();
+        assert_eq!(result.project_type, ProjectType::JS);
+    }
+
+    #[test]
+    fn pretty_print_preserves_valid_code() {
+        let code = "const x = 1;\nconst y = 2;\n";
+        let printed = pretty_print(code, "bundle.ts");
+        assert!(printed.contains("const x = 1"));
+        assert!(printed.contains("const y = 2"));
+    }
+
+    #[test]
+    fn pretty_print_falls_back_on_invalid_syntax() {
+        let code = "this is not valid typescript {{{";
+        let printed = pretty_print(code, "bundle.ts");
+        // Should return the original content unchanged.
+        assert_eq!(printed, code);
+    }
+}

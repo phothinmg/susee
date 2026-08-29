@@ -63,3 +63,30 @@ pub fn sm_esm(source_text: &str, file_name: &str) -> Option<String> {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sm_esm_generates_source_map_for_valid_code() {
+        let code = "const x = 1;\nexport { x };\n";
+        let result = sm_esm(code, "test.mjs");
+        assert!(result.is_some(), "should produce a source map");
+        let map = result.unwrap();
+        assert!(map.contains("test.mjs") || map.contains("test"));
+    }
+
+    #[test]
+    fn sm_commonjs_generates_source_map_for_valid_code() {
+        let code = "const x = 1;\nmodule.exports = { x };\n";
+        let result = sm_commonjs(code, "test.cjs");
+        assert!(result.is_some(), "should produce a source map");
+    }
+
+    #[test]
+    fn sm_esm_does_not_panic_on_empty_input() {
+        let result = sm_esm("", "empty.mjs");
+        let _ = result;
+    }
+}

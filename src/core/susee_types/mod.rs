@@ -433,3 +433,225 @@ impl<'a, 'b> SpecifierSpanCollector<'a, 'b> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // -----------------------------------------------------------------------
+    // ValidExts
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn valid_exts_from_ext_parses_known_extensions() {
+        assert_eq!(ValidExts::from_ext("ts"), Some(ValidExts::Ts));
+        assert_eq!(ValidExts::from_ext("tsx"), Some(ValidExts::Tsx));
+        assert_eq!(ValidExts::from_ext("js"), Some(ValidExts::Js));
+        assert_eq!(ValidExts::from_ext("jsx"), Some(ValidExts::Jsx));
+        assert_eq!(ValidExts::from_ext("cjs"), Some(ValidExts::Cjs));
+        assert_eq!(ValidExts::from_ext("mjs"), Some(ValidExts::Mjs));
+        assert_eq!(ValidExts::from_ext("cts"), Some(ValidExts::Cts));
+        assert_eq!(ValidExts::from_ext("mts"), Some(ValidExts::Mts));
+        assert_eq!(ValidExts::from_ext("json"), Some(ValidExts::Json));
+    }
+
+    #[test]
+    fn valid_exts_from_ext_returns_none_for_unknown() {
+        assert_eq!(ValidExts::from_ext("txt"), None);
+        assert_eq!(ValidExts::from_ext(""), None);
+    }
+
+    #[test]
+    fn valid_exts_from_path_ext_strips_leading_dot() {
+        assert_eq!(ValidExts::from_path_ext(".ts"), Some(ValidExts::Ts));
+        assert_eq!(ValidExts::from_path_ext("ts"), Some(ValidExts::Ts));
+    }
+
+    #[test]
+    fn valid_exts_as_ext_str_includes_dot() {
+        assert_eq!(ValidExts::Ts.as_ext_str(), ".ts");
+        assert_eq!(ValidExts::Jsx.as_ext_str(), ".jsx");
+        assert_eq!(ValidExts::Json.as_ext_str(), ".json");
+    }
+
+    #[test]
+    fn valid_exts_serde_round_trip() {
+        let json = serde_json::to_string(&ValidExts::Ts).unwrap();
+        assert_eq!(json, "\".ts\"");
+        let parsed: ValidExts = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, ValidExts::Ts);
+    }
+
+    #[test]
+    fn valid_exts_serde_rejects_unknown() {
+        let result: Result<ValidExts, _> = serde_json::from_str("\".unknown\"");
+        assert!(result.is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // ModuleType
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn module_type_serde_round_trip() {
+        let json = serde_json::to_string(&ModuleType::Cjs).unwrap();
+        assert_eq!(json, "\"cjs\"");
+        let parsed: ModuleType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, ModuleType::Cjs);
+
+        let json = serde_json::to_string(&ModuleType::Esm).unwrap();
+        assert_eq!(json, "\"esm\"");
+    }
+
+    #[test]
+    fn module_type_as_str() {
+        assert_eq!(ModuleType::Cjs.as_str(), "cjs");
+        assert_eq!(ModuleType::Esm.as_str(), "esm");
+        assert_eq!(ModuleType::Cts.as_str(), "cts");
+        assert_eq!(ModuleType::Json.as_str(), "json");
+    }
+
+    // -----------------------------------------------------------------------
+    // ProjectType
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn project_type_serde_round_trip() {
+        let json = serde_json::to_string(&ProjectType::TS).unwrap();
+        assert_eq!(json, "\"ts\"");
+        let parsed: ProjectType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, ProjectType::TS);
+    }
+
+    #[test]
+    fn project_type_as_str() {
+        assert_eq!(ProjectType::TS.as_str(), "ts");
+        assert_eq!(ProjectType::JS.as_str(), "js");
+        assert_eq!(ProjectType::MIXED.as_str(), "mixed");
+    }
+
+    // -----------------------------------------------------------------------
+    // DepsFile
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn deps_file_serde_round_trip() {
+        let dep = DepsFile {
+            file: "src/index.ts".to_string(),
+            content: "export const x = 1;".to_string(),
+            bytes: 20,
+            module_type: ModuleType::Esm,
+            file_ext: ValidExts::Ts,
+            is_jsx: false,
+            is_entry: true,
+        };
+        let json = serde_json::to_string(&dep).unwrap();
+        let parsed: DepsFile = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.file, "src/index.ts");
+        assert_eq!(parsed.bytes, 20);
+        assert_eq!(parsed.module_type, ModuleType::Esm);
+        assert_eq!(parsed.file_ext, ValidExts::Ts);
+        assert!(parsed.is_entry);
+        assert!(!parsed.is_jsx);
+    }
+
+    // -----------------------------------------------------------------------
+    // ModuleTypeDetector
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn module_type_detector_detects_esm_import() {
+        use oxc::allocator::Allocator;
+        use oxc::parser::Parser;
+        use oxc::span::SourceType;
+
+        let allocator = Allocator::default();
+        let src = "import { x } from './mod';";
+        let source_type = SourceType::from_path(std::path::Path::new("file.ts")).unwrap();
+        let parsed = Parser::new(&allocator, src, source_type).parse();
+        let mut detector = ModuleTypeDetector::default();
+        detector.visit_program(&parsed.program);
+        assert!(detector.is_esm);
+        assert!(!detector.is_common_js);
+    }
+
+    #[test]
+    fn module_type_detector_detects_cjs_require() {
+        use oxc::allocator::Allocator;
+        use oxc::parser::Parser;
+        use oxc::span::SourceType;
+
+        let allocator = Allocator::default();
+        let src = "const fs = require('fs');";
+        let source_type = SourceType::from_path(std::path::Path::new("file.cjs")).unwrap();
+        let parsed = Parser::new(&allocator, src, source_type).parse();
+        let mut detector = ModuleTypeDetector::default();
+        detector.visit_program(&parsed.program);
+        assert!(detector.is_common_js);
+        assert!(!detector.is_esm);
+    }
+
+    #[test]
+    fn module_type_detector_detects_module_exports() {
+        use oxc::allocator::Allocator;
+        use oxc::parser::Parser;
+        use oxc::span::SourceType;
+
+        let allocator = Allocator::default();
+        let src = "module.exports = { x: 1 };";
+        let source_type = SourceType::from_path(std::path::Path::new("file.js")).unwrap();
+        let parsed = Parser::new(&allocator, src, source_type).parse();
+        let mut detector = ModuleTypeDetector::default();
+        detector.visit_program(&parsed.program);
+        assert!(detector.is_common_js);
+    }
+
+    #[test]
+    fn module_type_detector_detects_exports_dot_x() {
+        use oxc::allocator::Allocator;
+        use oxc::parser::Parser;
+        use oxc::span::SourceType;
+
+        let allocator = Allocator::default();
+        let src = "exports.foo = 1;";
+        let source_type = SourceType::from_path(std::path::Path::new("file.js")).unwrap();
+        let parsed = Parser::new(&allocator, src, source_type).parse();
+        let mut detector = ModuleTypeDetector::default();
+        detector.visit_program(&parsed.program);
+        assert!(detector.is_common_js);
+    }
+
+    // -----------------------------------------------------------------------
+    // JsxDetector
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn jsx_detector_detects_jsx_element() {
+        use oxc::allocator::Allocator;
+        use oxc::parser::Parser;
+        use oxc::span::SourceType;
+
+        let allocator = Allocator::default();
+        let src = "const el = <div>hello</div>;";
+        let source_type = SourceType::tsx();
+        let parsed = Parser::new(&allocator, src, source_type).parse();
+        let mut detector = JsxDetector::default();
+        detector.visit_program(&parsed.program);
+        assert!(detector.contains_jsx);
+    }
+
+    #[test]
+    fn jsx_detector_false_without_jsx() {
+        use oxc::allocator::Allocator;
+        use oxc::parser::Parser;
+        use oxc::span::SourceType;
+
+        let allocator = Allocator::default();
+        let src = "const x = 1 + 2;";
+        let source_type = SourceType::ts();
+        let parsed = Parser::new(&allocator, src, source_type).parse();
+        let mut detector = JsxDetector::default();
+        detector.visit_program(&parsed.program);
+        assert!(!detector.contains_jsx);
+    }
+}

@@ -521,3 +521,117 @@ fn pathdiff(p: &str, base: &Path) -> String {
     }
     result.join("/")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // -----------------------------------------------------------------------
+    // join_path
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn join_path_combines_dir_and_file() {
+        let result = join_path("dist", "index.mjs");
+        assert!(result.ends_with("index.mjs"));
+        assert!(result.contains("dist"));
+    }
+
+    #[test]
+    fn join_path_with_nested_dir() {
+        let result = join_path("dist/sub", "index.cjs");
+        assert!(result.contains("dist"));
+        assert!(result.contains("sub"));
+        assert!(result.ends_with("index.cjs"));
+    }
+
+    // -----------------------------------------------------------------------
+    // clear_folder
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn clear_folder_removes_contents() {
+        let dir = tempfile::tempdir().unwrap();
+        let sub = dir.path().join("subdir");
+        std::fs::create_dir_all(&sub).unwrap();
+        std::fs::write(dir.path().join("a.txt"), "hello").unwrap();
+        std::fs::write(sub.join("b.txt"), "world").unwrap();
+
+        clear_folder(dir.path().to_str().unwrap()).unwrap();
+
+        // The dir itself still exists but is empty.
+        assert!(dir.path().exists());
+        assert!(dir.path().read_dir().unwrap().next().is_none());
+    }
+
+    #[test]
+    fn clear_folder_no_op_for_missing_dir() {
+        let result = clear_folder("/nonexistent/path/that/does/not/exist");
+        assert!(result.is_ok());
+    }
+
+    // -----------------------------------------------------------------------
+    // pathdiff
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn pathdiff_returns_relative_path() {
+        let base = std::path::Path::new("/home/user/project");
+        let target = "/home/user/project/dist/index.mjs";
+        let result = pathdiff(target, base);
+        assert_eq!(result, "dist/index.mjs");
+    }
+
+    #[test]
+    fn pathdiff_handles_parent_dirs() {
+        let base = std::path::Path::new("/home/user/project/src");
+        let target = "/home/user/project/dist/index.mjs";
+        let result = pathdiff(target, base);
+        assert_eq!(result, "../dist/index.mjs");
+    }
+
+    // -----------------------------------------------------------------------
+    // is_jsx_content (local version)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn is_jsx_content_detects_jsx() {
+        let code = "const el = <div>hello</div>;";
+        assert!(is_jsx_content(code));
+    }
+
+    #[test]
+    fn is_jsx_content_false_for_plain_ts() {
+        let code = "const x = 1 + 2;";
+        assert!(!is_jsx_content(code));
+    }
+
+    // -----------------------------------------------------------------------
+    // OutFiles
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn out_files_default_all_none() {
+        let files = OutFiles::default();
+        assert!(files.commonjs.is_none());
+        assert!(files.esm.is_none());
+        assert!(files.main.is_none());
+        assert!(files.module.is_none());
+        assert!(files.types.is_none());
+    }
+
+    // -----------------------------------------------------------------------
+    // Compiler
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn compiler_new_initializes_empty_cache() {
+        let opts = BuildOptions {
+            build_entry_points: vec![],
+            update_package: false,
+            out_dir: "dist".to_string(),
+        };
+        let compiler = Compiler::new(opts);
+        assert!(compiler.bundled_cache.is_empty());
+    }
+}
