@@ -67,7 +67,7 @@ jobs:
 
       - name: Build & package artifacts
         run: |
-          npx napi build --release --platform --config-path napi.config.json --output-dir ./dist --target ${{ matrix.settings.target }} ${{ matrix.settings.flags }}
+          npx napi build --release --platform --config-path napi.config.json --target ${{ matrix.settings.target }} ${{ matrix.settings.flags }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7

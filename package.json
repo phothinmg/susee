@@ -2,8 +2,8 @@
   "name": "susee",
   "version": "2.0.0",
   "description": "TypeScript-first bundler for library packages",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "bin": {
     "susee": "bin/susee"
   },
@@ -20,10 +20,10 @@
   "author": "Pho Thin Mg <phothinmg@disroot.org> (https://phothinmg.github.io/)",
   "license": "Apache-2.0",
   "files": [
-    "package.json",
     "README.md",
     "LICENSE",
-    "dist/**/*",
+    "index.js",
+    "index.d.ts",
     "bin/**/*"
   ],
   "publishConfig": {
