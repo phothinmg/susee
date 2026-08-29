@@ -1,7 +1,10 @@
 use crate::core::susee_types::DependenciesTree;
 
+mod post_process_hooks;
 mod pre_process_hooks;
 mod tree_hooks;
+
+pub use post_process_hooks::minify_js;
 
 pub use pre_process_hooks::unused_code::clean;
 

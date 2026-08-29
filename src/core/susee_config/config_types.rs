@@ -119,6 +119,7 @@ pub struct BuildOptions {
     pub build_entry_points: Vec<BuildEntryPoint>,
     pub update_package: bool,
     pub out_dir: String,
+    pub minify: bool,
 }
 
 impl std::fmt::Debug for BuildOptions {
@@ -127,6 +128,7 @@ impl std::fmt::Debug for BuildOptions {
             .field("build_entry_points", &self.build_entry_points)
             .field("update_package", &self.update_package)
             .field("out_dir", &self.out_dir)
+            .field("minify", &self.minify)
             .finish()
     }
 }
@@ -137,6 +139,7 @@ impl Default for BuildOptions {
             build_entry_points: Vec::new(),
             update_package: false,
             out_dir: String::new(),
+            minify: false,
         }
     }
 }
@@ -170,6 +173,8 @@ pub struct SuSeeConfig {
     pub out_dir: Option<String>,
     #[serde(default)]
     pub allow_update_package_json: Option<bool>,
+    #[serde(default)]
+    pub minify: Option<bool>,
 }
 
 /// Look for `susee.config.json` in `cwd`, mirroring `getSuseeConfigPath`.
@@ -270,6 +275,7 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
         build_entry_points: points,
         update_package: config.allow_update_package_json.unwrap_or(false),
         out_dir,
+        minify: config.minify.unwrap_or(false),
     })
 }
 

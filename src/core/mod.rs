@@ -11,8 +11,6 @@ mod susee_unique_name;
 mod susee_utils;
 
 pub use susee_build::build;
-// pub use susee_bundler::{BundleResult, bundler};
+pub use susee_bundler::bundler;
 pub use susee_cli::susee_cli_build_with_args;
-pub use susee_config::SuSeeConfig;
-// pub use susee_config::OutputFormat;
-// pub use susee_config::EntryPoint;
+pub use susee_config::{EntryPoint, OutputFormat, SuSeeConfig};

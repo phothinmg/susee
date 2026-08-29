@@ -22,6 +22,7 @@ use crate::core::susee_bundler::bundler;
 use crate::core::susee_config::{
     BuildEntryPoint, BuildOptions, OutputFormat, get_compiler_options,
 };
+use crate::core::susee_hooks::minify_js;
 use crate::core::susee_types::ProjectType;
 use crate::core::susee_utils::write_file;
 use std::path::{Path, PathBuf};
@@ -144,26 +145,11 @@ impl Compiler {
         let new_map_name = format!("{}{}", compiled.file_name, format.map_ext());
         compiled_code = compiled_code.replace(&js_map_name, &new_map_name);
 
-        // 5. Post-process plugins — run on the emitted JS code before
-        //    writing files, mirroring step 5 in `compiler/index.ts`.
-        // if !point.plugins.is_empty() {
-        //     let phase_start = Instant::now();
-        //     let scope = format!(
-        //         "compiler:{}",
-        //         Path::new(&point.entry)
-        //             .file_name()
-        //             .and_then(|n| n.to_str())
-        //             .unwrap_or(&point.entry)
-        //     );
-        //     let ctx = PluginContext::for_compiler(&point.entry, format, &compiler_options);
-        //     let payload = PostProcessPayload {
-        //         code: compiled_code,
-        //     };
-        //     let payload = dispatch_post_process(&point.plugins, &ctx, payload, &scope)
-        //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-        //     compiled_code = payload.code;
-        //     let _ = phase_start; // profiling happens inside the dispatcher.
-        // }
+        // 5. Minify — when `BuildOptions::minify` is enabled, run the
+        //    oxc minifier post-process on the emitted JS before writing.
+        if self.object.minify {
+            compiled_code = minify_js(&compiled_code, format, &point.entry);
+        }
 
         // // 6. Record output paths for package.json updates.
         if self.update() {
@@ -630,6 +616,7 @@ mod tests {
             build_entry_points: vec![],
             update_package: false,
             out_dir: "dist".to_string(),
+            minify: false,
         };
         let compiler = Compiler::new(opts);
         assert!(compiler.bundled_cache.is_empty());

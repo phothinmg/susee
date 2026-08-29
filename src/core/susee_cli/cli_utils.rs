@@ -29,6 +29,7 @@ Options:
   --allow-update[=true|false]          Enable/disable dependency update
   --warning[=true|false]               Treat dependency graph warnings as fatal
   --profile[=true|false]               Print bundler/compiler phase timings
+  --minify[=true|false]                Minify output JavaScript code.
 
 Notes:
   Duplicate top-level declarations fail the build with file and location output.
@@ -54,6 +55,7 @@ pub struct CliOptions {
     pub allow_update: Option<bool>,
     pub warning: Option<bool>,
     pub profile: Option<bool>,
+    pub minify: Option<bool>,
 }
 
 /// Normalized build options for the CLI single-entry compiler, mirroring
@@ -65,6 +67,7 @@ pub struct CliBuildOptions {
     pub format: OutputFormat,
     pub tsconfig: Option<String>,
     pub allow_update: bool,
+    pub minify: bool,
     pub warning: bool,
     #[allow(unused)]
     pub profile: bool,
@@ -178,6 +181,14 @@ pub fn parse_args(argv: &[String]) -> CliOptions {
                     &mut i,
                 ));
             }
+            "--minify" => {
+                opts.allow_update = Some(parse_bool_flag_value(
+                    "minify",
+                    inline_value,
+                    next_value,
+                    &mut i,
+                ));
+            }
             "--warning" => {
                 opts.warning = Some(parse_bool_flag_value(
                     "warning",
@@ -240,6 +251,7 @@ pub fn get_default_options(args: &CliOptions) -> CliBuildOptions {
         allow_update: args.allow_update.unwrap_or(false),
         warning: args.warning.unwrap_or(false),
         profile: args.profile.unwrap_or(false),
+        minify: args.minify.unwrap_or(false),
     }
 }
 

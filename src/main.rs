@@ -1,3 +1,4 @@
+use susee::susee_build;
 fn main() {
-    println!("Hello")
+    susee_build(None);
 }

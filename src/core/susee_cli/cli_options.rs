@@ -36,6 +36,7 @@ fn build_options_from_cli(opts: &CliBuildOptions) -> BuildOptions {
         build_entry_points: vec![entry],
         update_package: opts.allow_update,
         out_dir: opts.out_dir.clone(),
+        minify: opts.minify,
     }
 }
 
@@ -70,6 +71,7 @@ mod tests {
             allow_update: false,
             warning: false,
             profile: false,
+            minify: false,
         }
     }
 

@@ -8,7 +8,7 @@
 
 [![NPM][nodei_img]][nodei_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![mmcov][mmcov_svg]][mmcov_url] [![publish to npm][publish_npm_svg]][publish_npm][![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE)[![publish to npm][publish_npm_svg]][publish_npm][![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
 
 ## About
 
@@ -16,30 +16,33 @@ A **TypeScript-first** bundler designed specifically for **library packages** th
 
 > [!NOTE]
 >
-> - Susee currently depends on the `TypeScript 6` programmatic API.
-> - Starting with `v1.6.0`, Susee uses `@suseejs/ts6`, a focused fork of `@typescript/typescript6` that exposes the `ts6` runtime Susee needs.
-> - This keeps Susee's TypeScript API dependency isolated, while allowing your project to install and use `TypeScript 7` alongside it without `tsc` naming conflicts.
-> - For the best compatibility with this setup, use `Susee v1.6.0` or newer.
+> - Starting with **v2.0.0**, Susee's core is written in **Rust** and compiled to a native Node.js addon via **N-API** (`@napi-rs/cli`). The compiler, bundler, and minifier all run in native code for maximum performance.
+> - The output JavaScript is minified with the **[oxc](https://oxc.rs) minifier** when `minify` is enabled.
+> - Config files use the **JSONC** format (`susee.config.jsonc`).
 
 ---
 
 ## Key Features
 
-✅ **TypeScript-first** - Built with TypeScript for maximum type safety
+✅ **Rust-powered core** — Bundler, compiler, and minifier run natively via N-API
 
-✅ **Dual Output** - Generate both ESM and CommonJS formats automatically
+✅ **TypeScript-first** — Built for maximum type safety
 
-✅ **Duplicate Declaration Detection** - Fails fast when bundled files contain conflicting top-level declarations
+✅ **Dual Output** — Generate both ESM and CommonJS formats automatically
 
-✅ **Fast Builds** - Optimized for library packages with minimal overhead
+✅ **Duplicate Declaration Detection** — Fails fast when bundled files contain conflicting top-level declarations
 
-✅ **Package.json Management** - Automatic updates to package.json fields based on the build results
+✅ **Fast Builds** — Optimized for library packages with minimal overhead
 
-✅ **Plugin System** - Extend functionality with custom plugins
+✅ **Built-in Minification** — Minify output JavaScript with the oxc minifier
 
-✅ **CLI & Programmatic API** - Use as a CLI tool or integrate directly
+✅ **Package.json Management** — Automatic updates to package.json fields based on the build results
 
-✅ **Build Profiling** - Print bundler and compiler phase timings with `--profile`
+✅ **Plugin System** — Extend functionality with custom plugins
+
+✅ **CLI & Programmatic API** — Use as a CLI tool or integrate directly
+
+✅ **Build Profiling** — Print bundler and compiler phase timings with `--profile`
 
 ---
 
@@ -81,7 +84,7 @@ npx susee --version
 
 ### Using config file
 
-The easiest way to start is using the built-in initialization command which generates a configuration template at your project root.This command creates a `susee.config.ts`, `susee.config.js`, or `susee.config.mjs` file.
+The easiest way to start is using the built-in initialization command which generates a configuration template at your project root. This command creates a `susee.config.jsonc` file.
 
 ```bash
 npx susee init
@@ -93,14 +96,14 @@ Build your project by running:
 npx susee
 ```
 
-### Using Programmatic API
+### Using Programmatic API (Node.js)
 
-You can trigger the build process within a TypeScript/JavaScript script using the `build()` function.
+You can trigger the build process within a JavaScript/TypeScript script using the `suseeBuild()` N-API function.
 
 ```typescript
-import { build } from "susee";
+import { suseeBuild } from "susee";
 
-await build({
+suseeBuild({
   entryPoints: [
     {
       entry: "src/index.ts",
@@ -110,15 +113,16 @@ await build({
   ],
   outDir: "dist",
   allowUpdatePackageJson: true,
+  minify: true,
 });
 ```
 
 ### Using CLI (Direct Build)
 
-Build a single entry directly without a config file.This method uses default values for options not explicitly provided.
+Build a single entry directly without a config file. This method uses default values for options not explicitly provided.
 
 ```bash
-npx susee build src/index.ts --outdir dist --format esm
+npx susee build src/index.ts --outdir dist --format esm --minify
 ```
 
 ### Contributor Setup (Repository)
@@ -142,20 +146,233 @@ Do not open public issues for security reports.
 
 ---
 
-## API Quick Reference
+## N-API (Node.js) Exports
 
-1. `build(options?)`: Build from the provided options or from a discovered `susee.config.ts/js/mjs` file. If neither exists, Susee exits with code `1`.
-2. `suseeBundler(entry)`: Bundle a single entry and return the merged source string. This export does not expose plugin or warning options.
-3. `suseeCliBuild()`: Run the CLI dispatcher programmatically using `process.argv`.
-4. `susee`: Build from the root config file and clear the configured `outDir` before compiling.
-5. `susee init`: Generate a config template in the project root after prompting whether the project uses TypeScript.
-6. `susee build <entry> [options]`: Build a single entry directly from CLI arguments. Defaults: `--outdir dist`, `--format esm`, `--warning false`, `--allow-update false`, `--profile false`.
-7. `entryPoints[].format`: Output module format list. Default: `["esm"]`.
-8. `entryPoints[].tsconfigFilePath`: Custom tsconfig path. Default: `undefined`.
-9. `entryPoints[].plugins`: Dependency, pre-process, and post-process plugins. Default: `[]`.
-10. `entryPoints[].warning`: Treat dependency graph warnings as fatal. Default: `false`.
-11. `outDir`: Root output directory. Default: `"dist"`.
-12. `allowUpdatePackageJson`: Update package fields based on generated output. Default: `false`.
+Susee's Rust core is exposed to Node.js via N-API (`@napi-rs/cli`). The following functions and types are available:
+
+### `suseeBuild(config?)`
+
+Build from the provided config object or from a discovered `susee.config.jsonc` file. If neither exists, Susee logs an error and exits with code `1`.
+
+```ts
+import { suseeBuild, type SuSeeConfig } from "susee";
+
+// Build from an explicit config object
+suseeBuild({
+  entryPoints: [
+    {
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: ["esm", "commonjs"],
+    },
+  ],
+  outDir: "dist",
+  allowUpdatePackageJson: false,
+  minify: true,
+});
+
+// Build from susee.config.jsonc (config omitted)
+suseeBuild();
+```
+
+| Parameter       | Type                        | Required | Default | Description                                      |
+| --------------- | --------------------------- | -------- | ------- | ------------------------------------------------ |
+| `config`        | `SuSeeConfig \| undefined`   | No       | —       | Build options. If omitted, loads config file.    |
+
+### `cliBuild(args)`
+
+Run the CLI dispatcher programmatically. Pass `process.argv.slice(2)` from the JavaScript side.
+
+```ts
+import { cliBuild } from "susee";
+
+cliBuild(process.argv.slice(2));
+```
+
+| Parameter | Type         | Required | Description                                                        |
+| --------- | ------------ | -------- | ------------------------------------------------------------------ |
+| `args`    | `string[]`   | Yes      | CLI arguments (typically `process.argv.slice(2)`).               |
+
+### `suseeBundler(entry)`
+
+Bundle a single entry and return the merged source string. This export does not expose plugin or warning options.
+
+```ts
+import { suseeBundler } from "susee";
+
+const bundled = suseeBundler("src/index.ts");
+console.log(bundled);
+```
+
+| Parameter | Type     | Required | Description                               |
+| --------- | -------- | -------- | ----------------------------------------- |
+| `entry`   | `string` | Yes      | Entry file path relative to project root. |
+
+**Returns:** `string` — the bundled source code.
+
+### `OutputFormat` (enum)
+
+N-API enum representing the output module format.
+
+```ts
+enum OutputFormat {
+  Esm = "esm",
+  Commonjs = "commonjs",
+}
+```
+
+### `SuSeeConfig` (object)
+
+```ts
+interface SuSeeConfig {
+  entryPoints: EntryPoint[];
+  outDir?: string;                 // default: "dist"
+  allowUpdatePackageJson?: boolean; // default: false
+  minify?: boolean;                // default: false
+}
+```
+
+### `EntryPoint` (object)
+
+```ts
+interface EntryPoint {
+  entry: string;
+  exportPath: string;             // "." or "./sub/path"
+  format?: OutputFormat[];         // default: ["esm"]
+  tsconfigFilePath?: string | null; // default: null
+  warning?: boolean;               // default: false
+}
+```
+
+---
+
+## Rust API
+
+The Rust core library exposes the following public functions and types via the `susee` crate:
+
+### `core::build(config: Option<&SuSeeConfig>)`
+
+Top-level build entry point. When `config` is `None`, the config is loaded from `susee.config.jsonc` in the current directory.
+
+```rust
+use susee::{SuSeeConfig,susee_build};
+
+// Build from config file
+core::build(None);
+
+// Build from explicit config
+let config = SuSeeConfig {
+    entry_points: vec![susee::core::EntryPoint {
+        entry: "src/index.ts".to_string(),
+        export_path: ".".to_string(),
+        format: Some(vec![susee::core::OutputFormat::Esm]),
+        tsconfig_file_path: None,
+        warning: Some(false),
+    }],
+    out_dir: Some("dist".to_string()),
+    allow_update_package_json: Some(false),
+    minify: Some(true),
+};
+susee_build(Some(&config));
+```
+
+### `core::susee_build(config: &SuSeeConfig) -> Result<(), String>`
+
+Build from a config reference. Returns `Ok(())` on success or an error string on failure.
+
+```rust
+use susee::{susee_build, SuSeeConfig, EntryPoint, OutputFormat};
+
+let config = SuSeeConfig {
+    entry_points: vec![EntryPoint {
+        entry: "src/index.ts".to_string(),
+        export_path: ".".to_string(),
+        format: Some(vec![OutputFormat::Esm, OutputFormat::Commonjs]),
+        tsconfig_file_path: None,
+        warning: Some(false),
+    }],
+    out_dir: Some("dist".to_string()),
+    allow_update_package_json: Some(false),
+    minify: Some(true),
+};
+
+susee_build(&config).expect("build failed");
+```
+
+### `core::bundler(entry: &str, cwd: &str) -> std::io::Result<BundleResult>`
+
+Bundle a single entry and return the merged source string along with project type metadata.
+
+```rust
+use susee::core::bundler;
+
+let result = bundler("src/index.ts", ".")?;
+println!("{}", result.bundled_code);
+```
+
+### `core::susee_cli_build_with_args(args: Vec<String>)`
+
+CLI dispatcher with explicit args. Reads `std::env::args_os().skip(1)` for the standalone binary, or accepts args passed from the N-API layer.
+
+```rust
+use susee::core::susee_cli_build_with_args;
+
+susee_cli_build_with_args(vec!["build".to_string(), "src/index.ts".to_string()]);
+```
+
+### Rust Types
+
+#### `SuSeeConfig`
+
+```rust
+pub struct SuSeeConfig {
+    pub entry_points: Vec<EntryPoint>,
+    pub out_dir: Option<String>,
+    pub allow_update_package_json: Option<bool>,
+    pub minify: Option<bool>,
+}
+```
+
+#### `EntryPoint`
+
+```rust
+pub struct EntryPoint {
+    pub entry: String,
+    pub export_path: String,
+    pub format: Option<Vec<OutputFormat>>,
+    pub tsconfig_file_path: Option<String>,
+    pub warning: Option<bool>,
+}
+```
+
+#### `OutputFormat`
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum OutputFormat {
+    Commonjs, // serialized as "commonjs"
+    Esm,      // serialized as "esm"
+}
+```
+
+#### `BuildOptions` (internal)
+
+```rust
+pub struct BuildOptions {
+    pub build_entry_points: Vec<BuildEntryPoint>,
+    pub update_package: bool,
+    pub out_dir: String,
+    pub minify: bool,
+}
+```
+
+### Cargo.toml
+
+```toml
+[dependencies]
+susee = "2"
+```
 
 ---
 
@@ -165,8 +382,8 @@ Do not open public issues for security reports.
 Susee CLI.
 
 Usage:
-  susee                                 Build using susee.config.{ts,js,mjs}
-  susee init                            Generate susee.config.{ts,js,mjs}
+  susee                                 Build using susee.config.jsonc
+  susee init                            Generate susee.config.jsonc
   susee --version | -v                  Check susee version
   susee --help | -h                     Show this message
   susee build <entry> [options]         Build from a single entry file
@@ -182,6 +399,7 @@ Usage:
 --allow-update[=true|false]   Allow package.json updates (default: false)
 --warning[=true|false]        Treat dependency graph warnings as fatal (default: false)
 --profile[=true|false]        Print bundler/compiler phase timings (default: false)
+--minify[=true|false]         Minify output JavaScript code (default: false)
 ```
 
 ### CLI Examples
@@ -190,106 +408,63 @@ Usage:
 npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
 npx susee build --entry src/index.ts --format esm
-npx susee build src/index.ts --profile
+npx susee build src/index.ts --profile --minify
+npx susee --profile
 ```
 
 Notes:
 
 1. `susee build` accepts either a positional `<entry>` or `--entry <path>`.
 2. `--profile` is also accepted on plain `susee` config-driven builds.
-3. The CLI clears the target `outDir` before writing new output.
+3. `--minify` enables the oxc minifier on the emitted JavaScript output.
+4. The CLI clears the target `outDir` before writing new output.
 
 ---
 
 ## Config File
 
-Supported config filenames at project root:
+The config file uses the **JSONC** format (JSON with comments) and must be named:
 
-1. `susee.config.ts`
-2. `susee.config.js`
-3. `susee.config.mjs`
+- `susee.config.jsonc`
 
-### `SuSeeConfig` shape
+### `susee.config.jsonc` example
 
-```ts
-type OutputFormat = ("commonjs" | "esm")[];
-
-interface EntryPoint {
-  entry: string;
-  exportPath: "." | `./${string}`;
-  format?: OutputFormat; // default: ["esm"]
-  tsconfigFilePath?: string | undefined; // default: undefined
-  plugins?: unknown[]; // default: []
-  warning?: boolean; // default: false
-}
-
-interface SuSeeConfig {
-  entryPoints: EntryPoint[];
-  outDir?: string; // default: "dist"
-  allowUpdatePackageJson?: boolean; // default: false
-}
-```
-
-### Example `susee.config.ts`
-
-```ts
-import type { SuSeeConfig } from "susee";
-
-const config: SuSeeConfig = {
-  entryPoints: [
+```jsonc
+{
+  // Entry points to bundle
+  "entryPoints": [
     {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-    },
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm", "commonjs"],
+      "tsconfigFilePath": null,
+      "warning": false
+    }
   ],
-  outDir: "dist",
-  allowUpdatePackageJson: false,
-};
-
-export default config;
+  // Output directory (default: "dist")
+  "outDir": "dist",
+  // Update package.json fields from build output (default: false)
+  "allowUpdatePackageJson": false,
+  // Minify output JS with the oxc minifier (default: false)
+  "minify": true
+}
 ```
 
-## Programmatic API
+### Config schema
 
-### `build(options?)`
+| Field                    | Type         | Required | Default     | Description                                  |
+| ----------------------- | ------------ | -------- | ----------- | -------------------------------------------- |
+| `entryPoints`           | `EntryPoint[]` | Yes    | —           | List of entry points to build.               |
+| `outDir`                | `string`     | No       | `"dist"`   | Root output directory.                       |
+| `allowUpdatePackageJson`| `boolean`    | No       | `false`    | Update package.json from build output.       |
+| `minify`                | `boolean`    | No       | `false`    | Minify emitted JS with the oxc minifier.     |
+| `entryPoints[].entry`   | `string`     | Yes      | —           | Entry file path.                             |
+| `entryPoints[].exportPath` | `string`   | Yes      | —           | Package export path (`.` or `./sub`).        |
+| `entryPoints[].format`  | `string[]`   | No       | `["esm"]`  | Output formats: `"esm"`, `"commonjs"`.      |
+| `entryPoints[].tsconfigFilePath` | `string\|null` | No | `null` | Custom tsconfig path.                   |
+| `entryPoints[].warning` | `boolean`    | No       | `false`    | Treat dependency warnings as fatal.          |
 
-Signature:
-
-```ts
-function build(options?: SuSeeConfig): Promise<void>;
-```
-
-Parameters:
-
-1. `options` (optional): Build options passed directly from code.
-
-Returns:
-
-1. `Promise<void>` that resolves when compilation completes.
-
-Runtime behavior:
-
-1. If `options` is provided, Susee builds from that object.
-2. If `options` is omitted, Susee tries to load config from project root.
-3. If both are missing, Susee logs an error and exits with code `1`.
-4. Before compiling, Susee clears the configured `outDir`.
-
-```ts
-import { build, type SuSeeConfig } from "susee";
-
-const options: SuSeeConfig = {
-  entryPoints: [
-    {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-    },
-  ],
-};
-
-await build(options);
-```
+---
 
 ## Output Notes
 
@@ -297,7 +472,10 @@ For an entry like `src/index.ts` with both formats enabled, output includes:
 
 1. ESM: `dist/index.mjs`
 2. CommonJS: `dist/index.cjs`
-3. Sourcemaps: `.mjs.map` and `.cjs.map`
+3. Type declarations: `dist/index.d.mts` and `dist/index.d.cts`
+4. Sourcemaps: `dist/index.mjs.map` and `dist/index.cjs.map`
+
+When `minify` is enabled, the ESM and CommonJS output files are minified using the **oxc** minifier.
 
 Declaration files are emitted by the compiler when available.
 

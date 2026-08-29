@@ -1,80 +1,53 @@
 {
-	"name": "susee",
-	"version": "1.6.2",
-	"description": "TypeScript-first bundler for library packages",
-	"type": "module",
-	"main": "out/index.cjs",
-	"types": "out/index.d.cts",
-	"module": "out/index.mjs",
-	"exports": {
-		".": {
-			"import": {
-				"types": "./out/index.d.mts",
-				"default": "./out/index.mjs"
-			},
-			"require": {
-				"types": "./out/index.d.cts",
-				"default": "./out/index.cjs"
-			}
-		}
-	},
-	"bin": {
-		"susee": "bin/susee"
-	},
-	"scripts": {
-		"build": "tsx build.ts",
-		"lint": "biome lint ./src/nodejs ./__tests__  --write",
-		"fmt": "biome format --write",
-		"test": "tsx --test",
-		"hooks:install": "bash scripts/install-hooks.sh",
-		"commit": "bash scripts/commit.sh",
-		"v:patch": "npm version patch --no-git-tag-version",
-		"v:minor": "npm version minor --no-git-tag-version",
-		"v:major": "npm version major --no-git-tag-version"
-	},
-	"keywords": [
-		"bundler",
-		"susee",
-		"suseejs"
-	],
-	"author": "Pho Thin Mg <phothinmg@disroot.org> (https://phothinmg.github.io/)",
-	"license": "Apache-2.0",
-	"files": [
-		"package.json",
-		"README.md",
-		"LICENSE",
-		"dist/**/*",
-		"bin/**/*"
-	],
-	"publishConfig": {
-		"provenance": true,
-		"access": "public"
-	},
-	"repository": {
-		"url": "git+https://github.com/phothinmg/susee.git",
-		"type": "git"
-	},
-	"homepage": "https://susee.js.org/",
-	"bugs": {
-		"url": "https://github.com/phothinmg/susee/issues"
-	},
-	"dependencies": {
-		"@suseejs/color": "^0.0.9",
-		"@suseejs/ts6": "^1.0.0"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.12",
-		"@napi-rs/cli": "^3.8.6",
-		"@suseejs/banner-text-plugin": "^0.0.9",
-		"@suseejs/type": "^0.0.9",
-		"@types/node": "^25.6.0",
-		"tsx": "^4.23.1",
-		"typescript": "^7.0.2"
-	},
-	"allowScripts": {
-		"esbuild@0.28.1": true
-	},
-	"workspaces": [
-		"susee-docs"
-	]
+  "name": "susee",
+  "version": "1.6.2",
+  "description": "TypeScript-first bundler for library packages",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "susee": "bin/susee"
+  },
+  "scripts": {
+    "build": "tsx build.ts",
+    "lint": "biome lint ./src/nodejs ./__tests__  --write",
+    "fmt": "biome format --write",
+    "test": "tsx --test",
+    "hooks:install": "bash scripts/install-hooks.sh",
+    "commit": "bash scripts/commit.sh",
+    "v:patch": "npm version patch --no-git-tag-version",
+    "v:minor": "npm version minor --no-git-tag-version",
+    "v:major": "npm version major --no-git-tag-version"
+  },
+  "keywords": [
+    "bundler",
+    "susee",
+    "suseejs"
+  ],
+  "author": "Pho Thin Mg <phothinmg@disroot.org> (https://phothinmg.github.io/)",
+  "license": "Apache-2.0",
+  "files": [
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "dist/**/*",
+    "bin/**/*"
+  ],
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
+  "repository": {
+    "url": "git+https://github.com/phothinmg/susee.git",
+    "type": "git"
+  },
+  "homepage": "https://susee.js.org/",
+  "bugs": {
+    "url": "https://github.com/phothinmg/susee/issues"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.8.6"
+  },
+  "workspaces": [
+    "susee-docs"
+  ]
 }
