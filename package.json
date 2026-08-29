@@ -8,7 +8,7 @@
     "susee": "bin/susee"
   },
   "scripts": {
-    "build":"npx napi build --platform --config-path napi.config.json --output-dir ./dist",
+    "build": "npx napi build --platform --config-path napi.config.json --output-dir ./dist",
     "hooks:install": "bash scripts/install-hooks.sh",
     "commit": "bash scripts/commit.sh"
   },
@@ -43,5 +43,8 @@
   },
   "workspaces": [
     "susee-docs"
-  ]
+  ],
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
 }
