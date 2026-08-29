@@ -45,32 +45,28 @@ Example:
 }
 ```
 
-## Config-mode integration (`susee.config.ts`)
+## Config-mode integration (`susee.config.jsonc`)
 
 Use `tsconfigFilePath` when one entry point needs compiler settings that differ from the rest of the package.
 
-```ts
-import type { SuSeeConfig } from "susee";
-
-const config: SuSeeConfig = {
-  entryPoints: [
+```jsonc
+{
+  "entryPoints": [
     {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-      tsconfigFilePath: "tsconfig.build.json",
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm", "commonjs"],
+      "tsconfigFilePath": "tsconfig.build.json"
     },
     {
-      entry: "src/cli.ts",
-      exportPath: "./cli",
-      format: ["esm"],
-      tsconfigFilePath: "configs/tsconfig.cli.json",
-    },
+      "entry": "src/cli.ts",
+      "exportPath": "./cli",
+      "format": ["esm"],
+      "tsconfigFilePath": "configs/tsconfig.cli.json"
+    }
   ],
-  outDir: "dist",
-};
-
-export default config;
+  "outDir": "dist"
+}
 ```
 
 ## CLI-mode integration (`susee build`)
@@ -81,7 +77,7 @@ For direct CLI builds, pass a custom path with `--tsconfig`.
 susee build src/index.ts --format esm --tsconfig ./configs/tsconfig.build.json
 ```
 
-This is useful for one-off builds in CI or local experiments without changing `susee.config.ts`.
+This is useful for one-off builds in CI or local experiments without changing `susee.config.jsonc`.
 
 ## Recommended pattern: base + build tsconfig
 
@@ -115,7 +111,7 @@ For medium and large packages, keep a shared base file and extend it in build-sp
 
 Then reference `tsconfig.build.json` from either:
 
-- `entryPoints[].tsconfigFilePath` in `susee.config.ts`
+- `entryPoints[].tsconfigFilePath` in `susee.config.jsonc`
 - `--tsconfig` in `susee build`
 
 ## Path tips

@@ -26,11 +26,9 @@ Susee focuses on the library use case, so the build pipeline avoids unnecessary 
 
 Susee can update relevant package metadata after build output is generated. This makes it easier to keep published package fields aligned with what was actually built.
 
-## Plugin extension points
+## Built-in minification
 
-You can extend build behavior through plugins to fit project-specific requirements. This gives you flexibility for custom processing without replacing your whole build toolchain.
-
-For plugin categories, execution order, and implementation examples, see [Plugin Types and Lifecycle](/guide/plugin-types-lifecycle).
+When `minify` is enabled in the config (or `--minify` on the CLI), susee runs the oxc minifier (compression + mangling) over the final emitted JavaScript before writing it to disk. If the minifier cannot parse the code, susee falls back to the unminified source so the build never breaks on an edge case.
 
 ## CLI and programmatic API
 

@@ -1,171 +1,103 @@
 ---
 layout: docs
 label: guide
-title: How to Write Plugins
+title: Extending the Build
 ---
 
-This guide shows how to create plugins for Susee and wire them into your `susee.config.ts`.
+This guide explains how to influence the susee build pipeline today.
 
-If you want the conceptual overview of plugin categories and execution order, read [Plugin Types and Lifecycle](/guide/plugin-types-lifecycle).
+> **Note**: The current Rust/native (napi-rs) implementation of susee does **not** expose a user-configurable plugin API. There is no `plugins` field on `EntryPoint`. The pipeline stages described in [Build Hooks and Lifecycle](/guide/plugin-types-lifecycle) are built-in and cannot be registered from configuration. This page covers the configuration-driven options that are available now.
 
-## 1. Pick the right plugin type
+## 1. Use the `minify` option
 
-Choose your plugin type based on when your logic should run:
+The closest current equivalent to a "post-process" transform is the built-in minifier, toggled via the `minify` config field or the `--minify` CLI flag.
 
-- `dependency`: transform dependency file objects before merge
-- `pre-process`: transform merged source code before compile
-- `post-process`: transform compiled output before write
-
-## 2. Understand the plugin shape
-
-A plugin can be:
-
-- An object
-- A factory function that returns an object
-
-Each plugin must include:
-
-- `type`
-- `async` (`true` or `false`)
-- `func`
-
-Optional field:
-
-- `name`
-
-## 3. Write your first plugin
-
-### Example A: simple `pre-process` plugin (sync)
-
-```ts
-const addBannerPlugin = {
-  name: "add-banner",
-  type: "pre-process" as const,
-  async: false,
-  func(code: string, file?: string) {
-    const target = file ?? "unknown";
-    return `/* bundled from: ${target} */\n${code}`;
-  },
-};
-```
-
-### Example B: `post-process` plugin (async)
-
-```ts
-const replaceBuildFlagPlugin = {
-  name: "replace-build-flag",
-  type: "post-process" as const,
-  async: true,
-  async func(code: string) {
-    return code.replaceAll("__BUILD_FLAG__", "true");
-  },
-};
-```
-
-### Example C: `dependency` plugin (sync)
-
-```ts
-import type ts from "typescript";
-import type { DepsFiles } from "@suseejs/type";
-
-const trimDependencyCodePlugin = {
-  name: "trim-dependency-code",
-  type: "dependency" as const,
-  async: false,
-  func(depsFiles: DepsFiles, _compilerOptions: ts.CompilerOptions): DepsFiles {
-    return depsFiles.map((dep) => ({
-      ...dep,
-      content: dep.content.trim(),
-    }));
-  },
-};
-```
-
-## 4. Register plugins in config
-
-```ts
-import type { SuSeeConfig } from "susee";
-
-const addBannerPlugin = {
-  name: "add-banner",
-  type: "pre-process" as const,
-  async: false,
-  func(code: string) {
-    return `/* package build */\n${code}`;
-  },
-};
-
-const config: SuSeeConfig = {
-  entryPoints: [
+```jsonc
+{
+  "entryPoints": [
     {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-      plugins: [addBannerPlugin],
-    },
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm", "commonjs"]
+    }
   ],
-};
-
-export default config;
-```
-
-## 5. Use factory plugins when configurable behavior is needed
-
-```ts
-function createTagPlugin(tag: string) {
-  return {
-    name: "tag-plugin",
-    type: "post-process" as const,
-    async: false,
-    func(code: string) {
-      return `${code}\n/* ${tag} */`;
-    },
-  };
+  "outDir": "dist",
+  "minify": true
 }
+```
 
-export default {
-  entryPoints: [
+When enabled, susee runs the oxc minifier (compression + mangling) over the final emitted `.mjs`/`.cjs` output before writing it to disk. If the minifier cannot parse the code, susee falls back to the unminified source so the build never breaks.
+
+## 2. Use the `warning` option
+
+The `warning` field on each entry point makes dependency-graph warnings fatal:
+
+```jsonc
+{
+  "entryPoints": [
     {
-      entry: "src/index.ts",
-      exportPath: ".",
-      plugins: [createTagPlugin("release")],
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm"],
+      "warning": true
+    }
+  ]
+}
+```
+
+When `warning: true`, susee exits with code `1` if it finds referenced npm modules that are not installed during dependency analysis.
+
+## 3. Use per-entry `tsconfigFilePath`
+
+When one entry needs compiler settings that differ from the rest of the package, assign a custom tsconfig to that entry:
+
+```jsonc
+{
+  "entryPoints": [
+    {
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm", "commonjs"],
+      "tsconfigFilePath": "tsconfig.build.json"
     },
+    {
+      "entry": "src/cli.ts",
+      "exportPath": "./cli",
+      "format": ["esm"],
+      "tsconfigFilePath": "configs/tsconfig.cli.json"
+    }
   ],
-};
+  "outDir": "dist"
+}
 ```
 
-Note: factory plugins are invoked at plugin-processing stages, so keep factories deterministic and lightweight.
+See [tsconfig.json and Custom tsconfig Path Integration](/guide/tsconfig-and-custom-path-integration) for the full resolution priority.
 
-## 6. Verify plugin behavior
+## 4. Run builds from the programmatic API
 
-Run builds and inspect output:
+For custom orchestration, drive susee from a script instead of extending the pipeline:
 
-```sh
-npx susee
+```js
+const { suseeBuild, suseeBundler } = require("susee");
+
+// Full build
+suseeBuild({
+  entryPoints: [
+    { entry: "src/index.ts", exportPath: ".", format: ["esm", "commonjs"] },
+  ],
+  outDir: "dist",
+  minify: true,
+});
+
+// Or get just the bundled source string
+const bundled = suseeBundler("src/index.ts");
 ```
 
-What to check:
-
-- Your transformed code appears in generated `.mjs`/`.cjs` files
-- Sourcemaps still resolve correctly
-- Output remains valid JavaScript
-
-## Common mistakes
-
-- Returning the wrong shape (`string` vs `DepsFiles`)
-- Mutating shared state in ways that break multiple output formats
-- Assuming plugin factories run only once
-- Producing syntax-invalid output
-
-## Best practices
-
-- Keep one plugin focused on one concern
-- Make transforms idempotent where possible
-- Add `name` for easier debugging
-- Prefer pure transforms over hidden side effects
+See the [Programmatic API](/references/programmatic-api) reference for all exports.
 
 ## Related pages
 
-- [Plugin Types and Lifecycle](/guide/plugin-types-lifecycle)
-- [Entry Points](/guide/entry-points)
+- [Build Hooks and Lifecycle](/guide/plugin-types-lifecycle)
 - [Configuration File Structure](/guide/config-file-structure)
+- [Entry Points](/guide/entry-points)
+- [Quick Start](/guide/quick-start)

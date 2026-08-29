@@ -29,38 +29,31 @@ npx susee --version
 
 ## Create a config file
 
-Generate a starter config in your project root:
+Generate a starter `susee.config.jsonc` in your project root:
 
 ```sh
 npx susee init
 ```
 
-Supported config filenames:
-
-1. `susee.config.ts`
-2. `susee.config.js`
-3. `susee.config.mjs`
+The generated file uses JSONC (JSON with comments), so you can annotate each field inline.
 
 ## Define your package entries
 
-Example `susee.config.ts`:
+Example `susee.config.jsonc`:
 
-```ts
-import type { SuSeeConfig } from "susee";
-
-const config: SuSeeConfig = {
-  entryPoints: [
+```jsonc
+{
+  // Entry points to bundle
+  "entryPoints": [
     {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-    },
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm", "commonjs"]
+    }
   ],
-  outDir: "dist",
-  allowUpdatePackageJson: false,
-};
-
-export default config;
+  "outDir": "dist",
+  "allowUpdatePackageJson": false
+}
 ```
 
 ## Build with config
@@ -71,7 +64,7 @@ Run susee from your project root:
 npx susee
 ```
 
-Susee reads your `susee.config.*`, builds each entry, and writes output to `dist` by default.
+Susee reads your `susee.config.jsonc`, builds each entry, and writes output to `dist` by default.
 
 ## Build directly from CLI (without config)
 
@@ -88,18 +81,19 @@ Common options:
 - `--tsconfig <path>`
 - `--allow-update[=true|false]`
 - `--warning[=true|false]`
+- `--minify[=true|false]`
 - `--profile[=true|false]`
 
 If the bundled dependency set contains conflicting top-level declarations, Susee fails the build and reports the conflict instead of renaming identifiers automatically.
 
 ## Use the programmatic API
 
-You can also run builds in scripts:
+You can also run builds in scripts. The native addon exposes `suseeBuild`, `cliBuild`, and `suseeBundler`:
 
 ```ts
-import { build } from "susee";
+const { suseeBuild } = require("susee");
 
-await build({
+suseeBuild({
   entryPoints: [
     {
       entry: "src/index.ts",
@@ -109,6 +103,7 @@ await build({
   ],
   outDir: "dist",
   allowUpdatePackageJson: true,
+  minify: false,
 });
 ```
 

@@ -4,37 +4,37 @@ label: guide
 title: Core Build Packages
 ---
 
-These internal modules make up the main Susee build pipeline inside this repository.
+These internal Rust modules make up the main Susee build pipeline inside this repository, exposed to Node.js via napi-rs (`src/lib.rs`).
 
-## `src/bundler`
+## `src/core/susee_bundler`
 
 - Purpose: dependency-aware source bundling for Susee builds
-- Description: internal bundling stage used by the public `build()` API and CLI compiler flow
-- Role in flow: merges dependency and entry content, runs dependency and pre-process plugin stages
+- Description: internal bundling stage used by the public `suseeBuild` API and the CLI compiler flow
+- Role in flow: merges dependency and entry content, runs the built-in tree hooks, pretty-prints the bundled source via oxc's codegen
 
-## `src/compiler`
+## `src/core/susee_compiler`
 
-- Purpose: TypeScript-based compilation of bundled source
-- Description: internal compiler stage that emits `.mjs`, `.cjs`, declaration files, and sourcemaps
-- Role in flow: produces ESM/CommonJS output code and declaration artifacts
+- Purpose: oxc-based compilation of bundled source
+- Description: internal compiler stage that emits `.mjs`/`.cjs`, declaration files (`.d.mts`/`.d.cts`), and source maps
+- Role in flow: produces ESM/CommonJS output code and declaration artifacts; runs the `minify` post-process hook when enabled
 
-## `src/dependencies`
+## `src/core/susee_tree`
 
 - Purpose: dependency graph generation
-- Description: graph building, duplicate detection, and dependency-file collection for bundling
-- Role in flow: analyzes source dependency tree used by bundler and fails fast on duplicate top-level declarations
+- Description: graph building, JSON/CTS/CJS module handling, and dependency-file collection for bundling
+- Role in flow: analyzes the source dependency tree used by the bundler and fails fast on duplicate top-level declarations
 
-## `src/helpers/files.ts`
+## `src/core/susee_config`
 
-- Purpose: file system utilities for build output lifecycle
-- Description: path resolution, output cleanup, file writes, JSON reads, and `package.json` export updates
-- Role in flow: output directory handling, file writes, package metadata updates
+- Purpose: configuration parsing and compiler-option resolution
+- Description: reads `susee.config.jsonc` (with JSONC comments), validates entry points, and normalizes TypeScript compiler options from custom paths, root `tsconfig.json`, or defaults
+- Role in flow: produces `BuildOptions` consumed by the `Compiler`
 
-## `src/compiler/tsoptions.ts`
+## `src/core/susee_hooks`
 
-- Purpose: compiler option resolution
-- Description: loads and normalizes TypeScript compiler options from custom paths, root `tsconfig.json`, or defaults
-- Role in flow: loads and normalizes TypeScript compiler options from configured tsconfig/defaults
+- Purpose: built-in build hooks
+- Description: tree hooks (export-default, anonymous, duplicates, remove), pre-process unused-code cleanup, and the post-process oxc minifier
+- Role in flow: runs automatically during bundling and compilation; not user-configurable from config today
 
 ## When to work in these directly
 
@@ -48,28 +48,27 @@ Work in these modules directly when:
 
 These modules are wired together in the current codebase like this:
 
-1. `src/dependencies/graph.ts` discovers the dependency graph.
-2. `src/dependencies/index.ts` loads dependency files and validates duplicate declarations.
-3. `src/bundler/index.ts` merges sources and runs bundler-stage plugin hooks.
-4. `src/compiler/tsoptions.ts` resolves compiler options.
-5. `src/compiler/index.ts` emits output files and delegates metadata updates to `src/helpers/files.ts`.
+1. `src/core/susee_tree` discovers the dependency graph.
+2. `src/core/susee_bundler` merges sources and runs the tree hooks.
+3. `src/core/susee_config/ts_options` resolves compiler options.
+4. `src/core/susee_compiler` emits output files and delegates metadata updates to `src/core/susee_utils`.
 
 ## Public entry points into this pipeline
 
 Most users should interact with the pipeline through the public `susee` package exports:
 
-- `build(options?)`
+- `suseeBuild(config?)`
 - `suseeBundler(entry)`
-- `suseeCliBuild()`
+- `cliBuild(args)`
 
 Example:
 
-```ts
-import { build, suseeBundler } from "susee";
+```js
+const { suseeBuild, suseeBundler } = require("susee");
 
-const bundledCode = await suseeBundler("src/index.ts");
+const bundledCode = suseeBundler("src/index.ts");
 
-await build({
+suseeBuild({
   entryPoints: [
     {
       entry: "src/index.ts",
@@ -83,5 +82,5 @@ await build({
 ## Related pages
 
 - [Ecosystem Overview](/guide/ecosystem-overview)
-- [Plugin Types and Lifecycle](/guide/plugin-types-lifecycle)
-- [How to Write Plugins](/guide/how-to-write-plugins)
+- [Build Hooks and Lifecycle](/guide/plugin-types-lifecycle)
+- [Extending the Build](/guide/how-to-write-plugins)

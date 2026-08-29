@@ -8,30 +8,29 @@ title: Entry Points
 
 ## EntryPoint shape
 
-```ts
-import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
+The `EntryPoint` struct (Rust, exposed via napi-rs) maps 1:1 to each object in `entryPoints`. JSON field names are camelCase.
 
+```ts
 type OutputFormat = ("commonjs" | "esm")[];
 
 interface EntryPoint {
   entry: string;
   exportPath: "." | `./${string}`;
   format?: OutputFormat;
-  tsconfigFilePath?: string | undefined;
-  plugins?: (SuseePlugin | SuseePluginFunction)[];
+  tsconfigFilePath?: string | null;
   warning?: boolean;
 }
 ```
 
 ## Example entry
 
-```ts
+```jsonc
 {
-  entry: "src/index.ts",
-  exportPath: ".",
-  format: ["esm", "commonjs"],
-  tsconfigFilePath: "tsconfig.json",
-  warning: false,
+  "entry": "src/index.ts",
+  "exportPath": ".",
+  "format": ["esm", "commonjs"],
+  "tsconfigFilePath": "tsconfig.json",
+  "warning": false
 }
 ```
 
@@ -102,15 +101,6 @@ Susee validates top-level declarations across the bundled dependency set.
 - The fix is to rename or restructure the conflicting source declarations.
 - There is no `EntryPoint` flag for automatic duplicate renaming in the current API.
 
-### `plugins`
-
-This defines the plugins used for the entry.
-
-- Type: `SuseePlugin[] | SuseePluginFunction[]`
-- Default: `[]`
-
-Plugins are configured per entry, which means different subpath exports can use different plugin pipelines.
-
 ### `warning`
 
 This controls how Susee treats dependency graph warnings.
@@ -122,51 +112,43 @@ During dependency analysis, Susee checks whether referenced npm modules are inst
 
 ## Single-entry example
 
-```ts
-import type { SuSeeConfig } from "susee";
-
-const config: SuSeeConfig = {
-  entryPoints: [
+```jsonc
+{
+  "entryPoints": [
     {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
-    },
-  ],
-};
-
-export default config;
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm", "commonjs"]
+    }
+  ]
+}
 ```
 
 This is the standard setup for a package with one public entry.
 
 ## Multi-entry example
 
-```ts
-import type { SuSeeConfig } from "susee";
-
-const config: SuSeeConfig = {
-  entryPoints: [
+```jsonc
+{
+  "entryPoints": [
     {
-      entry: "src/index.ts",
-      exportPath: ".",
-      format: ["esm", "commonjs"],
+      "entry": "src/index.ts",
+      "exportPath": ".",
+      "format": ["esm", "commonjs"]
     },
     {
-      entry: "src/cli.ts",
-      exportPath: "./cli",
-      format: ["esm"],
+      "entry": "src/cli.ts",
+      "exportPath": "./cli",
+      "format": ["esm"]
     },
     {
-      entry: "src/utils.ts",
-      exportPath: "./utils",
-      format: ["esm"],
-    },
+      "entry": "src/utils.ts",
+      "exportPath": "./utils",
+      "format": ["esm"]
+    }
   ],
-  outDir: "dist",
-};
-
-export default config;
+  "outDir": "dist"
+}
 ```
 
 This structure is useful when your package exposes a main API and one or more subpath exports.

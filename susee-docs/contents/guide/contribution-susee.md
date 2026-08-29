@@ -27,18 +27,22 @@ git checkout -b feat/my-change
 
 Common contribution areas:
 
-- CLI behavior (`src/cli/**`)
-- Build pipeline internals (`src/bundler/**`, `src/compiler/**`, `src/dependencies/**`)
-- Documentation (`docs/**`)
-- Tests (`__tests__/test-suites/**`)
+- Native addon bindings (`src/lib.rs`)
+- CLI behavior (`src/core/susee_cli/**`)
+- Build pipeline internals (`src/core/susee_bundler/**`, `src/core/susee_compiler/**`, `src/core/susee_tree/**`)
+- Documentation (`susee-docs/contents/**`)
+- Tests (in-module `#[cfg(test)]` blocks run via `cargo test`)
 
 ## 4. Run local quality checks
 
-Use the scripts from this repository:
+Use the scripts and commands from this repository:
 
 ```sh
-npm run test
-npm run lint
+npm install
+npm run build      # build the native addon (napi-rs)
+cargo check
+cargo test
+cargo fmt
 ```
 
 For docs work, use the available docs scripts when needed:
@@ -46,12 +50,6 @@ For docs work, use the available docs scripts when needed:
 ```sh
 npm run docs:init
 npm run docs:dev
-```
-
-Optional formatting:
-
-```sh
-npm run fmt
 ```
 
 ## 5. Commit and open PR

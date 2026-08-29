@@ -8,31 +8,31 @@ This page documents how to use susee programmatically from TypeScript or JavaScr
 
 ## Overview
 
-The package entry point exports three runtime helpers:
+Susee is a native Node addon built with [napi-rs](https://napi.rs). The Rust `susee` crate exposes three `#[napi]`-annotated functions, each delegating to an internal `core` module. From JavaScript they are available on the package's main entry point:
 
-- `build(options?)` for full config-driven builds
-- `suseeBundler(entry)` for bundling a single entry into a merged source string
-- `suseeCliBuild()` for running the CLI entry logic from code
+| Export         | JS signature                              | Rust function                                    | Description                                          |
+| -------------- | ----------------------------------------- | ------------------------------------------------ | ---------------------------------------------------- |
+| `suseeBuild`   | `(config?: SuSeeConfig) => void`          | `susee_build(config: Option<SuSeeConfig>)`       | Full config-driven build                             |
+| `cliBuild`     | `(args: string[]) => void`                | `cli_build(args: Vec<String>)`                   | Run the CLI dispatcher with an explicit argument list |
+| `suseeBundler` | `(entry: string) => string`               | `susee_bundler(entry: String) -> String`         | Bundle one entry into a merged source string          |
+| `SuSeeConfig`  | *(type)*                                  | `SuSeeConfig` struct                             | Configuration object                                  |
+| `EntryPoint`   | *(type)*                                  | `EntryPoint` struct                              | One entry in `entryPoints`                           |
+| `OutputFormat` | *(type)*                                  | `OutputFormat` enum (`"esm" | "commonjs"`)       | Output module format                                  |
 
-`build(options?)` remains the main programmatic build API. It orchestrates configuration loading, dependency resolution, bundling, and compilation. The API is exported from the main package entry point and can be imported in both ESM and CommonJS environments.
+`suseeBuild` is the main programmatic build API. It orchestrates configuration loading, dependency resolution, bundling, and compilation. The native addon can be consumed in both ESM and CommonJS environments.
+
+> The functions are **synchronous** in the native addon. `suseeBuild` returns `void`; `suseeBundler` returns the bundled source string directly. Do not `await` these calls.
 
 ## Package Exports
 
-The susee package provides dual-format exports, allowing consumption in both ESM and CommonJS environments. The main entry point `src/index.ts` exports the core function and configuration types.
-
-| Export        | Type     | Description                                                |
-| ------------- | -------- | ---------------------------------------------------------- |
-| build         | Function | Full build entry point using inline options or root config |
-| suseeBundler  | Function | Bundles one entry and returns merged source code           |
-| suseeCliBuild | Function | Runs the CLI dispatcher programmatically                   |
-| SuSeeConfig   | Type     | TypeScript interface for the configuration object          |
+The susee package provides dual-format exports. The main entry point (`index.js` / `index.d.ts`) re-exports the napi-generated functions and TypeScript types.
 
 ### Import Syntax
 
 #### ESM Example
 
 ```ts
-import { build, type SuSeeConfig } from "susee";
+import { suseeBuild, type SuSeeConfig } from "susee";
 
 const options: SuSeeConfig = {
   entryPoints: [
@@ -44,15 +44,16 @@ const options: SuSeeConfig = {
   ],
   outDir: "dist",
   allowUpdatePackageJson: true,
+  minify: false,
 };
 
-await build(options);
+suseeBuild(options);
 ```
 
-#### CommonJs Example
+#### CommonJS Example
 
 ```js
-const { build } = require("susee");
+const { suseeBuild } = require("susee");
 /** @type {import("susee").SuSeeConfig} */
 const options = {
   entryPoints: [
@@ -64,21 +65,24 @@ const options = {
   ],
   outDir: "dist",
   allowUpdatePackageJson: true,
+  minify: false,
 };
 
-build(options);
+suseeBuild(options);
 ```
 
-## Function Signature
+## `suseeBuild(config?)`
 
-The `build` function is the primary interface for programmatic execution.
+The primary interface for programmatic execution.
 
-- **Name** : `build`
-- **Parameters** : options (Optional `SuSeeConfig` object)
-- **Return Type** : `Promise<void>`
-- **Async** : Yes (must be awaited).
+- **Name** : `suseeBuild`
+- **Parameters** : `config?: SuSeeConfig`
+- **Return type** : `void`
+- **Async** : No (synchronous native call)
 
-If `options` is omitted, `build()` tries to load `susee.config.ts`, `susee.config.js`, or `susee.config.mjs` from the current working directory.
+When `config` is omitted, `suseeBuild` loads `susee.config.jsonc` from the current working directory. When a `SuSeeConfig` is provided, it overrides the file-based configuration. After the build completes, the elapsed time is logged via the internal `susee_log` module.
+
+On a build error the function prints `[Error] : <message>` to stderr and exits the process with code `1`.
 
 ## Other runtime exports
 
@@ -86,28 +90,72 @@ If `options` is omitted, `build()` tries to load `susee.config.ts`, `susee.confi
 
 Use this when you want the merged bundled source string without running the compiler or writing files.
 
-- **Parameters** : `entry: string`
-- **Return Type** : `Promise<string>`
+- **Parameters** : `entry: string` — resolved relative to the current working directory (`.`)
+- **Return type** : `string` — the bundled JavaScript/TypeScript source
 
-### `suseeCliBuild()`
+On a bundler error the message `"Error when bundling"` is printed and the process panics.
+
+### `cliBuild(args)`
 
 Use this when embedding the CLI entry flow into another Node.js process.
 
-- **Parameters** : none
-- **Return Type** : `Promise<void>`
+- **Parameters** : `args: string[]` — pass `process.argv.slice(2)` (the user-supplied arguments with the Node executable and script path already stripped)
+- **Return type** : `void`
+
+This is the same dispatcher the `susee` bin script uses. See [Command Line Interface](/references/command-line-interface) for the supported subcommands and flags.
+
+## `SuSeeConfig`
+
+The configuration struct, defined in Rust and exposed to JavaScript via napi-rs `#[napi(object)]`. JSON field names use camelCase.
+
+```ts
+interface SuSeeConfig {
+  entryPoints: EntryPoint[];
+  outDir?: string;                  // default: "dist"
+  allowUpdatePackageJson?: boolean;  // default: false
+  minify?: boolean;                  // default: false
+}
+
+interface EntryPoint {
+  entry: string;                     // required, must exist on disk
+  exportPath: "." | `./${string}`;   // required, must be unique
+  format?: ("commonjs" | "esm")[];   // default: ["esm"]
+  tsconfigFilePath?: string | null;   // default: null
+  warning?: boolean;                  // default: false
+}
+```
 
 ## Execution Pipeline
 
-The `build()` function implements a three-stage pipeline.
+`suseeBuild` implements a three-stage pipeline.
 
 ### 1. Configuration Resolution
 
-The function first determines the configuration to use. If options are passed directly to `build()`, it calls `generateBuildOptions(options)`. If `options` are omitted, it attempts to load a configuration file from the project root.
+If a `config` argument is provided, it is normalized via `generate_build_options`. If `config` is omitted, the loader looks for `susee.config.jsonc` in the current working directory and parses it (stripping JSONC comments) into a `SuSeeConfig`.
 
 ### 2. Validation
 
-If neither provided options nor a discovered configuration file are found, the process logs an error and exits with code `1`.
+Entry points are validated by `check_entries`:
+
+- At least one entry is required.
+- Every `entry` file must exist on disk.
+- Every `exportPath` must be unique.
+
+If validation fails, an error message is returned and the process exits with code `1`.
 
 ### 3. Compilation Orchestration
 
-A `Compiler` instance is instantiated with the resolved `buildOptions`. The `compiler.compile()` method is then invoked, which internally handles dependency resolution, AST bundling, TypeScript emission, output cleanup, and optional `package.json` updates.
+A `Compiler` instance is created with the resolved `BuildOptions`. `compiler.compile()` then handles, for each entry point and each requested `OutputFormat`:
+
+1. Bundling the entry's local dependency tree into a single source string (`bundler`).
+2. Running internal tree hooks (export-default normalization, anonymous-export naming, duplicate-declaration detection, import/export removal).
+3. Compiling the bundled source with the oxc parser/transformer/codegen.
+4. Optionally minifying the emitted JS with the oxc minifier (when `minify: true`).
+5. Writing `.mjs`/`.cjs`, `.d.mts`/`.d.cts`, and `.js.map`/`.cjs.map` files to the output directory.
+6. Optionally updating `package.json` export metadata (when `allowUpdatePackageJson: true`).
+
+## Related pages
+
+- [Command Line Interface](/references/command-line-interface)
+- [Configuration File Structure](/guide/config-file-structure)
+- [Quick Start](/guide/quick-start)

@@ -8,17 +8,25 @@ This page is for contributions to Susee's core build internals in this repositor
 
 ## Target modules
 
-The main build stages now live under `src/` as internal modules:
+The main build stages are implemented in Rust under `src/core/`:
 
-- `src/bundler`
-- `src/compiler`
-- `src/dependencies`
-- `src/helpers/files.ts`
-- `src/compiler/tsoptions.ts`
+- `src/core/susee_bundler`
+- `src/core/susee_compiler`
+- `src/core/susee_tree`
+- `src/core/susee_config`
+- `src/core/susee_hooks`
+- `src/core/susee_build`
+- `src/core/susee_cli`
+- `src/core/susee_utils`
+- `src/core/susee_unique_name`
+- `src/core/susee_log`
+- `src/core/susee_types`
+
+The native addon entry points live in `src/lib.rs` (`suseeBuild`, `cliBuild`, `suseeBundler`).
 
 ## 1. Work in this repository
 
-Use npm for consistency with this repository's lockfile and npm-based scripts.
+Install Node dependencies for the napi-rs build tooling:
 
 ```sh
 npm install
@@ -30,22 +38,39 @@ If the repository has a hooks installation script, run:
 npm run hooks:install
 ```
 
+Build the native addon:
+
+```sh
+npm run build
+```
+
+Run Rust checks and tests with cargo:
+
+```sh
+cargo check
+cargo test
+```
+
 ## 2. Pick the owning module first
 
 Before coding, choose exactly where the fix belongs:
 
-- API surface or transforms in bundling: `src/bundler`
-- compiler behavior: `src/compiler`
-- dependency graph logic: `src/dependencies`
-- filesystem/output handling or `package.json` updates: `src/helpers/files.ts`
-- TypeScript options resolution: `src/compiler/tsoptions.ts`
+- API surface or transforms in bundling: `src/core/susee_bundler`
+- compiler behavior: `src/core/susee_compiler`
+- dependency graph logic: `src/core/susee_tree`
+- filesystem/output handling or `package.json` updates: `src/core/susee_utils`
+- TypeScript options resolution: `src/core/susee_config/ts_options`
+- config parsing/validation: `src/core/susee_config/config_types`
+- built-in hooks (minify, unused code, duplicates, ...): `src/core/susee_hooks`
+- CLI dispatch: `src/core/susee_cli`
+- native addon bindings: `src/lib.rs`
 
 ## 3. Implement and test in-module
 
 Recommended flow:
 
 1. Make changes in one module slice first.
-2. Run the narrowest local test or validation that covers that slice.
+2. Run the narrowest local test or validation that covers that slice (`cargo test`).
 3. Validate adjacent build stages if your change affects shared contracts.
 
 ## 4. Keep public behavior in mind

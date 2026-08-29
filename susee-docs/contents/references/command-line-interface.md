@@ -4,7 +4,7 @@ label: references
 title: Command Line Interface
 ---
 
-This document details the Command Line Interface (CLI) for susee, covering installation methods, execution patterns, and the command behavior implemented in `src/cli`.
+This document details the Command Line Interface (CLI) for susee, covering installation methods, execution patterns, and the command behavior implemented in `src/core/susee_cli` (and exposed to Node.js via the `cliBuild` napi binding).
 
 The CLI includes a utility for initializing project configurations and provides two primary build modes:
 
@@ -37,7 +37,7 @@ The CLI is structured to handle three distinct workflows:
 
 **Command** : `susee` or `npx susee`
 
-When run without arguments, susee attempts to find a configuration file (`susee.config.ts`, `susee.config.js`, or `susee.config.mjs`) in the current directory. It resolves the build options and executes the bundling and compilation pipeline.
+When run without arguments, susee attempts to find `susee.config.jsonc` in the current working directory. It parses the file (stripping JSONC comments), resolves the build options, and executes the bundling and compilation pipeline.
 
 #### 2. Single Entry Build
 
@@ -52,6 +52,7 @@ This command allows for quick builds without a configuration file.
 --tsconfig <path>             Custom tsconfig path
 --allow-update[=true|false]   Allow package.json updates (default: false)
 --warning[=true|false]        Treat dependency graph warnings as fatal (default: false)
+--minify[=true|false]         Minify output JS with the oxc minifier (default: false)
 --profile[=true|false]        Print bundler and compiler phase timings (default: false)
 ```
 
@@ -61,6 +62,7 @@ This command allows for quick builds without a configuration file.
 npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
 npx susee build --entry src/index.ts --format esm --tsconfig tsconfig.build.json
+npx susee build src/index.ts --minify
 npx susee build src/index.ts --profile
 ```
 
@@ -68,12 +70,7 @@ npx susee build src/index.ts --profile
 
 **Command** : `susee init` or `npx susee init`
 
-This command provides an interactive prompt to determine if the project is TypeScript-based.
-Based on the user input and the `type` field in `package.json`, it generates the appropriate configuration file:
-
-- **TypeScript** : `susee.config.ts`
-- **ESM JavaScript package** : `susee.config.js`
-- **CommonJS JavaScript package** : `susee.config.mjs`
+This command writes a starter `susee.config.jsonc` file in the current directory. If a config file already exists, the command fails with an error. The generated file includes commented entries for `entryPoints`, `outDir`, `allowUpdatePackageJson`, and `minify`.
 
 #### 4. Help, Version, and Profiling
 

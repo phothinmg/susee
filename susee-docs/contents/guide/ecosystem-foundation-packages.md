@@ -12,6 +12,8 @@ These packages provide shared types, helpers, and terminal ergonomics used acros
 - Description: Type Def for SuseeJs
 - Common usage: plugin type unions, dependency-file structures, ecosystem-wide API consistency
 
+> **Note**: The current native (Rust/napi-rs) build does not expose a user-configurable plugin API, so `@suseejs/type`'s plugin types are not consumed by the config today. They remain available for when the plugin API is reintroduced.
+
 ## `@suseejs/utilities`
 
 - Purpose: common utility helpers reused across packages
