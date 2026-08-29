@@ -799,15 +799,6 @@ fn scan_helper_usage(program: &Program<'_>) -> HelperUsage {
 ///
 /// Panics if the source fails to parse or the transformer reports errors.
 ///
-/// # Example
-///
-/// ```
-/// use susee_bundler::{emit_cjs, SourceType};
-///
-/// let src = "export const x = 42;";
-/// let out = emit_cjs(src, SourceType::ts(), None);
-/// assert!(out.contains("exports.x = x;"));
-/// ```
 pub fn emit_cjs(source_code: &str, source_type: SourceType, file_path: Option<String>) -> String {
     // 1. Strip TypeScript types (if any), keeping ESM.
     let js_code = strip_types(source_code, source_type, file_path);

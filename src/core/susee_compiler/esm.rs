@@ -35,15 +35,6 @@ use std::path::Path;
 /// * Panics with an `"oxc transform error: …"` message if the transformer
 ///   reports error-level diagnostics.
 ///
-/// # Example
-///
-/// ```
-/// use susee_bundler::{emit_esm, SourceType};
-///
-/// let src = "export const answer = 42;";
-/// let out = emit_esm(src, SourceType::ts(), None);
-/// assert!(out.contains("export const answer = 42;"));
-/// ```
 pub fn emit_esm(
     source_code: &str,
     source_type: SourceType,

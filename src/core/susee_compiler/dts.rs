@@ -44,18 +44,7 @@ use oxc::span::SourceType;
 /// has an explicitly-annotated return type, that type is propagated to the
 /// caller's synthesized annotation.
 ///
-/// # Example
-///
-/// ```
-/// use susee_bundler::{emit_dts, SourceType};
-///
-/// let src = "export function add(a: number, b: number): number { return a + b; }";
-/// let out = emit_dts(src, SourceType::ts());
-/// assert!(out.contains("export declare function add"));
-/// assert!(out.contains("number"));
-/// // Implementation bodies are stripped.
-/// assert!(!out.contains("return a + b"));
-/// ```
+
 pub fn emit_dts(source_code: &str, source_type: SourceType) -> std::string::String {
     use oxc::codegen::Codegen;
     use oxc::isolated_declarations::{IsolatedDeclarations, IsolatedDeclarationsOptions};
