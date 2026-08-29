@@ -41,7 +41,7 @@ pub fn emit_esm(
     file_path: Option<String>,
 ) -> std::string::String {
     let allocator = Allocator::default();
-    let parser = Parser::new(&allocator, &source_code, source_type);
+    let parser = Parser::new(&allocator, source_code, source_type);
     let parsed_program = parser.parse();
     if parsed_program.panicked {
         let diags = parsed_program

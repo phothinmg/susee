@@ -373,12 +373,11 @@ fn write_package_json(files: &OutFiles, export_path: &str) -> std::io::Result<()
     // the new entry into the existing `exports` object.
     let exports_val = {
         let mut exports_obj: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
-        if !is_main {
-            if let Some(existing) = &existing_exports {
-                if let Some(m) = existing.as_object() {
-                    exports_obj = m.clone();
-                }
-            }
+        if !is_main
+            && let Some(existing) = &existing_exports
+            && let Some(m) = existing.as_object()
+        {
+            exports_obj = m.clone();
         }
         if let Some(entry) = build_export_entry(files) {
             exports_obj.insert(export_path.to_string(), entry);

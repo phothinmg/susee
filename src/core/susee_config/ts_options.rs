@@ -103,12 +103,12 @@ pub fn get_ts_config_path(custom_config_path: Option<&str>) -> Option<PathBuf> {
             return Some(p.to_path_buf());
         }
         eprintln!("> Given custom tsconfig file {custom} does not exist; falling back to defaults");
-        return None;
+        None
     } else {
         let cwd = std::env::current_dir().ok()?;
         let default = cwd.join("tsconfig.json");
         if default.exists() {
-            return Some(default);
+            Some(default)
         } else {
             None
         }

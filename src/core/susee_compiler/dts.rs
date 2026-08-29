@@ -164,7 +164,7 @@ fn annotate_missing_return_types<'a>(
                     annotate_variable_declaration(&ast, var_decl, &known_return_types, jsdoc_map);
                 }
                 Declaration::ClassDeclaration(class) => {
-                    annotate_class(&ast, &mut **class, &known_return_types, jsdoc_map);
+                    annotate_class(&ast, class, &known_return_types, jsdoc_map);
                 }
                 _ => {}
             },
@@ -177,13 +177,13 @@ fn annotate_missing_return_types<'a>(
                     fill_untyped_params_with_any(&ast, &mut func.params);
                 }
                 ExportDefaultDeclarationKind::ClassDeclaration(class) => {
-                    annotate_class(&ast, &mut **class, &known_return_types, jsdoc_map);
+                    annotate_class(&ast, class, &known_return_types, jsdoc_map);
                 }
                 _ => {}
             },
             // `class C {}` (top-level, non-exported)
             Statement::ClassDeclaration(class) => {
-                annotate_class(&ast, &mut **class, &known_return_types, jsdoc_map);
+                annotate_class(&ast, class, &known_return_types, jsdoc_map);
             }
             // `const foo = () => {}` (top-level, non-exported)
             Statement::VariableDeclaration(var_decl) => {
@@ -344,7 +344,7 @@ fn annotate_missing_return_types<'a>(
         // methods and properties — the declarator itself doesn't need a type
         // annotation for this case.
         if let Some(Expression::ClassExpression(class)) = &mut declarator.init {
-            annotate_class(ast, &mut **class, known, jsdoc_map);
+            annotate_class(ast, class, known, jsdoc_map);
             return;
         }
 
@@ -741,7 +741,8 @@ fn annotate_missing_return_types<'a>(
         let body = func.body.as_ref()?;
         let mut candidate: Option<TSType<'a>> = None;
         for ret in find_return_arguments(&body.statements) {
-            if let Some(t) = resolve_expression_type(ast, ret, known, func.r#async) {
+            {
+                let t = resolve_expression_type(ast, ret, known, func.r#async)?;
                 // Keep the first resolved type; if subsequent returns disagree we
                 // bail out and fall back to `any`.
                 if let Some(existing) = &candidate {
@@ -751,9 +752,6 @@ fn annotate_missing_return_types<'a>(
                 } else {
                     candidate = Some(t);
                 }
-            } else {
-                // Unknown return — can't safely infer, bail.
-                return None;
             }
         }
         candidate
@@ -769,7 +767,8 @@ fn annotate_missing_return_types<'a>(
             let body = arrow.body.as_function_body()?;
             let mut candidate: Option<TSType<'a>> = None;
             for ret in find_return_arguments(&body.statements) {
-                if let Some(t) = resolve_expression_type(ast, ret, known, arrow.r#async) {
+                {
+                    let t = resolve_expression_type(ast, ret, known, arrow.r#async)?;
                     if let Some(existing) = &candidate {
                         if !type_content_eq(existing, &t) {
                             return None;
@@ -777,8 +776,6 @@ fn annotate_missing_return_types<'a>(
                     } else {
                         candidate = Some(t);
                     }
-                } else {
-                    return None;
                 }
             }
             candidate
@@ -823,16 +820,13 @@ fn annotate_missing_return_types<'a>(
 
     /// If `ty` is `Promise<T>`, return `T`; otherwise return `ty` unchanged.
     fn unwrap_promise<'a>(ast: &AstBuilder<'a>, ty: TSType<'a>) -> Option<TSType<'a>> {
-        if let TSType::TSTypeReference(reference) = &ty {
-            if let TSTypeName::IdentifierReference(ident) = &reference.type_name {
-                if ident.name.as_str() == "Promise" {
-                    if let Some(type_args) = &reference.type_arguments {
-                        if type_args.params.len() == 1 {
-                            return Some(type_args.params[0].clone_in(ast.allocator()));
-                        }
-                    }
-                }
-            }
+        if let TSType::TSTypeReference(reference) = &ty
+            && let TSTypeName::IdentifierReference(ident) = &reference.type_name
+            && ident.name.as_str() == "Promise"
+            && let Some(type_args) = &reference.type_arguments
+            && type_args.params.len() == 1
+        {
+            return Some(type_args.params[0].clone_in(ast.allocator()));
         }
         Some(ty)
     }
@@ -1007,12 +1001,12 @@ fn parse_jsdoc_comment<'a>(
         if line.starts_with("@returns") || line.starts_with("@return") {
             has_returns = true;
             // Extract the type expression in `{...}`.
-            if let Some(ty_str) = extract_braced_type(line) {
-                if let Some(ty) = parse_jsdoc_type(ast, ty_str) {
-                    return_type = Some(ty);
-                }
-                // If parse failed, return_type stays None → caller uses `any`.
+            if let Some(ty_str) = extract_braced_type(line)
+                && let Some(ty) = parse_jsdoc_type(ast, ty_str)
+            {
+                return_type = Some(ty);
             }
+            // If parse failed, return_type stays None → caller uses `any`.
             // If no `{...}` braces, return_type stays None → caller uses `any`.
         } else if line.starts_with("@param") {
             // `@param {type} name` or `@param {type} [name]` or `@param name`
@@ -1049,10 +1043,10 @@ fn extract_braced_type(s: &str) -> Option<&str> {
 
 /// Find the text after the closing `}` of the first `{...}` group.
 fn find_after_brace(s: &str) -> &str {
-    if let Some(start) = s.find('{') {
-        if let Some(end) = s[start..].find('}') {
-            return s[start + end + 1..].trim();
-        }
+    if let Some(start) = s.find('{')
+        && let Some(end) = s[start..].find('}')
+    {
+        return s[start + end + 1..].trim();
     }
     s
 }
@@ -1064,8 +1058,7 @@ fn extract_param_name(s: &str) -> Option<String> {
         return None;
     }
     // Handle `[name]` (optional) — strip a leading `[` and the matching `]`.
-    let s = if s.starts_with('[') {
-        let inner = &s[1..];
+    let s = if let Some(inner) = s.strip_prefix('[') {
         if let Some(end) = inner.find(']') {
             &inner[..end]
         } else {
@@ -1128,18 +1121,18 @@ fn parse_jsdoc_type_inner<'a>(
     }
 
     // Check for union `|` at the top level (not inside `<>` or `()`).
-    if let Some(union_parts) = split_top_level_union(trimmed) {
-        if union_parts.len() > 1 {
-            let mut types: ArenaVec<'a, TSType<'a>> =
-                ArenaVec::with_capacity_in(union_parts.len(), ast);
-            for part in &union_parts {
-                if let Some(t) = parse_jsdoc_type_inner(ast, part) {
-                    types.push(t);
-                }
+    if let Some(union_parts) = split_top_level_union(trimmed)
+        && union_parts.len() > 1
+    {
+        let mut types: ArenaVec<'a, TSType<'a>> =
+            ArenaVec::with_capacity_in(union_parts.len(), ast);
+        for part in &union_parts {
+            if let Some(t) = parse_jsdoc_type_inner(ast, part) {
+                types.push(t);
             }
-            if !types.is_empty() {
-                return Some(TSType::new_ts_union_type(SPAN, types, ast));
-            }
+        }
+        if !types.is_empty() {
+            return Some(TSType::new_ts_union_type(SPAN, types, ast));
         }
     }
 
@@ -1154,28 +1147,27 @@ fn parse_jsdoc_type_inner<'a>(
     }
 
     // Check for generic type args: `Name<arg1, arg2, ...>`.
-    if let Some(lt_pos) = find_top_level_lt(trimmed) {
-        if trimmed.ends_with('>') {
-            let name_str = trimmed[..lt_pos].trim();
-            let args_str = &trimmed[lt_pos + 1..trimmed.len() - 1];
-            let type_name = TSTypeName::new_identifier_reference(SPAN, name_str, ast);
-            let arg_strs = split_top_level_commas(args_str);
-            let mut params: ArenaVec<'a, TSType<'a>> =
-                ArenaVec::with_capacity_in(arg_strs.len(), ast);
-            for arg in &arg_strs {
-                if let Some(t) = parse_jsdoc_type_inner(ast, arg) {
-                    params.push(t);
-                }
+    if let Some(lt_pos) = find_top_level_lt(trimmed)
+        && trimmed.ends_with('>')
+    {
+        let name_str = trimmed[..lt_pos].trim();
+        let args_str = &trimmed[lt_pos + 1..trimmed.len() - 1];
+        let type_name = TSTypeName::new_identifier_reference(SPAN, name_str, ast);
+        let arg_strs = split_top_level_commas(args_str);
+        let mut params: ArenaVec<'a, TSType<'a>> = ArenaVec::with_capacity_in(arg_strs.len(), ast);
+        for arg in &arg_strs {
+            if let Some(t) = parse_jsdoc_type_inner(ast, arg) {
+                params.push(t);
             }
-            if !params.is_empty() {
-                let type_args = TSTypeParameterInstantiation::boxed(SPAN, params, ast);
-                return Some(TSType::new_ts_type_reference(
-                    SPAN,
-                    type_name,
-                    Some(type_args),
-                    ast,
-                ));
-            }
+        }
+        if !params.is_empty() {
+            let type_args = TSTypeParameterInstantiation::boxed(SPAN, params, ast);
+            return Some(TSType::new_ts_type_reference(
+                SPAN,
+                type_name,
+                Some(type_args),
+                ast,
+            ));
         }
     }
 

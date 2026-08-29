@@ -269,36 +269,36 @@ fn collect_export_default_local_spans(
             Statement::ExportDefaultDeclaration(export_decl) => {
                 match &export_decl.declaration {
                     ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
-                        if let Some(id) = &func.id {
-                            if id.name.as_str() == base {
-                                spans.push((
-                                    id.span.start as usize,
-                                    id.span.end as usize,
-                                    new_name.clone(),
-                                ));
-                            }
-                        }
-                    }
-                    ExportDefaultDeclarationKind::ClassDeclaration(cls) => {
-                        if let Some(id) = &cls.id {
-                            if id.name.as_str() == base {
-                                spans.push((
-                                    id.span.start as usize,
-                                    id.span.end as usize,
-                                    new_name.clone(),
-                                ));
-                            }
-                        }
-                    }
-                    // `export default <identifier>` — rename the identifier.
-                    ExportDefaultDeclarationKind::Identifier(ident) => {
-                        if ident.name.as_str() == base {
+                        if let Some(id) = &func.id
+                            && id.name.as_str() == base
+                        {
                             spans.push((
-                                ident.span.start as usize,
-                                ident.span.end as usize,
+                                id.span.start as usize,
+                                id.span.end as usize,
                                 new_name.clone(),
                             ));
                         }
+                    }
+                    ExportDefaultDeclarationKind::ClassDeclaration(cls) => {
+                        if let Some(id) = &cls.id
+                            && id.name.as_str() == base
+                        {
+                            spans.push((
+                                id.span.start as usize,
+                                id.span.end as usize,
+                                new_name.clone(),
+                            ));
+                        }
+                    }
+                    // `export default <identifier>` — rename the identifier.
+                    ExportDefaultDeclarationKind::Identifier(ident)
+                        if ident.name.as_str() == base =>
+                    {
+                        spans.push((
+                            ident.span.start as usize,
+                            ident.span.end as usize,
+                            new_name.clone(),
+                        ));
                     }
                     _ => {}
                 }
@@ -306,14 +306,14 @@ fn collect_export_default_local_spans(
             // Variable declarations: `const hello = ...` → `const <new> = ...`
             Statement::VariableDeclaration(var_decl) => {
                 for decl in &var_decl.declarations {
-                    if let oxc::ast::ast::BindingPattern::BindingIdentifier(id) = &decl.id {
-                        if id.name.as_str() == base {
-                            spans.push((
-                                id.span.start as usize,
-                                id.span.end as usize,
-                                new_name.clone(),
-                            ));
-                        }
+                    if let oxc::ast::ast::BindingPattern::BindingIdentifier(id) = &decl.id
+                        && id.name.as_str() == base
+                    {
+                        spans.push((
+                            id.span.start as usize,
+                            id.span.end as usize,
+                            new_name.clone(),
+                        ));
                     }
                 }
             }
@@ -351,28 +351,28 @@ struct ExportDefaultRefCollector<'a> {
 
 impl<'a, 'ast> Visit<'ast> for ExportDefaultRefCollector<'a> {
     fn visit_call_expression(&mut self, it: &oxc::ast::ast::CallExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.callee {
-            if ident.name.as_str() == self.base {
-                self.spans.push((ident.span, self.new_name.to_string()));
-            }
+        if let Expression::Identifier(ident) = &it.callee
+            && ident.name.as_str() == self.base
+        {
+            self.spans.push((ident.span, self.new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_call_expression(self, it);
     }
 
     fn visit_static_member_expression(&mut self, it: &oxc::ast::ast::StaticMemberExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.object {
-            if ident.name.as_str() == self.base {
-                self.spans.push((ident.span, self.new_name.to_string()));
-            }
+        if let Expression::Identifier(ident) = &it.object
+            && ident.name.as_str() == self.base
+        {
+            self.spans.push((ident.span, self.new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_static_member_expression(self, it);
     }
 
     fn visit_new_expression(&mut self, it: &oxc::ast::ast::NewExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.callee {
-            if ident.name.as_str() == self.base {
-                self.spans.push((ident.span, self.new_name.to_string()));
-            }
+        if let Expression::Identifier(ident) = &it.callee
+            && ident.name.as_str() == self.base
+        {
+            self.spans.push((ident.span, self.new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_new_expression(self, it);
     }
@@ -507,37 +507,34 @@ struct ExportDefaultImportRefCollector<'a, 'b> {
 
 impl<'a, 'b, 'ast> Visit<'ast> for ExportDefaultImportRefCollector<'a, 'b> {
     fn visit_call_expression(&mut self, it: &oxc::ast::ast::CallExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.callee {
-            if let Some(new_name) = self
+        if let Expression::Identifier(ident) = &it.callee
+            && let Some(new_name) = self
                 .state
                 .find_export_default_import(self.file, ident.name.as_str())
-            {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_call_expression(self, it);
     }
 
     fn visit_static_member_expression(&mut self, it: &oxc::ast::ast::StaticMemberExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.object {
-            if let Some(new_name) = self
+        if let Expression::Identifier(ident) = &it.object
+            && let Some(new_name) = self
                 .state
                 .find_export_default_import(self.file, ident.name.as_str())
-            {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_static_member_expression(self, it);
     }
 
     fn visit_new_expression(&mut self, it: &oxc::ast::ast::NewExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.callee {
-            if let Some(new_name) = self
+        if let Expression::Identifier(ident) = &it.callee
+            && let Some(new_name) = self
                 .state
                 .find_export_default_import(self.file, ident.name.as_str())
-            {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_new_expression(self, it);
     }
@@ -569,13 +566,12 @@ impl<'a, 'b, 'ast> Visit<'ast> for ExportDefaultImportRefCollector<'a, 'b> {
 
 impl<'a, 'b> ExportDefaultImportRefCollector<'a, 'b> {
     fn check_export_specifier(&mut self, spec: &ExportSpecifier<'_>) {
-        if let ModuleExportName::IdentifierReference(ident) = &spec.local {
-            if let Some(new_name) = self
+        if let ModuleExportName::IdentifierReference(ident) = &spec.local
+            && let Some(new_name) = self
                 .state
                 .find_export_default_import(self.file, ident.name.as_str())
-            {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
     }
 }

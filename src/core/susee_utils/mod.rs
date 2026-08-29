@@ -830,10 +830,11 @@ pub fn merge_imports_statement(imports: &[String]) -> Vec<String> {
 /// redundant because `fs::write` truncates).
 pub fn write_file(file_path: &str, content: &str) -> std::io::Result<()> {
     let p = Path::new(file_path);
-    if let Some(parent) = p.parent() {
-        if !parent.as_os_str().is_empty() && !parent.exists() {
-            fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = p.parent()
+        && !parent.as_os_str().is_empty()
+        && !parent.exists()
+    {
+        fs::create_dir_all(parent)?;
     }
     fs::write(p, content)
 }

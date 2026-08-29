@@ -11,15 +11,11 @@ use serde::{Deserialize, Serialize};
 #[napi]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum OutputFormat {
     Commonjs,
+    #[default]
     Esm,
-}
-
-impl Default for OutputFormat {
-    fn default() -> Self {
-        Self::Esm
-    }
 }
 
 impl OutputFormat {
@@ -115,6 +111,7 @@ impl Default for BuildEntryPoint {
 /// Normalized build options for the whole build.
 ///
 /// Mirrors `BuildOptions` from `src/nodejs/config/index.ts`.
+#[derive(Default)]
 pub struct BuildOptions {
     pub build_entry_points: Vec<BuildEntryPoint>,
     pub update_package: bool,
@@ -130,17 +127,6 @@ impl std::fmt::Debug for BuildOptions {
             .field("out_dir", &self.out_dir)
             .field("minify", &self.minify)
             .finish()
-    }
-}
-
-impl Default for BuildOptions {
-    fn default() -> Self {
-        Self {
-            build_entry_points: Vec::new(),
-            update_package: false,
-            out_dir: String::new(),
-            minify: false,
-        }
     }
 }
 

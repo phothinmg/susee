@@ -31,7 +31,7 @@ fn get_deps<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DepReturns>
         let path = Path::new(&file);
         let file_ext_str = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
-        let (content, bytes) = match read_file(&root, &file) {
+        let (content, bytes) = match read_file(&root, file) {
             Ok(c) => c,
             Err(e) => {
                 // Mirror the TS version which exits on missing files; here we
@@ -42,7 +42,7 @@ fn get_deps<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DepReturns>
 
         let module_type = detect_module_type(&content, path);
         let is_jsx = is_jsx_content(&content, path);
-        let is_entry = is_entry_file(&file);
+        let is_entry = is_entry_file(file);
         let file_ext = ValidExts::from_path_ext(file_ext_str).unwrap_or(ValidExts::Ts);
 
         dep_files.push(DepsFile {
@@ -149,14 +149,14 @@ pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Depen
         } else {
             dep_files
         };
-        return Ok(DependenciesTree {
+        Ok(DependenciesTree {
             entry: entry.to_string(),
             npm,
             nodes,
             warns,
             dep_files,
             project_type: ProjectType::TS,
-        });
+        })
     } else if !has_ts_extensions(&dep_files) && has_js_extensions(&dep_files) {
         // 2. JS extensions only.
         // Both ESM and CommonJS found
@@ -191,14 +191,14 @@ pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Depen
         } else {
             dep_files
         };
-        return Ok(DependenciesTree {
+        Ok(DependenciesTree {
             entry: entry.to_string(),
             npm,
             nodes,
             warns,
             dep_files,
             project_type: ProjectType::JS,
-        });
+        })
     } else {
         // 3. Both extensions.
         if has_esm(&dep_files) && (has_cjs(&dep_files) || has_cts(&dep_files)) {
@@ -219,14 +219,14 @@ pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<Depen
         } else {
             dep_files
         };
-        return Ok(DependenciesTree {
+        Ok(DependenciesTree {
             entry: entry.to_string(),
             npm,
             nodes,
             warns,
             dep_files,
             project_type: ProjectType::MIXED,
-        });
+        })
     }
 }
 

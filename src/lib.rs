@@ -73,7 +73,7 @@ pub fn cli_build(args: Vec<String>) {
 pub fn susee_bundler(entry: String) -> std::string::String {
     let start = Instant::now();
     let bundled = bundler(&entry, ".")
-        .expect(&"Error when bundling".magenta())
+        .unwrap_or_else(|_| panic!("{}", "Error when bundling".magenta()))
         .bundled_code;
     core::susee_log::bundle_time(start);
     bundled

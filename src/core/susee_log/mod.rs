@@ -2,50 +2,34 @@ use colored::*;
 use std::time::Instant;
 
 pub fn error(info: &str, cause: &str, e: bool) {
-    eprintln!("{}{}{}", "[", "error".red().bold(), "]");
-    eprintln!("{}{}{}{}", " ", "info", "  : ", info);
-    eprintln!("{}{}{}{}", " ", "cause", " : ", cause);
+    eprintln!("[{}]", "error".red().bold());
+    eprintln!(" info  : {}", info);
+    eprintln!(" cause : {}", cause);
     if e {
         std::process::exit(1)
     }
 }
 #[allow(unused)]
 pub fn info(message: &str) {
-    eprintln!("{}{}{}", "[", "info".green().bold(), "]");
-    eprintln!("{}{}", " ", message);
+    eprintln!("[{}]", "info".green().bold());
+    eprintln!(" {}", message);
 }
 
 pub fn warning(message: &str) {
-    eprintln!("{}{}{}", "[", "warning".yellow().bold(), "]");
-    eprintln!("{}{}", " ", message);
+    eprintln!("[{}]", "warning".yellow().bold());
+    eprintln!(" {}", message);
 }
 #[allow(unused)]
 pub fn bundle_time(start: Instant) {
     let elapsed = start.elapsed();
     let ms = elapsed.as_secs_f64() * 1000.0;
-    eprintln!(
-        "{}{}{}{}{}{}",
-        "[",
-        "Bundled".cyan().bold(),
-        "]",
-        " : ",
-        format!("{ms:.1}"),
-        "ms"
-    );
+    eprintln!("[{}] : {}ms", "Bundled".cyan().bold(), format!("{ms:.1}"));
 }
 
 pub fn build_time(start: Instant) {
     let elapsed = start.elapsed();
     let ms = elapsed.as_secs_f64() * 1000.0;
-    eprintln!(
-        "{}{}{}{}{}{}",
-        "[",
-        "Build".cyan().bold(),
-        "]",
-        " : ",
-        format!("{ms:.1}"),
-        "ms"
-    );
+    eprintln!("[{}] : {}ms", "Build".cyan().bold(), format!("{ms:.1}"));
 }
 
 #[cfg(test)]

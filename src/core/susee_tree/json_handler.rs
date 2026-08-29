@@ -320,28 +320,28 @@ impl<'a> JsonReferenceCollector<'a> {
 
 impl<'a, 'ast> Visit<'ast> for JsonReferenceCollector<'a> {
     fn visit_call_expression(&mut self, it: &oxc::ast::ast::CallExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.callee {
-            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        if let Expression::Identifier(ident) = &it.callee
+            && let Some(new_name) = self.find_mapping(ident.name.as_str())
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_call_expression(self, it);
     }
 
     fn visit_static_member_expression(&mut self, it: &oxc::ast::ast::StaticMemberExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.object {
-            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        if let Expression::Identifier(ident) = &it.object
+            && let Some(new_name) = self.find_mapping(ident.name.as_str())
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_static_member_expression(self, it);
     }
 
     fn visit_new_expression(&mut self, it: &oxc::ast::ast::NewExpression<'ast>) {
-        if let Expression::Identifier(ident) = &it.callee {
-            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        if let Expression::Identifier(ident) = &it.callee
+            && let Some(new_name) = self.find_mapping(ident.name.as_str())
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
         oxc::ast_visit::walk::walk_new_expression(self, it);
     }
@@ -363,10 +363,10 @@ impl<'a, 'ast> Visit<'ast> for JsonReferenceCollector<'a> {
 
 impl<'a> JsonReferenceCollector<'a> {
     fn check_export_specifier(&mut self, spec: &ExportSpecifier<'_>) {
-        if let ModuleExportName::IdentifierReference(ident) = &spec.local {
-            if let Some(new_name) = self.find_mapping(ident.name.as_str()) {
-                self.spans.push((ident.span, new_name.to_string()));
-            }
+        if let ModuleExportName::IdentifierReference(ident) = &spec.local
+            && let Some(new_name) = self.find_mapping(ident.name.as_str())
+        {
+            self.spans.push((ident.span, new_name.to_string()));
         }
     }
 }

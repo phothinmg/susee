@@ -186,10 +186,10 @@ impl<'a, 'ast> Visit<'ast> for CollectVisitor<'a> {
                 ModuleExportName::IdentifierName(id) => id.name.as_str().to_string(),
                 ModuleExportName::StringLiteral(_) => String::new(),
             };
-            if !local_name.is_empty() {
-                if let Some(entry) = self.defined.iter_mut().find(|(n, _)| *n == local_name) {
-                    entry.1.exported = true;
-                }
+            if !local_name.is_empty()
+                && let Some(entry) = self.defined.iter_mut().find(|(n, _)| *n == local_name)
+            {
+                entry.1.exported = true;
             }
             let _ = spec;
         }
@@ -376,19 +376,19 @@ fn collect_removal_spans(
 
             // --- Function / Class declarations ---
             Statement::FunctionDeclaration(func) => {
-                if let Some(id) = &func.id {
-                    if unused.contains(id.name.as_str()) {
-                        let span = stmt.span();
-                        spans.push((span.start as usize, span.end as usize, String::new()));
-                    }
+                if let Some(id) = &func.id
+                    && unused.contains(id.name.as_str())
+                {
+                    let span = stmt.span();
+                    spans.push((span.start as usize, span.end as usize, String::new()));
                 }
             }
             Statement::ClassDeclaration(cls) => {
-                if let Some(id) = &cls.id {
-                    if unused.contains(id.name.as_str()) {
-                        let span = stmt.span();
-                        spans.push((span.start as usize, span.end as usize, String::new()));
-                    }
+                if let Some(id) = &cls.id
+                    && unused.contains(id.name.as_str())
+                {
+                    let span = stmt.span();
+                    spans.push((span.start as usize, span.end as usize, String::new()));
                 }
             }
 
@@ -418,11 +418,9 @@ fn collect_removal_spans(
                     spans.push((span.start as usize, span.end as usize, String::new()));
                 }
             }
-            Statement::TSEnumDeclaration(en) => {
-                if unused.contains(en.id.name.as_str()) {
-                    let span = stmt.span();
-                    spans.push((span.start as usize, span.end as usize, String::new()));
-                }
+            Statement::TSEnumDeclaration(en) if unused.contains(en.id.name.as_str()) => {
+                let span = stmt.span();
+                spans.push((span.start as usize, span.end as usize, String::new()));
             }
 
             _ => {}

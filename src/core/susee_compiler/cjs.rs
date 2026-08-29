@@ -470,7 +470,7 @@ fn collect_binding_names(pattern: &oxc::ast::ast::BindingPattern<'_>, out: &mut 
         }
         BindingPattern::ArrayPattern(arr) => {
             for elem in arr.elements.iter().flatten() {
-                collect_binding_names(&elem, out);
+                collect_binding_names(elem, out);
             }
         }
         _ => {}

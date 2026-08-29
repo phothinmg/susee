@@ -234,12 +234,12 @@ impl<'a> Visit<'a> for ModuleTypeDetector {
 
     // CommonJS: `require(...)` calls.
     fn visit_call_expression(&mut self, it: &oxc::ast::ast::CallExpression<'a>) {
-        if let Expression::Identifier(ident) = &it.callee {
-            if ident.name.as_str() == "require" {
-                self.is_common_js = true;
-                // Don't walk children — we already captured it.
-                return;
-            }
+        if let Expression::Identifier(ident) = &it.callee
+            && ident.name.as_str() == "require"
+        {
+            self.is_common_js = true;
+            // Don't walk children — we already captured it.
+            return;
         }
         // Otherwise walk normally to find nested require/import expressions.
         self.visit_expression(&it.callee);
