@@ -115,7 +115,7 @@ jobs:
 
       # 3. Move binaries from artifacts folder into target /npm dirs
       - name: Distribute build artifacts to npm dirs
-        run: npx napi artifacts
+        run: npx napi artifacts --config-path napi.config.json
 
       # 3b. Ensure package.json version matches the release tag so we never
       #     accidentally publish a stale version from a mistagged commit.
@@ -140,7 +140,7 @@ jobs:
 
       # 4. Sync package versions across root and /npm platform packages
       - name: Prepare publish
-        run: npx napi prepublish -t npm
+        run: npx napi prepublish --config-path napi.config.json -t npm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
