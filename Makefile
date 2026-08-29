@@ -1,6 +1,6 @@
 SHELL := bash
 
-.PHONY: check test fmt doc
+.PHONY: check test fmt doc dr publish
 
 check:
 	cargo check --target x86_64-unknown-linux-gnu
@@ -18,3 +18,8 @@ fmt:
 	cargo fmt
 doc:
 	cargo doc --open
+dr:
+	cargo publish --dry-run
+
+publish:
+	cargo publish
