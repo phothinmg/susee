@@ -9,7 +9,7 @@ pub fn error(info: &str, cause: &str, e: bool) {
         std::process::exit(1)
     }
 }
-
+#[allow(unused)]
 pub fn info(message: &str) {
     eprintln!("{}{}{}{}", "   ", "[", "susee_info".green().bold(), "]");
     eprintln!("{}{}", "     ", message);

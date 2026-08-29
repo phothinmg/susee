@@ -7,6 +7,13 @@
 			"format": ["esm", "commonjs"],
 			"tsconfigFilePath": null,
 			"warning": false
+		},
+			{
+			"entry": "__local__/cjs/index.cjs",
+			"exportPath": "./cjs",
+			"format": ["esm", "commonjs"],
+			"tsconfigFilePath": null,
+			"warning": false
 		}
 	],
 	"outDir": "out",

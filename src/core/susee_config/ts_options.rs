@@ -85,6 +85,7 @@ impl CompilerOptionsBuilder {
     }
 
     /// The default options (no tsconfig merge).
+    #[allow(dead_code)]
     pub fn default_options(&self) -> CompilerOptions {
         self.base.clone()
     }

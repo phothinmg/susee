@@ -14,8 +14,10 @@ use oxc::{allocator::Allocator, ast_visit::Visit};
 
 use crate::core::susee_types::{
     DepsFile, FileInfo, JsxDetector, ModuleType, ModuleTypeDetector, SpecifierSpanCollector,
-    ValidExts,
 };
+
+#[cfg(test)]
+use crate::core::susee_types::ValidExts;
 
 /// Replace the `.json` extension with `.ts` in a file path.
 pub fn json_ext_to_ts(file: &str) -> String {
@@ -116,6 +118,7 @@ pub fn read_file(root: &Path, rel_path: &str) -> std::io::Result<(String, usize)
 
 /// Parse a file and collect all bindings declared in the root (module-top-
 /// level) scope using oxc's semantic analyzer.
+#[allow(dead_code)]
 pub fn collect_root_bindings(dep: &DepsFile) -> FileInfo {
     let ts_file = json_ext_to_ts(&dep.file);
     let path = std::path::Path::new(&ts_file);
@@ -326,6 +329,7 @@ fn collect_declaration_names(decl: &Declaration<'_>, names: &mut Vec<(String, Sp
     }
 }
 
+#[cfg(test)]
 pub fn make_dep(file: &str, content: &str) -> DepsFile {
     DepsFile {
         file: file.to_string(),

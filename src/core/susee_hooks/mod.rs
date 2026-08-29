@@ -1,9 +1,9 @@
 use crate::core::susee_types::DependenciesTree;
 
-pub mod pre_process_hooks;
+mod pre_process_hooks;
 mod tree_hooks;
 
-pub use pre_process_hooks::clean;
+pub use pre_process_hooks::unused_code::clean;
 
 /// Run all tree hooks and return the processed tree plus a list of removed
 /// import statements (as text) that the bundler should re-emit at the top of

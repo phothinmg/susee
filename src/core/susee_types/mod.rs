@@ -100,6 +100,7 @@ pub enum ModuleType {
 }
 
 impl ModuleType {
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Cjs => "cjs",
@@ -167,14 +168,18 @@ pub struct DependenciesTree {
 
 #[derive(Debug, Clone)]
 pub struct NamesSet {
+    #[allow(dead_code)]
     pub base: String,
+    #[allow(dead_code)]
     pub file: String,
+    #[allow(dead_code)]
     pub new_name: String,
     #[allow(dead_code)]
     pub is_ed: bool,
 }
 
 /// A collection of [`NamesSet`] entries.
+#[allow(dead_code)]
 pub type NamesSets = Vec<NamesSet>;
 
 #[derive(Default)]
@@ -293,6 +298,7 @@ pub type NameToFileMap = HashMap<String, Vec<(usize, Vec<SymbolId>)>>;
 // ---------------------------------------------------------------------------
 
 /// Information collected from a single file's semantic analysis.
+#[allow(dead_code)]
 pub struct FileInfo {
     /// (name, symbol_id) for each binding in the root scope.
     pub root_symbols: Vec<(String, SymbolId)>,

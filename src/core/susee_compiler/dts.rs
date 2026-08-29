@@ -113,13 +113,13 @@ pub fn emit_dts(source_code: &str, source_type: SourceType) -> std::string::Stri
 /// |---|---|---|
 /// | no `return <value>` | `false` | `void` |
 /// | no `return <value>` | `true` | `Promise<void>` |
-/// | `return <value>` | `false` | `unknown` (or propagated type) |
-/// | `return <value>` | `true` | `Promise<unknown>` (or `Promise<T>`) |
+/// | `return <value>` | `false` | `any` (or propagated type) |
+/// | `return <value>` | `true` | `Promise<any>` (or `Promise<T>`) |
 ///
 /// When the function body is `return await foo()` / `return foo()` and `foo`
 /// has a known explicit return type `T`, the synthesized annotation uses `T`
-/// (or `Promise<T>` for async) instead of `unknown`. If multiple `return`
-/// statements yield conflicting types, inference falls back to `unknown`.
+/// (or `Promise<T>` for async) instead of `any`. If multiple `return`
+/// statements yield conflicting types, inference falls back to `any`.
 ///
 /// # Arguments
 ///
@@ -284,7 +284,7 @@ fn annotate_missing_return_types<'a>(
 
     /// Build a return-type annotation and assign it to `func.return_type` when it
     /// is currently `None`. Uses `void`/`Promise<void>` for functions that don't
-    /// return a value, or `unknown`/`Promise<unknown>` for those that do.
+    /// return a value, or `any`/`Promise<any>` for those that do.
     /// When the function body is `return await <callee>(...)` and `<callee>` has a
     /// known explicit return type, that type is propagated.
     fn ensure_return_type<'a>(
@@ -301,6 +301,16 @@ fn annotate_missing_return_types<'a>(
             if let Some(rt) = &jsdoc.return_type {
                 let rt_type = rt.clone_in(ast.allocator());
                 func.return_type = Some(TSTypeAnnotation::boxed(SPAN, rt_type, ast));
+                return;
+            }
+            // `@returns` was present but the type didn't parse → `any`.
+            if jsdoc.has_returns {
+                func.return_type = Some(make_return_type_annotation(
+                    ast,
+                    func.r#async,
+                    true,
+                    Some(TSType::new_ts_any_keyword(SPAN, ast)),
+                ));
                 return;
             }
         }
@@ -321,7 +331,7 @@ fn annotate_missing_return_types<'a>(
     /// For each declarator in a `const`/`let`/`var` whose initializer is a
     /// function expression or arrow function, synthesize a `() => void` /
     /// `() => Promise<void>` type annotation on the declarator when it lacks
-    /// one so that IsolatedDeclarations doesn't emit `unknown` (TS9007).
+    /// one so that IsolatedDeclarations doesn't emit `any` (TS9007).
     fn annotate_variable_declaration<'a>(
         ast: &AstBuilder<'a>,
         var_decl: &mut VariableDeclaration<'a>,
@@ -364,10 +374,49 @@ fn annotate_missing_return_types<'a>(
             Expression::ArrowFunctionExpression(arrow) => {
                 build_function_type_from_arrow(ast, arrow, known, jsdoc_map, declarator.span.start)
             }
+            // `const x = new Foo()` — extract the class name as a type
+            // reference so IsolatedDeclarations doesn't emit TS9010 and fall
+            // back to `unknown`.
+            Expression::NewExpression(new_expr) => new_expression_type(ast, new_expr),
             _ => None,
         };
         if let Some(func_type) = func_type {
             declarator.type_annotation = Some(TSTypeAnnotation::boxed(SPAN, func_type, ast));
+        }
+    }
+
+    /// Extract a [`TSType`] from a `NewExpression` callee so that
+    /// `const x = new Foo()` gets the type annotation `Foo` instead of
+    /// triggering TS9010 and falling back to `unknown`.
+    ///
+    /// Handles simple identifier callees (`new Command()`) and member
+    /// expression callees (`new foo.Bar()`). For anything more complex
+    /// (e.g. `(getClass())()`), returns `None` and the caller falls back
+    /// to the default `any`/`unknown` behaviour.
+    fn new_expression_type<'a>(
+        ast: &AstBuilder<'a>,
+        new_expr: &oxc::ast::ast::NewExpression<'a>,
+    ) -> Option<TSType<'a>> {
+        use oxc::ast::ast::{Expression, TSType, TSTypeName};
+        use oxc::span::SPAN;
+
+        match &new_expr.callee {
+            // `new Command()` → `Command`
+            Expression::Identifier(ident) => {
+                let name = ident.name.as_str();
+                if name.is_empty() {
+                    return None;
+                }
+                let type_name = TSTypeName::new_identifier_reference(SPAN, name, ast);
+                Some(TSType::new_ts_type_reference(SPAN, type_name, None, ast))
+            }
+            // `new foo.Bar()` → `Bar` (use the property name)
+            expr => {
+                let member = expr.as_member_expression()?;
+                let prop_name = member.static_property_name()?;
+                let type_name = TSTypeName::new_identifier_reference(SPAN, prop_name, ast);
+                Some(TSType::new_ts_type_reference(SPAN, type_name, None, ast))
+            }
         }
     }
 
@@ -382,10 +431,11 @@ fn annotate_missing_return_types<'a>(
         owner_span: u32,
     ) -> Option<TSType<'a>> {
         let has_value = function_has_return_value(func);
-        let jsdoc_rt = jsdoc_map
-            .lookup(owner_span)
+        let jsdoc = jsdoc_map.lookup(owner_span);
+        let jsdoc_rt = jsdoc
             .and_then(|j| j.return_type.as_ref())
             .map(|rt| rt.clone_in(ast.allocator()));
+        let jsdoc_has_returns = jsdoc.is_some_and(|j| j.has_returns);
         let resolved = if has_value {
             infer_return_type_from_body(ast, func, known)
         } else {
@@ -398,6 +448,14 @@ fn annotate_missing_return_types<'a>(
             .unwrap_or_else(|| {
                 if let Some(jrt) = jsdoc_rt {
                     TSTypeAnnotation::boxed(SPAN, jrt, ast)
+                } else if jsdoc_has_returns {
+                    // `@returns` present but type didn't parse → `any`.
+                    make_return_type_annotation(
+                        ast,
+                        func.r#async,
+                        true,
+                        Some(TSType::new_ts_any_keyword(SPAN, ast)),
+                    )
                 } else {
                     make_return_type_annotation(ast, func.r#async, has_value, resolved)
                 }
@@ -439,10 +497,11 @@ fn annotate_missing_return_types<'a>(
         owner_span: u32,
     ) -> Option<TSType<'a>> {
         let has_value = arrow_has_return_value(arrow);
-        let jsdoc_rt = jsdoc_map
-            .lookup(owner_span)
+        let jsdoc = jsdoc_map.lookup(owner_span);
+        let jsdoc_rt = jsdoc
             .and_then(|j| j.return_type.as_ref())
             .map(|rt| rt.clone_in(ast.allocator()));
+        let jsdoc_has_returns = jsdoc.is_some_and(|j| j.has_returns);
         let resolved = if has_value {
             infer_return_type_from_arrow_body(ast, arrow, known)
         } else {
@@ -455,6 +514,14 @@ fn annotate_missing_return_types<'a>(
             .unwrap_or_else(|| {
                 if let Some(jrt) = jsdoc_rt {
                     TSTypeAnnotation::boxed(SPAN, jrt, ast)
+                } else if jsdoc_has_returns {
+                    // `@returns` present but type didn't parse → `any`.
+                    make_return_type_annotation(
+                        ast,
+                        arrow.r#async,
+                        true,
+                        Some(TSType::new_ts_any_keyword(SPAN, ast)),
+                    )
                 } else {
                     make_return_type_annotation(ast, arrow.r#async, has_value, resolved)
                 }
@@ -483,7 +550,7 @@ fn annotate_missing_return_types<'a>(
     }
 
     /// Construct the `TSTypeAnnotation` box for the synthetic return type.
-    /// When `has_return_value` is true, `unknown`/`Promise<unknown>` is used instead
+    /// When `has_return_value` is true, `any`/`Promise<any>` is used instead
     /// of `void`/`Promise<void>` so the annotation does not lie about functions that
     /// actually return a value.
     fn make_return_type_annotation<'a>(
@@ -492,17 +559,17 @@ fn annotate_missing_return_types<'a>(
         has_return_value: bool,
         resolved: Option<TSType<'a>>,
     ) -> oxc::allocator::Box<'a, TSTypeAnnotation<'a>> {
-        // Prefer a resolved type when available; otherwise fall back to `unknown`
+        // Prefer a resolved type when available; otherwise fall back to `any`
         // (for functions that return a value) or `void` (for those that don't).
         let inner_type = if let Some(rt) = resolved {
             rt
         } else if has_return_value {
-            TSType::new_ts_unknown_keyword(SPAN, ast)
+            TSType::new_ts_any_keyword(SPAN, ast)
         } else {
             TSType::new_ts_void_keyword(SPAN, ast)
         };
         let type_annotation = if is_async {
-            // `Promise<T>` where T is the resolved type, `unknown`, or `void`.
+            // `Promise<T>` where T is the resolved type, `any`, or `void`.
             let mut params: ArenaVec<'a, TSType<'a>> = ArenaVec::with_capacity_in(1, ast);
             params.push(inner_type);
             let type_args = TSTypeParameterInstantiation::boxed(SPAN, params, ast);
@@ -687,7 +754,7 @@ fn annotate_missing_return_types<'a>(
         for ret in find_return_arguments(&body.statements) {
             if let Some(t) = resolve_expression_type(ast, ret, known, func.r#async) {
                 // Keep the first resolved type; if subsequent returns disagree we
-                // bail out and fall back to `unknown`.
+                // bail out and fall back to `any`.
                 if let Some(existing) = &candidate {
                     if !type_content_eq(existing, &t) {
                         return None;
@@ -848,10 +915,17 @@ fn annotate_missing_return_types<'a>(
 /// byte offset of the AST node the comment precedes.
 ///
 /// `return_type` holds the parsed `@returns {type}` / `@return {type}` type.
+/// `has_returns` is `true` when a `@returns`/`@return` tag was present even if
+/// the type expression failed to parse (so the caller can fall back to `any`
+/// instead of body-based inference).
 /// `params` maps parameter names to their parsed `@param {type} name` types.
+/// `param_any_names` lists params whose `@param` tag was present but whose
+/// type expression failed to parse (so the caller can assign `any`).
 pub(crate) struct JSDocInfo<'a> {
     pub return_type: Option<oxc::ast::ast::TSType<'a>>,
+    pub has_returns: bool,
     pub params: std::collections::HashMap<String, oxc::ast::ast::TSType<'a>>,
+    pub param_any_names: Vec<String>,
 }
 
 /// A map from the **start byte offset** of an AST node to the JSDoc info
@@ -911,7 +985,11 @@ fn collect_jsdoc_types<'a>(
         // Extract the inner content (between `/**` and `*/`).
         let inner: &'a str = &comment_text[3..comment_text.len().saturating_sub(2)];
         let info = parse_jsdoc_comment(&ast, inner);
-        if info.return_type.is_some() || !info.params.is_empty() {
+        if info.return_type.is_some()
+            || info.has_returns
+            || !info.params.is_empty()
+            || !info.param_any_names.is_empty()
+        {
             entries.push((comment.span.end, info));
         }
     }
@@ -928,20 +1006,25 @@ fn parse_jsdoc_comment<'a>(
 ) -> JSDocInfo<'a> {
     use oxc::ast::ast::TSType;
     let mut return_type: Option<TSType<'a>> = None;
+    let mut has_returns = false;
     let mut params: std::collections::HashMap<String, TSType<'a>> =
         std::collections::HashMap::new();
+    let mut param_any_names: Vec<String> = Vec::new();
 
     // Process line by line. JSDoc tags start with `@` at the beginning of a
     // line (after stripping leading `* `).
     for raw_line in inner.lines() {
         let line = raw_line.trim().trim_start_matches('*').trim();
         if line.starts_with("@returns") || line.starts_with("@return") {
+            has_returns = true;
             // Extract the type expression in `{...}`.
             if let Some(ty_str) = extract_braced_type(line) {
                 if let Some(ty) = parse_jsdoc_type(ast, ty_str) {
                     return_type = Some(ty);
                 }
+                // If parse failed, return_type stays None → caller uses `any`.
             }
+            // If no `{...}` braces, return_type stays None → caller uses `any`.
         } else if line.starts_with("@param") {
             // `@param {type} name` or `@param {type} [name]` or `@param name`
             if let Some(ty_str) = extract_braced_type(line) {
@@ -949,7 +1032,10 @@ fn parse_jsdoc_comment<'a>(
                 let after_brace = find_after_brace(line);
                 if let Some(name) = extract_param_name(after_brace) {
                     if let Some(ty) = parse_jsdoc_type(ast, ty_str) {
-                        params.insert(name, ty);
+                        params.insert(name.clone(), ty);
+                    } else {
+                        // @param present with a type that failed to parse → `any`.
+                        param_any_names.push(name);
                     }
                 }
             }
@@ -958,7 +1044,9 @@ fn parse_jsdoc_comment<'a>(
 
     JSDocInfo {
         return_type,
+        has_returns,
         params,
+        param_any_names,
     }
 }
 
@@ -1134,6 +1222,41 @@ fn parse_jsdoc_type_inner<'a>(
         .is_some_and(|c| c.is_alphabetic() || c == '_' || c == '$')
     {
         let type_name = TSTypeName::new_identifier_reference(SPAN, trimmed, ast);
+        // Some well-known generic types are invalid without type arguments
+        // (e.g. `Promise` requires `Promise<T>`). When a JSDoc type expression
+        // references one of them bare (no `<>`), fill in `any` so the emitted
+        // `.d.ts` is valid TypeScript.
+        let needs_type_arg = matches!(
+            trimmed,
+            "Promise"
+                | "Map"
+                | "Set"
+                | "WeakMap"
+                | "WeakSet"
+                | "Array"
+                | "ReadonlyArray"
+                | "ReadonlyMap"
+                | "ReadonlySet"
+                | "Iterable"
+                | "IterableIterator"
+                | "Iterator"
+                | "AsyncIterable"
+                | "AsyncIterator"
+                | "Generator"
+                | "AsyncGenerator"
+                | "PromiseLike"
+        );
+        if needs_type_arg {
+            let mut params: ArenaVec<'a, TSType<'a>> = ArenaVec::with_capacity_in(1, ast);
+            params.push(TSType::new_ts_any_keyword(SPAN, ast));
+            let type_args = TSTypeParameterInstantiation::boxed(SPAN, params, ast);
+            return Some(TSType::new_ts_type_reference(
+                SPAN,
+                type_name,
+                Some(type_args),
+                ast,
+            ));
+        }
         return Some(TSType::new_ts_type_reference(SPAN, type_name, None, ast));
     }
 
@@ -1232,7 +1355,8 @@ fn is_balanced_parens(s: &str) -> bool {
 
 /// Apply JSDoc `@param {type} name` annotations to the formal parameters of
 /// a function. Only parameters that don't already have a type annotation are
-/// annotated.
+/// annotated. When `@param` was present but the type expression failed to
+/// parse, the parameter gets `any`.
 fn apply_jsdoc_param_types<'a>(
     ast: &oxc::ast::builder::AstBuilder<'a>,
     params: &mut oxc::allocator::Box<'a, oxc::ast::ast::FormalParameters<'a>>,
@@ -1240,13 +1364,13 @@ fn apply_jsdoc_param_types<'a>(
     owner_span: oxc::span::Span,
 ) {
     use oxc::allocator::{CloneIn, GetAllocator};
-    use oxc::ast::ast::{BindingPattern, TSTypeAnnotation};
+    use oxc::ast::ast::{BindingPattern, TSType, TSTypeAnnotation};
     use oxc::span::SPAN;
 
     let Some(jsdoc) = jsdoc_map.lookup(owner_span.start) else {
         return;
     };
-    if jsdoc.params.is_empty() {
+    if jsdoc.params.is_empty() && jsdoc.param_any_names.is_empty() {
         return;
     }
 
@@ -1263,6 +1387,10 @@ fn apply_jsdoc_param_types<'a>(
         if let Some(ty) = jsdoc.params.get(&name) {
             let ty_clone = ty.clone_in(ast.allocator());
             param.type_annotation = Some(TSTypeAnnotation::boxed(SPAN, ty_clone, ast));
+        } else if jsdoc.param_any_names.iter().any(|n| n == &name) {
+            // `@param` was present but type didn't parse → `any`.
+            let any_type = TSType::new_ts_any_keyword(SPAN, ast);
+            param.type_annotation = Some(TSTypeAnnotation::boxed(SPAN, any_type, ast));
         }
     }
 }
@@ -1347,21 +1475,21 @@ mod tests {
         assert!(out.contains("baz(): Promise<void>"), "got: {out}");
     }
 
-    /// A function returning a value but with no explicit type gets `: unknown`.
+    /// A function returning a value but with no explicit type gets `: any`.
     #[test]
-    fn synthesizes_unknown_for_returning_function() {
+    fn synthesizes_any_for_returning_function() {
         let out = emit_dts("export function foo() { return 1; }", SourceType::ts());
-        assert!(out.contains("foo(): unknown"), "got: {out}");
+        assert!(out.contains("foo(): any"), "got: {out}");
     }
 
-    /// An async function returning a value gets `: Promise<unknown>`.
+    /// An async function returning a value gets `: Promise<any>`.
     #[test]
-    fn synthesizes_promise_unknown_for_async_returning() {
+    fn synthesizes_promise_any_for_async_returning() {
         let out = emit_dts(
             "export async function foo() { return 1; }",
             SourceType::ts(),
         );
-        assert!(out.contains("foo(): Promise<unknown>"), "got: {out}");
+        assert!(out.contains("foo(): Promise<any>"), "got: {out}");
     }
 
     /// A function whose body is `return f()` where `f` has a known return type
@@ -1387,9 +1515,9 @@ mod tests {
     fn annotates_arrow_const() {
         let out = emit_dts("export const fn = (a: number) => a + 1;", SourceType::ts());
         assert!(out.contains("export declare const fn"), "got: {out}");
-        // The synthesized type should include the parameter and `unknown` return.
+        // The synthesized type should include the parameter and `any` return.
         assert!(out.contains("(a: number)"), "got: {out}");
-        assert!(out.contains("unknown"), "got: {out}");
+        assert!(out.contains("any"), "got: {out}");
     }
 
     // ─── Type-level constructs ─────────────────────────────────────────
@@ -1524,34 +1652,34 @@ mod tests {
         assert!(out.contains("method(): Promise<void>"), "got: {out}");
     }
 
-    /// A class method that returns a value gets `: unknown`.
+    /// A class method that returns a value gets `: any`.
     #[test]
-    fn synthesizes_unknown_for_class_method_returning() {
+    fn synthesizes_any_for_class_method_returning() {
         let out = emit_dts(
             "export class C { method() { return 1; } }",
             SourceType::ts(),
         );
-        assert!(out.contains("method(): unknown"), "got: {out}");
+        assert!(out.contains("method(): any"), "got: {out}");
     }
 
-    /// An async class method that returns a value gets `: Promise<unknown>`.
+    /// An async class method that returns a value gets `: Promise<any>`.
     #[test]
-    fn synthesizes_promise_unknown_for_async_class_method_returning() {
+    fn synthesizes_promise_any_for_async_class_method_returning() {
         let out = emit_dts(
             "export class C { async method() { return 1; } }",
             SourceType::ts(),
         );
-        assert!(out.contains("method(): Promise<unknown>"), "got: {out}");
+        assert!(out.contains("method(): Promise<any>"), "got: {out}");
     }
 
-    /// A class getter with no explicit return type gets `: unknown`.
+    /// A class getter with no explicit return type gets `: any`.
     #[test]
-    fn synthesizes_unknown_for_class_getter() {
+    fn synthesizes_any_for_class_getter() {
         let out = emit_dts(
             "export class C { get value() { return 42; } }",
             SourceType::ts(),
         );
-        assert!(out.contains("get value(): unknown"), "got: {out}");
+        assert!(out.contains("get value(): any"), "got: {out}");
     }
 
     /// A class constructor does not get a return type annotation.
@@ -1593,7 +1721,7 @@ mod tests {
         );
         assert!(out.contains("handler"), "got: {out}");
         assert!(out.contains("(a: number)"), "got: {out}");
-        assert!(out.contains("unknown"), "got: {out}");
+        assert!(out.contains("any"), "got: {out}");
     }
 
     /// A class method with an explicit return type is preserved verbatim.
@@ -1667,14 +1795,14 @@ mod tests {
         assert!(out.contains("method(): void"), "got: {out}");
     }
 
-    /// JS source class async methods should get `Promise<unknown>`.
+    /// JS source class async methods should get `Promise<any>`.
     #[test]
     fn js_class_async_method_gets_return_type() {
         let out = emit_dts(
             "export class C { async method() { return 1; } }",
             SourceType::mjs(),
         );
-        assert!(out.contains("method(): Promise<unknown>"), "got: {out}");
+        assert!(out.contains("method(): Promise<any>"), "got: {out}");
     }
 
     /// JS source class getters should get return types.
@@ -1684,7 +1812,7 @@ mod tests {
             "export class C { get value() { return 42; } }",
             SourceType::mjs(),
         );
-        assert!(out.contains("get value(): unknown"), "got: {out}");
+        assert!(out.contains("get value(): any"), "got: {out}");
     }
 
     /// JS source arrow function assigned to const should get a type annotation.
@@ -1692,7 +1820,7 @@ mod tests {
     fn js_arrow_const_gets_type() {
         let out = emit_dts("export const fn = (a) => a + 1;", SourceType::mjs());
         assert!(out.contains("export declare const fn"), "got: {out}");
-        assert!(out.contains("unknown"), "got: {out}");
+        assert!(out.contains("any"), "got: {out}");
     }
 
     /// JS source class with arrow function property should get a type annotation.
@@ -1703,7 +1831,7 @@ mod tests {
             SourceType::mjs(),
         );
         assert!(out.contains("handler"), "got: {out}");
-        assert!(out.contains("unknown"), "got: {out}");
+        assert!(out.contains("any"), "got: {out}");
     }
 
     /// JS source with JSDoc `@param` and `@returns` annotations should have
@@ -1818,5 +1946,206 @@ export function greet(name) {
         let out = emit_dts(src, SourceType::mjs());
         assert!(out.contains("name: string"), "got: {out}");
         assert!(out.contains("): string"), "got: {out}");
+    }
+
+    // ─── Fallback to `any` ─────────────────────────────────────────────
+
+    /// A JS function with no JSDoc and no return type gets `: any` (not
+    /// `unknown`) when it returns a value.
+    #[test]
+    fn js_no_jsdoc_returning_gets_any() {
+        let out = emit_dts("export function foo() { return 1; }", SourceType::mjs());
+        assert!(out.contains("foo(): any"), "got: {out}");
+        assert!(!out.contains("unknown"), "got: {out}");
+    }
+
+    /// A JS async function with no JSDoc gets `: Promise<any>`.
+    #[test]
+    fn js_no_jsdoc_async_returning_gets_promise_any() {
+        let out = emit_dts(
+            "export async function foo() { return 1; }",
+            SourceType::mjs(),
+        );
+        assert!(out.contains("foo(): Promise<any>"), "got: {out}");
+        assert!(!out.contains("unknown"), "got: {out}");
+    }
+
+    /// JSDoc `@returns` without a `{type}` expression → `: any`.
+    #[test]
+    fn js_jsdoc_returns_without_type_gets_any() {
+        let src = r#"
+/**
+ * @returns The computed value.
+ */
+export function compute() {
+  return 42;
+}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("compute(): any"), "got: {out}");
+        assert!(!out.contains("unknown"), "got: {out}");
+    }
+
+    /// JSDoc `@returns {InvalidType}` where the type expression fails to
+    /// parse → `: any`.
+    #[test]
+    fn js_jsdoc_returns_invalid_type_gets_any() {
+        let src = r#"
+/**
+ * @returns {???}
+ */
+export function compute() {
+  return 42;
+}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("compute(): any"), "got: {out}");
+    }
+
+    /// JSDoc `@param {???} name` where the type expression fails to parse
+    /// → param gets `: any`.
+    #[test]
+    fn js_jsdoc_param_invalid_type_gets_any() {
+        let src = r#"
+/**
+ * @param {???} value
+ * @returns {void}
+ */
+export function process(value) {}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("process(value: any): void"), "got: {out}");
+    }
+
+    /// JSDoc `@param` without a `{type}` (just a name) → param gets `: any`.
+    #[test]
+    fn js_jsdoc_param_without_type_gets_any() {
+        let src = r#"
+/**
+ * @param value - The value to process.
+ * @returns {void}
+ */
+export function process(value) {}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("process(value: any): void"), "got: {out}");
+    }
+
+    /// A JS class method with no JSDoc that returns a value gets `: any`.
+    #[test]
+    fn js_class_method_no_jsdoc_gets_any() {
+        let out = emit_dts(
+            "export class C { method() { return 1; } }",
+            SourceType::mjs(),
+        );
+        assert!(out.contains("method(): any"), "got: {out}");
+        assert!(!out.contains("unknown"), "got: {out}");
+    }
+
+    /// A JS class method with a JSDoc comment that has `@package` but no
+    /// `@returns` should still get `: any` (not `unknown`) when it returns a
+    /// value.
+    #[test]
+    fn js_jsdoc_package_only_no_returns_gets_any() {
+        let src = r#"
+export class C {
+  /**
+   * @package
+   */
+  _concatValue(value, previous) {
+    if (previous === this.defaultValue) {
+      return [value];
+    }
+    return previous.concat(value);
+  }
+}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(
+            out.contains("_concatValue(value: any, previous: any): any"),
+            "got: {out}"
+        );
+        assert!(!out.contains("unknown"), "got: {out}");
+    }
+
+    /// JSDoc `@return {Promise}` without type args should become `Promise<any>`,
+    /// not a bare invalid `Promise`.
+    #[test]
+    fn js_jsdoc_bare_promise_gets_promise_any() {
+        let src = r#"
+/**
+ * @return {Promise}
+ */
+export function delay() {
+  return Promise.resolve(1);
+}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("Promise<any>"), "got: {out}");
+        assert!(
+            !out.contains("): Promise;"),
+            "bare Promise is invalid, got: {out}"
+        );
+    }
+
+    /// JSDoc `@return {Map}` without type args should become `Map<any, any>`.
+    #[test]
+    fn js_jsdoc_bare_map_gets_map_any_any() {
+        let src = r#"
+/**
+ * @return {Map}
+ */
+export function getMap() {
+  return new Map();
+}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("Map<any"), "got: {out}");
+        assert!(!out.contains("): Map;"), "bare Map is invalid, got: {out}");
+    }
+
+    /// JSDoc `@return {Promise<string>}` should stay as `Promise<string>`.
+    #[test]
+    fn js_jsdoc_promise_with_arg_preserved() {
+        let src = r#"
+/**
+ * @return {Promise<string>}
+ */
+export function fetchName() {
+  return Promise.resolve('hi');
+}
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("Promise<string>"), "got: {out}");
+    }
+
+    // ─── NewExpression type inference (TS9010 fix) ─────────────────────
+
+    /// `export const program = new Command()` should get type `Command`,
+    /// not `unknown` or trigger TS9010.
+    #[test]
+    fn new_expression_gets_callee_type() {
+        let src = r#"
+class Command {}
+export const program = new Command();
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(
+            out.contains("export declare const program: Command"),
+            "got: {out}"
+        );
+        assert!(!out.contains("unknown"), "got: {out}");
+    }
+
+    /// `export const x = new Foo.Bar()` should get type `Bar`.
+    #[test]
+    fn new_expression_member_callee_gets_property_type() {
+        let src = r#"
+class Bar {}
+const Foo = { Bar };
+export const x = new Foo.Bar();
+"#;
+        let out = emit_dts(src, SourceType::mjs());
+        assert!(out.contains("export declare const x: Bar"), "got: {out}");
     }
 }
