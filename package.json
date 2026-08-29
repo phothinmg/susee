@@ -8,15 +8,9 @@
     "susee": "bin/susee"
   },
   "scripts": {
-    "build": "tsx build.ts",
-    "lint": "biome lint ./src/nodejs ./__tests__  --write",
-    "fmt": "biome format --write",
-    "test": "tsx --test",
+    "build":"npx napi build --platform --config-path napi.config.json --output-dir ./dist",
     "hooks:install": "bash scripts/install-hooks.sh",
-    "commit": "bash scripts/commit.sh",
-    "v:patch": "npm version patch --no-git-tag-version",
-    "v:minor": "npm version minor --no-git-tag-version",
-    "v:major": "npm version major --no-git-tag-version"
+    "commit": "bash scripts/commit.sh"
   },
   "keywords": [
     "bundler",

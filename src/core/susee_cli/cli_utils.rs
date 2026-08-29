@@ -28,7 +28,6 @@ Options:
   --tsconfig <path>                    Custom tsconfig path
   --allow-update[=true|false]          Enable/disable dependency update
   --warning[=true|false]               Treat dependency graph warnings as fatal
-  --profile[=true|false]               Print bundler/compiler phase timings
   --minify[=true|false]                Minify output JavaScript code.
 
 Notes:
@@ -39,8 +38,6 @@ Examples:
   susee build src/index.ts --outdir dist
   susee build src/index.ts --format commonjs
   susee build --entry src/index.ts --format esm --tsconfig tsconfig.build.json
-  susee build src/index.ts --profile
-  susee --profile
 "#
     );
 }
@@ -54,7 +51,6 @@ pub struct CliOptions {
     pub tsconfig: Option<String>,
     pub allow_update: Option<bool>,
     pub warning: Option<bool>,
-    pub profile: Option<bool>,
     pub minify: Option<bool>,
 }
 
@@ -69,8 +65,6 @@ pub struct CliBuildOptions {
     pub allow_update: bool,
     pub minify: bool,
     pub warning: bool,
-    #[allow(unused)]
-    pub profile: bool,
 }
 
 /// `true` when `entry`'s extension is one susee accepts as an entry file.
@@ -197,14 +191,6 @@ pub fn parse_args(argv: &[String]) -> CliOptions {
                     &mut i,
                 ));
             }
-            "--profile" => {
-                opts.profile = Some(parse_bool_flag_value(
-                    "profile",
-                    inline_value,
-                    next_value,
-                    &mut i,
-                ));
-            }
             _ => {
                 // Unknown flag — mirror the TS parser, which silently ignores
                 // unrecognized args. This keeps `susee build <entry> --unknown`
@@ -250,7 +236,6 @@ pub fn get_default_options(args: &CliOptions) -> CliBuildOptions {
         tsconfig: args.tsconfig.clone(),
         allow_update: args.allow_update.unwrap_or(false),
         warning: args.warning.unwrap_or(false),
-        profile: args.profile.unwrap_or(false),
         minify: args.minify.unwrap_or(false),
     }
 }

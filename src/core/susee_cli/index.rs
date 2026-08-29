@@ -37,25 +37,27 @@ fn set_profile_enabled(enabled: bool) {
 /// Template for `susee init`, mirroring `tsFileText` / `jsFileText` from
 /// `index.ts` but in JSON form (since the Rust CLI reads JSON configs).
 const CONFIG_TEMPLATE: &str = r#"{
+  // Entry points to bundle
   "entryPoints": [
     {
       "entry": "src/index.ts",
       "exportPath": ".",
-      "format": ["esm"],
+      "format": ["esm", "commonjs"],
       "tsconfigFilePath": null,
       "warning": false
     }
   ],
+  // Output directory (default: "dist")
   "outDir": "dist",
-  "allowUpdatePackageJson": false
+  // Update package.json fields from build output (default: false)
+  "allowUpdatePackageJson": false,
+  // Minify output JS with the oxc minifier (default: false)
+  "minify": true
 }
 "#;
 
-/// Generate a `susee.config.json` file in the current directory.
+/// Generate a `susee.config.jsonc` file in the current directory.
 ///
-/// Mirrors `cliInit()` from `index.ts`. The TS version prompts for TS vs JS
-/// and writes `susee.config.ts|js|mjs`; the Rust CLI uses JSON, so this
-/// writes `susee.config.json` non-interactively.
 pub fn cli_init() {
     let config_path = PathBuf::from("susee.config.jsonc");
     if config_path.exists() {

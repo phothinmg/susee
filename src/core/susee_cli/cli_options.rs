@@ -70,7 +70,6 @@ mod tests {
             tsconfig: None,
             allow_update: false,
             warning: false,
-            profile: false,
             minify: false,
         }
     }

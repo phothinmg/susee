@@ -38,11 +38,7 @@ A **TypeScript-first** bundler designed specifically for **library packages** th
 
 ✅ **Package.json Management** — Automatic updates to package.json fields based on the build results
 
-✅ **Plugin System** — Extend functionality with custom plugins
-
 ✅ **CLI & Programmatic API** — Use as a CLI tool or integrate directly
-
-✅ **Build Profiling** — Print bundler and compiler phase timings with `--profile`
 
 ---
 
@@ -398,7 +394,6 @@ Usage:
 --tsconfig <path>             Custom tsconfig path
 --allow-update[=true|false]   Allow package.json updates (default: false)
 --warning[=true|false]        Treat dependency graph warnings as fatal (default: false)
---profile[=true|false]        Print bundler/compiler phase timings (default: false)
 --minify[=true|false]         Minify output JavaScript code (default: false)
 ```
 
@@ -408,8 +403,6 @@ Usage:
 npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
 npx susee build --entry src/index.ts --format esm
-npx susee build src/index.ts --profile --minify
-npx susee --profile
 ```
 
 Notes:
