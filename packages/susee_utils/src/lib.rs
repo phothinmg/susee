@@ -1,16 +1,13 @@
-#![allow(missing_docs)]
+//! Utility functions for the SUSEE project.
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod index;
+
+pub use index::{
+    apply_renames, collect_root_bindings, collect_top_level_declaration_names, detect_module_type,
+    extract_default_name, extract_import_clause, extract_module_path, extract_string_literal,
+    is_jsx_content, is_non_local_import, merge_content, merge_imports_statement, path_relative,
+    read_file, with_parsed_program, write_file,
+};
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use index::make_dep;

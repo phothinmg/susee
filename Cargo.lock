@@ -1517,8 +1517,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "susee_types"
+version = "2.0.0"
+dependencies = [
+ "oxc 0.147.0",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "susee_utils"
 version = "2.0.0"
+dependencies = [
+ "oxc 0.147.0",
+ "susee_types",
+ "tempfile",
+]
 
 [[package]]
 name = "syn"
