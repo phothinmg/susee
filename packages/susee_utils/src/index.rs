@@ -14,10 +14,8 @@ use oxc::{allocator::Allocator, ast_visit::Visit};
 
 use susee_types::{
     DepsFile, FileInfo, JsxDetector, ModuleType, ModuleTypeDetector, SpecifierSpanCollector,
+    ValidExts,
 };
-
-#[cfg(test)]
-use susee_types::ValidExts;
 
 /// Replace the `.json` extension with `.ts` in a file path.
 pub fn json_ext_to_ts(file: &str) -> String {
@@ -327,7 +325,6 @@ fn collect_declaration_names(decl: &Declaration<'_>, names: &mut Vec<(String, Sp
     }
 }
 
-#[cfg(test)]
 /// Creates a `DepsFile` for use in tests, from the given file path and content.
 ///
 /// The resulting `DepsFile` defaults to ESM module type, `.ts` file extension,

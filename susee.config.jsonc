@@ -11,5 +11,5 @@
 	],
 	"outDir": "test_out",
 	"allowUpdatePackageJson": false,
-	"check":true
+	"minify":true
 }

@@ -26,14 +26,19 @@
 		"config": ".rubocop.yml"
 	},
 	"cSpell.words": [
+		"aanon",
+		"abar",
+		"afoo",
 		"androideabi",
 		"armv",
+		"asome",
 		"aunused",
 		"cdylib",
 		"clippy",
 		"codegen",
 		"contentinfo",
 		"dependensa",
+		"dfoo",
 		"dgram",
 		"dhello",
 		"efault",
@@ -65,6 +70,7 @@
 		"topo",
 		"tsoptions",
 		"ushared",
+		"usrc",
 		"wasi",
 		"wasip"
 	]

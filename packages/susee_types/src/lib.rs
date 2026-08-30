@@ -5,5 +5,6 @@
 mod index;
 pub use index::{
     DepReturns, DependenciesTree, DepsFile, FileInfo, JsxDetector, ModuleType, ModuleTypeDetector,
-    NameToFileMap, ProjectType, SpecifierSpanCollector, ValidExts,
+    NameToFileMap, NamesSet, NamesSets, OutputFormat, ProjectType, SpecifierSpanCollector,
+    ValidExts,
 };

@@ -9,7 +9,7 @@
 //!    + mangling) to shrink the AST.
 //! 3. Re-emit with [`Codegen`] configured for minified whitespace output.
 //!
-//! This mirrors the `--minify` behaviour of the TypeScript port: a single
+//! This mirrors the `--minify` behavior of the TypeScript port: a single
 //! post-process pass over the bundled + compiled output. It is gated by
 //! [`BuildOptions::minify`](crate::core::susee_config::BuildOptions::minify)
 //! in the compiler driver.
@@ -23,12 +23,12 @@
 //! (CJS) syntax parses cleanly.
 
 use oxc::allocator::Allocator;
-use oxc::codegen::{Codegen, CodegenOptions, CommentOptions};
+use oxc::codegen::{Codegen, CodegenOptions};
 use oxc::minifier::{Minifier, MinifierOptions};
 use oxc::parser::Parser;
 use oxc::span::SourceType;
 
-use crate::core::susee_config::OutputFormat;
+use susee_types::OutputFormat;
 
 /// Minify a compiled JS source string.
 ///
@@ -48,6 +48,7 @@ pub fn minify_js(code: &str, format: OutputFormat, file_name: &str) -> String {
     if code.trim().is_empty() {
         return code.to_string();
     }
+
     // Derive a JS (not TS) source type. The compiler already stripped types,
     // so we force `with_typescript(false)` and let the module flag follow the
     // output format: ESM stays a module, CJS is parsed as a script.
@@ -74,16 +75,7 @@ pub fn minify_js(code: &str, format: OutputFormat, file_name: &str) -> String {
     let _ = minifier.minify(&allocator, &mut program);
 
     Codegen::new()
-        .with_options(CodegenOptions {
-            minify: true,
-            comments: CommentOptions {
-                normal: false,
-                jsdoc: false,
-                annotation: false,
-                legal: oxc::codegen::LegalComment::None,
-            },
-            ..CodegenOptions::minify()
-        })
+        .with_options(CodegenOptions::minify())
         .build(&program)
         .code
 }

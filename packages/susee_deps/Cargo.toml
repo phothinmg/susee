@@ -1,8 +1,11 @@
 [package]
 name = "susee_deps"
+readme = "README.md"
 authors.workspace = true
 version.workspace = true
 edition.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 oxc = { workspace = true }

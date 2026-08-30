@@ -273,7 +273,7 @@ mod tests {
             ts_dep("a.ts", "export const shared: number = 1;\n"),
             ts_dep("b.ts", "export const shared: number = 2;\n"),
         ];
-        assert!(check_options(deps).is_err());
+        assert!(check_dup(deps).is_err());
     }
 
     #[test]

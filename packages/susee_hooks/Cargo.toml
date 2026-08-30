@@ -1,5 +1,6 @@
 [package]
-name = "susee_utils"
+name = "susee_hooks"
+readme = "README.md"
 authors.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -8,15 +9,13 @@ repository.workspace = true
 
 [dependencies]
 oxc = { workspace = true }
+susee_utils = {  workspace = true }
 susee_types = { workspace = true }
-
-[dev-dependencies]
-tempfile = { workspace = true }
+susee_log = { workspace = true }
 
 [lints]
 workspace = true
 
-
 [lib]
-name = "susee_utils"
+name = "susee_hooks"
 path = "src/lib.rs"

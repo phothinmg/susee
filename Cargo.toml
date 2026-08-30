@@ -38,6 +38,7 @@ crate-type = ["rlib", "cdylib"]
 
 [dev-dependencies]
 tempfile = "3"
+cargo-release = "1.1.5"
 
 
 
@@ -47,13 +48,21 @@ tempfile = "3"
 
 [workspace]
 resolver = "3"
-members = ["packages/susee_deps", "packages/susee_log", "packages/susee_types","packages/susee_utils"]
+members = [
+    "packages/susee_deps", 
+    "packages/susee_hooks", 
+    "packages/susee_log", 
+    "packages/susee_types",
+    "packages/susee_utils"
+    ]
 
 
 [workspace.package]
 authors = ["Pho Thin Maung <phothinmg@disroot.org>"]
 version = "2.0.0"
 edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/phothinmg/susee"
 
 
 [workspace.dependencies]
@@ -66,6 +75,7 @@ colored = "2"
 susee_types = { path = "packages/susee_types" }
 susee_utils = { path = "packages/susee_utils" }
 susee_log = { path = "packages/susee_log" }
+susee_hooks = { path = "packages/susee_hooks" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid" 

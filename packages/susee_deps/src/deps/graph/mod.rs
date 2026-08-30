@@ -89,7 +89,7 @@ use visualize::visualize_dependencies;
 /// # Example
 ///
 /// ```no_run
-/// use susee_graph::{generate_graph, GraphObject};
+/// use susee_deps::{generate_graph, GraphObject};
 ///
 /// let graph: GraphObject = generate_graph("index.ts", ".").unwrap();
 /// println!("{}", graph.text_graph());
@@ -226,7 +226,7 @@ impl GraphObject {
 /// # Example
 ///
 /// ```no_run
-/// use susee_graph::generate_graph;
+/// use susee_deps::generate_graph;
 ///
 /// let graph = generate_graph("index.ts", ".").unwrap();
 /// for file in graph.leaf() {

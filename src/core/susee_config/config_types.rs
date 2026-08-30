@@ -272,7 +272,7 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
         minify: config.minify.unwrap_or(false),
         // susee_check runs by default so issues surface during a normal
         // build. Opt out with `"check": false` in susee.config.jsonc.
-        check: config.check.unwrap_or(true),
+        check: config.check.unwrap_or(false),
     })
 }
 

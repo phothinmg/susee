@@ -137,7 +137,6 @@ pub enum ProjectType {
 }
 impl ProjectType {
     /// Return the project type as a lowercase string (e.g. `ts`, `js`, `mixed`).
-    #[allow(unused)]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::JS => "js",
@@ -187,20 +186,21 @@ pub struct DependenciesTree {
     pub project_type: ProjectType,
 }
 
+/// Holds naming metadata used when resolving/renaming identifiers
+/// (such as imports or exports) during transformation.
 #[derive(Debug, Clone)]
 pub struct NamesSet {
-    #[allow(dead_code)]
+    /// The base (original) name of the identifier.
     pub base: String,
-    #[allow(dead_code)]
+    /// The source file associated with the identifier.
     pub file: String,
-    #[allow(dead_code)]
+    /// The computed replacement name, if any.
     pub new_name: String,
-    #[allow(dead_code)]
+    /// Whether this name set has already been edited/renamed.
     pub is_ed: bool,
 }
 
 /// A collection of [`NamesSet`] entries.
-#[allow(dead_code)]
 pub type NamesSets = Vec<NamesSet>;
 
 /// Detects the module system used by a source file by walking its AST.
@@ -477,6 +477,58 @@ impl<'a, 'b> SpecifierSpanCollector<'a, 'b> {
                 self.check_and_add(&name, ident.span);
             }
             ModuleExportName::StringLiteral(_) => {}
+        }
+    }
+}
+
+/// The module format used when emitting compiled output.
+///
+/// Controls both the emitted module file extension and the corresponding
+/// type declaration file extension, as well as the runtime module system
+/// (CommonJS `require`/`module.exports` vs. ESM `import`/`export`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[derive(Default)]
+pub enum OutputFormat {
+    /// Emit a CommonJS module (`.cjs` file, `.d.cts` declaration).
+    Commonjs,
+    /// Emit an ES module (`.mjs` file, `.d.mts` declaration).
+    #[default]
+    Esm,
+}
+
+impl OutputFormat {
+    /// Return the canonical string label used in logs and file extensions.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Commonjs => "commonjs",
+            Self::Esm => "esm",
+        }
+    }
+
+    /// The primary file extension used for the emitted module file:
+    /// `.cjs` for CommonJS, `.mjs` for ESM.
+    pub fn module_ext(&self) -> &'static str {
+        match self {
+            Self::Commonjs => ".cjs",
+            Self::Esm => ".mjs",
+        }
+    }
+
+    /// The extension used for the type declaration file:
+    /// `.d.cts` for CommonJS, `.d.mts` for ESM.
+    pub fn dts_ext(&self) -> &'static str {
+        match self {
+            Self::Commonjs => ".d.cts",
+            Self::Esm => ".d.mts",
+        }
+    }
+
+    /// The extension used for the source map file.
+    pub fn map_ext(&self) -> &'static str {
+        match self {
+            Self::Commonjs => ".cjs.map",
+            Self::Esm => ".mjs.map",
         }
     }
 }
