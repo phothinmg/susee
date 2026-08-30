@@ -1,5 +1,6 @@
 [package]
 name = "susee_log"
+readme = "README.md"
 authors.workspace = true
 version.workspace = true
 edition.workspace = true
