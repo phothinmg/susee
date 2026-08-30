@@ -47,6 +47,7 @@ tempfile = "3"
 
 [workspace]
 resolver = "3"
+members = ["packages/susee_deps","packages/susee_utils"]
 
 
 [workspace.package]

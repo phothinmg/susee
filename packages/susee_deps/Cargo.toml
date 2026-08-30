@@ -1,0 +1,21 @@
+[package]
+name = "susee_deps"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+oxc = { workspace = true }
+indexmap = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true
+
+[lib]
+name = "susee_deps"
+path = "src/lib.rs"
