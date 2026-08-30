@@ -47,7 +47,7 @@ tempfile = "3"
 
 [workspace]
 resolver = "3"
-members = ["packages/susee_utils","packages/susee_dep"]
+
 
 [workspace.package]
 authors = ["Pho Thin Maung <phothinmg@disroot.org>"]
