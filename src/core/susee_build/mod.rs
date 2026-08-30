@@ -7,6 +7,10 @@ use std::fs;
 pub fn susee_build(config: &SuSeeConfig) -> Result<(), String> {
     let build_options = generate_build_options(config)?;
 
+    // `susee_check` diagnostics are run inside `bundler` (gated by
+    // `build_options.check`) so the reported line positions reflect the
+    // original source files BEFORE the tree hooks rewrite CommonJS/CTS
+    // modules into ESM. See `susee_bundler::bundler`.
     let mut compiler = Compiler::new(build_options);
     compiler
         .compile()
@@ -52,6 +56,7 @@ mod tests {
             out_dir: Some("dist".to_string()),
             allow_update_package_json: Some(false),
             minify: Some(false),
+            check: Some(false),
         }
     }
 
@@ -71,6 +76,7 @@ mod tests {
             out_dir: Some("dist".to_string()),
             allow_update_package_json: Some(false),
             minify: Some(false),
+            check: Some(false),
         };
         let result = susee_build(&config);
         assert!(result.is_err());

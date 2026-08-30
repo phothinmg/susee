@@ -1,0 +1,10 @@
+[package]
+name = "susee_utils"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

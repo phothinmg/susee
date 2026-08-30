@@ -3,16 +3,17 @@
 <div align="center">
 <img src="https://susee.phothin.dev/logo/susee-bg-white.webp" width="160" height="160" alt="susee" />
   <h1>Susee</h1>
+  <p>A high-performance TypeScript library bundler</p>
 </div>
 <!-- markdownlint-enable MD033 -->
 
 [![NPM][nodei_img]][nodei_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE)[![publish to npm][publish_npm_svg]][publish_npm][![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
+[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE)[![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
 
-## About
+## Overview
 
-A **TypeScript-first** bundler designed specifically for **library packages** that delivers **fast builds**, **type safety**, and **modern JavaScript output** with minimal configuration.
+`susee` is a **TypeScript-first bundler** specialized for library packages.Unlike general-purpose bundlers, `susee` focuses on consolidating a package's local TypeScript dependency tree into consolidated source units and compiling them into dual-format artifacts (ESM and CommonJS) using a high-performance `Rust` core.
 
 > [!NOTE]
 >
@@ -24,11 +25,9 @@ A **TypeScript-first** bundler designed specifically for **library packages** th
 
 ## Key Features
 
-✅ **Rust-powered core** — Bundler, compiler, and minifier run natively via N-API
+✅ **Native Performance via N-API and Rust** — Key native components: Bundler , Compiler, Minifier, N-API Bridge
 
-✅ **TypeScript-first** — Built for maximum type safety
-
-✅ **Dual Output** — Generate both ESM and CommonJS formats automatically
+✅ **Dual-Format Module Output** — Generate both ESM and CommonJS formats automatically
 
 ✅ **Duplicate Declaration Detection** — Fails fast when bundled files contain conflicting top-level declarations
 

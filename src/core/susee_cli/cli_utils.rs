@@ -29,6 +29,7 @@ Options:
   --allow-update[=true|false]          Enable/disable dependency update
   --warning[=true|false]               Treat dependency graph warnings as fatal
   --minify[=true|false]                Minify output JavaScript code.
+  --check[=true|false]                 Run susee_check diagnostics before bundling (default: true).
 
 Notes:
   Duplicate top-level declarations fail the build with file and location output.
@@ -52,6 +53,7 @@ pub struct CliOptions {
     pub allow_update: Option<bool>,
     pub warning: Option<bool>,
     pub minify: Option<bool>,
+    pub check: Option<bool>,
 }
 
 /// Normalized build options for the CLI single-entry compiler, mirroring
@@ -65,6 +67,8 @@ pub struct CliBuildOptions {
     pub allow_update: bool,
     pub minify: bool,
     pub warning: bool,
+    /// Run susee_check diagnostics before bundling (default: true).
+    pub check: bool,
 }
 
 /// `true` when `entry`'s extension is one susee accepts as an entry file.
@@ -176,7 +180,7 @@ pub fn parse_args(argv: &[String]) -> CliOptions {
                 ));
             }
             "--minify" => {
-                opts.allow_update = Some(parse_bool_flag_value(
+                opts.minify = Some(parse_bool_flag_value(
                     "minify",
                     inline_value,
                     next_value,
@@ -186,6 +190,14 @@ pub fn parse_args(argv: &[String]) -> CliOptions {
             "--warning" => {
                 opts.warning = Some(parse_bool_flag_value(
                     "warning",
+                    inline_value,
+                    next_value,
+                    &mut i,
+                ));
+            }
+            "--check" => {
+                opts.check = Some(parse_bool_flag_value(
+                    "check",
                     inline_value,
                     next_value,
                     &mut i,
@@ -237,6 +249,8 @@ pub fn get_default_options(args: &CliOptions) -> CliBuildOptions {
         allow_update: args.allow_update.unwrap_or(false),
         warning: args.warning.unwrap_or(false),
         minify: args.minify.unwrap_or(false),
+        // susee_check runs by default; opt out with `--check=false`.
+        check: args.check.unwrap_or(true),
     }
 }
 
@@ -280,4 +294,45 @@ pub fn extract_profile_flag(args: &[String]) -> (Vec<String>, bool) {
     }
 
     (next_args, profile)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn argv(args: &[&str]) -> Vec<String> {
+        args.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn parse_args_check_flag_defaults_true() {
+        // No --check passed → get_default_options uses true.
+        let parsed = parse_args(&argv(&["src/index.ts"]));
+        assert!(parsed.check.is_none());
+        let opts = get_default_options(&parsed);
+        assert!(opts.check);
+    }
+
+    #[test]
+    fn parse_args_check_false_disables() {
+        let parsed = parse_args(&argv(&["src/index.ts", "--check=false"]));
+        assert_eq!(parsed.check, Some(false));
+        let opts = get_default_options(&parsed);
+        assert!(!opts.check);
+    }
+
+    #[test]
+    fn parse_args_check_true_explicit() {
+        let parsed = parse_args(&argv(&["src/index.ts", "--check=true"]));
+        assert_eq!(parsed.check, Some(true));
+    }
+
+    #[test]
+    fn parse_args_minify_writes_to_minify_not_allow_update() {
+        // Regression test for the bug where `--minify` wrote to
+        // `opts.allow_update` instead of `opts.minify`.
+        let parsed = parse_args(&argv(&["src/index.ts", "--minify=true"]));
+        assert_eq!(parsed.minify, Some(true));
+        assert_eq!(parsed.allow_update, None);
+    }
 }

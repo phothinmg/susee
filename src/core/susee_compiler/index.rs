@@ -81,7 +81,7 @@ impl Compiler {
             return Ok(cached.clone());
         }
         let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-        let bundle_result = bundler(&point.entry, &cwd)?;
+        let bundle_result = bundler(&point.entry, &cwd, self.object.check)?;
         let result = BundleEntryResult {
             code: bundle_result.bundled_code,
             project_type: bundle_result.project_type,
@@ -616,6 +616,7 @@ mod tests {
             update_package: false,
             out_dir: "dist".to_string(),
             minify: false,
+            check: false,
         };
         let compiler = Compiler::new(opts);
         assert!(compiler.bundled_cache.is_empty());

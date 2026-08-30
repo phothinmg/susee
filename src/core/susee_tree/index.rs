@@ -1,6 +1,7 @@
 use super::cjs_handler::cjs_handler;
 use super::cts_handler::cts_handler;
 use super::json_handler::json_handler;
+use crate::core::susee_check::check_and_exit;
 use crate::core::susee_log;
 use crate::core::susee_types::{
     DepReturns, DependenciesTree, DepsFile, ModuleType, ProjectType, ValidExts,
@@ -107,12 +108,19 @@ fn has_json(dep_files: &[DepsFile]) -> bool {
         .any(|dep| dep.module_type == ModuleType::Json)
 }
 /// Tree for bundler
-pub fn susee_tree<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DependenciesTree> {
+pub fn susee_tree<P: AsRef<Path>>(
+    entry: &str,
+    root: P,
+    check: bool,
+) -> std::io::Result<DependenciesTree> {
     let deps = get_deps(entry, root)?;
     let npm = deps.npm;
     let nodes = deps.nodes;
     let warns = deps.warns;
     let dep_files = deps.dep_files;
+    if check {
+        check_and_exit(dep_files.clone());
+    }
 
     if has_ts_extensions(&dep_files) && !has_js_extensions(&dep_files) {
         // 1. TS extensions only.
@@ -355,7 +363,7 @@ mod tests {
     #[test]
     fn susee_tree_returns_err_for_missing_entry() {
         let dir = tempfile::tempdir().unwrap();
-        let result = susee_tree("nonexistent.ts", dir.path());
+        let result = susee_tree("nonexistent.ts", dir.path(), false);
         assert!(result.is_err());
     }
 
@@ -363,7 +371,7 @@ mod tests {
     fn susee_tree_builds_ts_project() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join("index.ts"), "export const x = 1;").unwrap();
-        let result = susee_tree("index.ts", dir.path()).unwrap();
+        let result = susee_tree("index.ts", dir.path(), false).unwrap();
         assert_eq!(result.project_type, ProjectType::TS);
         assert_eq!(result.entry, "index.ts");
         assert!(!result.dep_files.is_empty());

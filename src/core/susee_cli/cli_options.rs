@@ -37,6 +37,7 @@ fn build_options_from_cli(opts: &CliBuildOptions) -> BuildOptions {
         update_package: opts.allow_update,
         out_dir: opts.out_dir.clone(),
         minify: opts.minify,
+        check: opts.check,
     }
 }
 
@@ -71,6 +72,7 @@ mod tests {
             allow_update: false,
             warning: false,
             minify: false,
+            check: false,
         }
     }
 
@@ -114,5 +116,13 @@ mod tests {
             bo.build_entry_points[0].tsconfig_file_path.as_deref(),
             Some("tsconfig.build.json")
         );
+    }
+
+    #[test]
+    fn build_options_propagates_check() {
+        let mut opts = cli_opts(OutputFormat::Esm);
+        opts.check = true;
+        let bo = build_options_from_cli(&opts);
+        assert!(bo.check);
     }
 }

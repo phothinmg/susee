@@ -10,9 +10,20 @@ pub struct BundleResult {
     pub project_type: ProjectType,
 }
 
-//
-pub fn bundler<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<BundleResult> {
-    let tree = susee_tree(entry, root)?;
+/// Bundle `entry` (resolved relative to `root`) into a single source string.
+///
+/// When `check` is `true`, the `susee_check` diagnostics run on the freshly
+/// generated `susee_tree` **before** `run_tree_hooks` rewrites the
+/// dependency files. This matters for CommonJS/CTS modules: the hooks
+/// convert `require`/`module.exports` into ESM, which shifts line positions
+/// and would make the reported locations wrong. Running the checks on the
+/// original source keeps every reported `file:line:col` accurate.
+///
+/// If any check finds an issue, `check_and_exit` prints the report and
+/// exits the process with code 1, so `run_tree_hooks` (and the rest of the
+/// bundle) never executes.
+pub fn bundler<P: AsRef<Path>>(entry: &str, root: P, check: bool) -> std::io::Result<BundleResult> {
+    let tree = susee_tree(entry, root, check)?;
     let project_type = tree.project_type;
     // Check for warnings.
     if !tree.warns.is_empty() {
@@ -21,6 +32,12 @@ pub fn bundler<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<BundleRe
         let e = true;
         susee_log::error(info, &cause, e);
     }
+    // Run susee_check diagnostics BEFORE tree hooks so the reported line
+    // positions match the original source files (CommonJS/CTS content is
+    // rewritten by the hooks, which would shift line numbers).
+    // if check {
+    //     check_and_exit(&tree);
+    // }
     // Run tree hooks (anonymous, export-default, duplicates, remove imports/exports).
     // The removed import statements are collected for re-emission at the top of the bundle.
     let (clean_tree, removed_statements) = run_tree_hooks(tree);
@@ -127,21 +144,21 @@ mod tests {
     #[test]
     fn bundler_produces_non_empty_output() {
         let dir = make_project();
-        let result = bundler("index.ts", dir.path()).unwrap();
+        let result = bundler("index.ts", dir.path(), false).unwrap();
         assert!(!result.bundled_code.trim().is_empty());
     }
 
     #[test]
     fn bundler_returns_ts_project_type_for_ts_files() {
         let dir = make_project();
-        let result = bundler("index.ts", dir.path()).unwrap();
+        let result = bundler("index.ts", dir.path(), false).unwrap();
         assert_eq!(result.project_type, ProjectType::TS);
     }
 
     #[test]
     fn bundler_inlines_dependency_content() {
         let dir = make_project();
-        let result = bundler("index.ts", dir.path()).unwrap();
+        let result = bundler("index.ts", dir.path(), false).unwrap();
         // The bundled output should contain the `greet` definition.
         assert!(result.bundled_code.contains("greet"));
     }
@@ -149,7 +166,7 @@ mod tests {
     #[test]
     fn bundler_returns_err_for_missing_entry() {
         let dir = tempdir().unwrap();
-        let result = bundler("nonexistent.ts", dir.path());
+        let result = bundler("nonexistent.ts", dir.path(), false);
         assert!(result.is_err());
     }
 
@@ -161,7 +178,7 @@ mod tests {
             "export const x = 1;\n\n;\nexport const y = 2;\n",
         )
         .unwrap();
-        let result = bundler("index.ts", dir.path()).unwrap();
+        let result = bundler("index.ts", dir.path(), false).unwrap();
         // No line should be just a semicolon.
         for line in result.bundled_code.lines() {
             assert_ne!(line.trim(), ";");
@@ -183,7 +200,7 @@ mod tests {
             "export const greet = () => 'hello';\n",
         )
         .unwrap();
-        let result = bundler("index.js", dir.path()).unwrap();
+        let result = bundler("index.js", dir.path(), false).unwrap();
         assert_eq!(result.project_type, ProjectType::JS);
     }
 

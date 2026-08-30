@@ -52,7 +52,10 @@ const CONFIG_TEMPLATE: &str = r#"{
   // Update package.json fields from build output (default: false)
   "allowUpdatePackageJson": false,
   // Minify output JS with the oxc minifier (default: false)
-  "minify": true
+  "minify": true,
+  // Run susee_check diagnostics after generating the dependency tree and
+  // exit with code 1 if any issue is found (default: true)
+  "check": true
 }
 "#;
 

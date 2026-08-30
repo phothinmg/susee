@@ -10,6 +10,7 @@
 mod core;
 use colored::*;
 use core::bundler;
+pub use core::susee_tree;
 pub use core::{EntryPoint, OutputFormat, SuSeeConfig};
 use napi_derive::napi;
 use std::time::Instant;
@@ -72,7 +73,7 @@ pub fn cli_build(args: Vec<String>) {
 #[napi]
 pub fn susee_bundler(entry: String) -> std::string::String {
     let start = Instant::now();
-    let bundled = bundler(&entry, ".")
+    let bundled = bundler(&entry, ".", false)
         .unwrap_or_else(|_| panic!("{}", "Error when bundling".magenta()))
         .bundled_code;
     core::susee_log::bundle_time(start);

@@ -117,6 +117,9 @@ pub struct BuildOptions {
     pub update_package: bool,
     pub out_dir: String,
     pub minify: bool,
+    /// When `true`, run the `susee_check` diagnostics after generating
+    /// `susee_tree` and exit with code 1 if any issue is found.
+    pub check: bool,
 }
 
 impl std::fmt::Debug for BuildOptions {
@@ -126,6 +129,7 @@ impl std::fmt::Debug for BuildOptions {
             .field("update_package", &self.update_package)
             .field("out_dir", &self.out_dir)
             .field("minify", &self.minify)
+            .field("check", &self.check)
             .finish()
     }
 }
@@ -161,6 +165,10 @@ pub struct SuSeeConfig {
     pub allow_update_package_json: Option<bool>,
     #[serde(default)]
     pub minify: Option<bool>,
+    /// Run the `susee_check` diagnostics after generating `susee_tree`.
+    /// When `true` and issues are found, the build exits with code 1.
+    #[serde(default)]
+    pub check: Option<bool>,
 }
 
 /// Look for `susee.config.json` in `cwd`, mirroring `getSuseeConfigPath`.
@@ -262,6 +270,9 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
         update_package: config.allow_update_package_json.unwrap_or(false),
         out_dir,
         minify: config.minify.unwrap_or(false),
+        // susee_check runs by default so issues surface during a normal
+        // build. Opt out with `"check": false` in susee.config.jsonc.
+        check: config.check.unwrap_or(true),
     })
 }
 

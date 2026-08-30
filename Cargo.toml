@@ -1,5 +1,6 @@
 [package]
 name = "susee"
+authors = ["Pho Thin Maung <phothinmg@disroot.org>"]
 version = "2.0.0"
 edition = "2024"
 description = "Susee is a bundler specialized for library packages"
@@ -9,6 +10,7 @@ readme = "README.md"
 # Exclude the internal test binary and its generated JSON output from the
 # published crate. `src/main.rs` is a local test harness, not a shipped binary.
 exclude = ["src/main.rs"]
+
 
 [dependencies]
 dependensa = "0.2.0"
@@ -36,3 +38,36 @@ crate-type = ["rlib", "cdylib"]
 
 [dev-dependencies]
 tempfile = "3"
+
+
+
+# ----------------- #
+# CARGO WORKSPACES  #
+# ----------------- #
+
+[workspace]
+resolver = "3"
+members = ["packages/susee_utils","packages/susee_dep"]
+
+[workspace.package]
+authors = ["Pho Thin Maung <phothinmg@disroot.org>"]
+version = "2.0.0"
+edition = "2024"
+
+
+[workspace.dependencies]
+indexmap = { version = "2", features = ["serde"] }
+oxc = { version = "0.147.0", features = ["ast_visit", "codegen", "semantic", "transformer", "isolated_declarations", "minifier"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.151", features = ["preserve_order"] }
+tempfile = "3"
+
+[workspace.lints.rust]
+unsafe_code = "forbid" 
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+pedantic = "warn"
+todo = "deny"
+must_use_candidate = "allow"
+

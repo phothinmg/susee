@@ -30,9 +30,11 @@
 		"armv",
 		"aunused",
 		"cdylib",
+		"clippy",
 		"codegen",
 		"contentinfo",
 		"dependensa",
+		"dgram",
 		"dhello",
 		"efault",
 		"execjs",
@@ -45,6 +47,7 @@
 		"inlines",
 		"jconfig",
 		"Maung",
+		"Microtask",
 		"mistagged",
 		"Moji",
 		"msvc",
@@ -61,6 +64,7 @@
 		"topo",
 		"tsoptions",
 		"ushared",
+		"wasi",
 		"wasip"
 	]
 }
