@@ -124,11 +124,15 @@ impl ModuleType {
         }
     }
 }
+/// The type of project, determined by the languages used in its source files.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProjectType {
+    /// A purely TypeScript project.
     TS,
+    /// A purely JavaScript project.
     JS,
+    /// A project mixing both TypeScript and JavaScript.
     MIXED,
 }
 impl ProjectType {

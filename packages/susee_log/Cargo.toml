@@ -1,0 +1,15 @@
+[package]
+name = "susee_log"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+colored = { workspace = true }
+
+[lints]
+workspace = true
+
+[lib]
+name = "susee_log"
+path = "src/lib.rs"

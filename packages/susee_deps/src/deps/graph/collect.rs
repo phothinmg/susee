@@ -6,6 +6,8 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[allow(unused)]
+use super::get_package_info;
 use super::handlers::collect_module_specifiers;
 use super::package_info::PackageInfo;
 use super::resolve_ext::resolve_extension;
@@ -240,11 +242,10 @@ fn normalize_path(p: &Path) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph;
-    use crate::graph::PathBuf;
-    use crate::graph::collect::normalize_path;
-    use crate::graph::collect_dependencies;
-    use crate::graph::get_package_info;
+    use super::collect_dependencies;
+    use super::get_package_info;
+    use super::normalize_path;
+    use super::*;
     use std::fs;
     use std::path::Path;
     use tempfile::tempdir;
@@ -285,7 +286,7 @@ mod tests {
         )
         .unwrap();
 
-        let pkg = graph::get_package_info(root);
+        let pkg = get_package_info(root);
         let info = collect_dependencies("a.ts", &pkg, root);
 
         // two files visited: a.ts and b.ts

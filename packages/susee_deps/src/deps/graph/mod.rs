@@ -10,30 +10,33 @@
 //! project (topological order, NPM packages, circular dependencies, etc.).
 
 /// Dependency cycle detection and analysis.
-pub mod analyze;
+mod analyze;
+/// Verification that collected npm dependencies are actually installed.
+mod check_installed;
 /// Collection of dependency information from project source files.
-pub mod collect;
+mod collect;
 /// Event handlers used while traversing and building the dependency graph.
-pub mod handlers;
+mod handlers;
 /// Identification of leaf files (files with no further local dependencies).
-pub mod leaf;
+mod leaf;
 /// Detection of mutual (bidirectional) dependencies between files.
-pub mod mutual;
+mod mutual;
 /// Extraction of metadata from `package.json` manifests.
-pub mod package_info;
+mod package_info;
 /// Resolution of external (non-local) module specifiers.
-pub mod resolve_ext;
+mod resolve_ext;
 /// Topological sorting of files based on their dependency relationships.
-pub mod sort;
+mod sort;
 /// Shared graph construction and array-merging helpers.
-pub mod utils;
+mod utils;
 /// Rendering of the dependency graph into human-readable output formats.
-pub mod visualize;
+mod visualize;
 
 use indexmap::IndexMap;
 use std::path::{Path, PathBuf};
 
 use analyze::{CircularDependency, DependencyAnalysis, analyze_dependencies};
+use check_installed::check_npm_installed;
 use collect::{CollectedDepsInfo, collect_dependencies};
 use leaf::find_leaf_files;
 use mutual::find_mutual_dependencies;
@@ -249,6 +252,12 @@ pub fn generate_graph<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<G
     let npm_modules = merge_string_arr(&collected.collected_npm_modules);
     let node_modules = merge_string_arr(&collected.collected_node_modules);
     let warning = merge_string_arr(&collected.collected_warning);
+
+    // Verify that every collected npm specifier is actually installed
+    // (listed in package.json or present in node_modules). If any are
+    // missing, `check_npm_installed` logs an error and exits the process,
+    // so the `Err` arm is unreachable.
+    let _ = check_npm_installed(&npm_modules, &pkg, &root);
 
     let deps_obj = create_graph(&collected.dependencies, &root);
     let sorted_graph = topo_sort(&deps_obj);

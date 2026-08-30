@@ -47,7 +47,7 @@ tempfile = "3"
 
 [workspace]
 resolver = "3"
-members = ["packages/susee_deps", "packages/susee_types","packages/susee_utils"]
+members = ["packages/susee_deps", "packages/susee_log", "packages/susee_types","packages/susee_utils"]
 
 
 [workspace.package]
@@ -62,7 +62,10 @@ oxc = { version = "0.147.0", features = ["ast_visit", "codegen", "semantic", "tr
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.151", features = ["preserve_order"] }
 tempfile = "3"
+colored = "2"
 susee_types = { path = "packages/susee_types" }
+susee_utils = { path = "packages/susee_utils" }
+susee_log = { path = "packages/susee_log" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid" 

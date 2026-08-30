@@ -9,6 +9,10 @@ oxc = { workspace = true }
 indexmap = { workspace = true }
 serde_json = { workspace = true }
 serde = { workspace = true }
+susee_utils = {  workspace = true }
+susee_types = { workspace = true }
+colored = { workspace = true }
+susee_log = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

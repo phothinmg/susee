@@ -1509,11 +1509,22 @@ dependencies = [
 name = "susee_deps"
 version = "2.0.0"
 dependencies = [
+ "colored",
  "indexmap",
  "oxc 0.147.0",
  "serde",
  "serde_json",
+ "susee_log",
+ "susee_types",
+ "susee_utils",
  "tempfile",
+]
+
+[[package]]
+name = "susee_log"
+version = "2.0.0"
+dependencies = [
+ "colored",
 ]
 
 [[package]]
