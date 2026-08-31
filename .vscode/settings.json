@@ -25,6 +25,8 @@
 		"lintOnSave": true,
 		"config": ".rubocop.yml"
 	},
+	"rust-analyzer.cargo.targetDir": true,
+    "rust-analyzer.cachePriming.enable": false,
 	"cSpell.words": [
 		"aanon",
 		"abar",
