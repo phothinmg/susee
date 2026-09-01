@@ -35,8 +35,7 @@ use oxc::ast_visit::Visit;
 use oxc::span::Span;
 
 use crate::core::susee_types::DepsFile;
-use crate::core::susee_unique_name::{UniqueName, sigil};
-use crate::core::susee_utils::with_parsed_program;
+use crate::core::susee_utils::{UniqueName, sigil, with_parsed_program};
 
 /// The category key for named default exports, mirroring the TS
 /// implementation (`uniqueName.setPrefix({ key: "ExportDefault", ... })`).
@@ -643,11 +642,10 @@ pub fn export_default_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::susee_utils::make_dep;
 
     #[test]
     fn renames_named_default_function_export() {
-        let deps = vec![make_dep(
+        let deps = vec![crate::core::susee_utils::make_dep(
             "src/exp.ts",
             "export default function hello() { return 1; }\nhello();\n",
         )];
@@ -666,7 +664,7 @@ mod tests {
 
     #[test]
     fn renames_named_default_class_export() {
-        let deps = vec![make_dep(
+        let deps = vec![crate::core::susee_utils::make_dep(
             "src/exp.ts",
             "export default class Hello {}\nnew Hello();\n",
         )];
@@ -682,7 +680,7 @@ mod tests {
 
     #[test]
     fn renames_export_default_identifier() {
-        let deps = vec![make_dep(
+        let deps = vec![crate::core::susee_utils::make_dep(
             "src/exp.ts",
             "const foo = 42;\nexport default foo;\nfoo();\n",
         )];
@@ -697,11 +695,14 @@ mod tests {
 
     #[test]
     fn export_default_renames_import_in_consumer() {
-        let dep_a = make_dep(
+        let dep_a = crate::core::susee_utils::make_dep(
             "src/exp.ts",
             "export default function hello() { return 1; }\nhello();\n",
         );
-        let dep_b = make_dep("src/main.ts", "import myFn from \"./exp\";\nmyFn();\n");
+        let dep_b = crate::core::susee_utils::make_dep(
+            "src/main.ts",
+            "import myFn from \"./exp\";\nmyFn();\n",
+        );
         let result = export_default_handler(vec![dep_a, dep_b]);
         let main_content = &result[1].content;
         // The import should use the new name.
@@ -720,7 +721,7 @@ mod tests {
 
     #[test]
     fn export_default_skips_entry_file() {
-        let mut dep = make_dep(
+        let mut dep = crate::core::susee_utils::make_dep(
             "src/index.ts",
             "export default function hello() { return 1; }\nhello();\n",
         );
@@ -742,7 +743,7 @@ mod tests {
     #[test]
     fn no_changes_when_no_named_default_exports() {
         let src = "export const x = 1;\nexport function foo() { return x; }\n";
-        let deps = vec![make_dep("src/normal.ts", src)];
+        let deps = vec![crate::core::susee_utils::make_dep("src/normal.ts", src)];
         let result = export_default_handler(deps);
         assert_eq!(result[0].content, src);
     }

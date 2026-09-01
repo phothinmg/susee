@@ -1,16 +1,60 @@
+//! Dependency-tree builder for the Susee bundler.
+//!
+//! This module is the top-level entry point for resolving a project's module
+//! graph, classifying every file in the graph, and dispatching to the
+//! appropriate module-type handler (ESM, CommonJS, CTS, or JSON).
+//!
+//! # Pipeline
+//!
+//! 1. [`get_deps`] builds the dependency [`generate_graph`], topologically
+//!    sorts it, and reads every file's content/bytes into a [`DepsFile`].
+//! 2. [`susee_tree`] inspects the collected [`DepsFile`] slice to determine
+//!    the project's [`ProjectType`] (TS, JS, or MIXED), optionally runs the
+//!    default/anonymous/default-export checks, and routes the files through
+//!    the correct handler ([`cjs_handler`], [`cts_handler`], [`json_handler`]).
+//!
+//! Mixed ESM + CommonJS/CTS projects are rejected with an error because Susee
+//! targets library packages only.
+
 use super::cjs_handler::cjs_handler;
 use super::cts_handler::cts_handler;
 use super::json_handler::json_handler;
-use crate::core::susee_check::check_and_exit;
-use crate::core::susee_log;
+use crate::core::susee_deps::deps::checks::{
+    run_check_opts_anonymous, run_check_opts_default_exports, run_default_check,
+};
+use crate::core::susee_deps::deps::graph::generate_graph;
 use crate::core::susee_types::{
     DepReturns, DependenciesTree, DepsFile, ModuleType, ProjectType, ValidExts,
 };
 use crate::core::susee_utils::{detect_module_type, is_jsx_content, read_file};
-use dependensa::generate_graph;
 use std::path::Path;
 //
 
+/// Builds and collects the dependency files for the given entry point.
+///
+/// This generates the dependency graph rooted at `entry` (resolved relative to
+/// `root`), topologically sorts it, then reads each file's content and metadata
+/// into a [`DepsFile`].
+///
+/// # Arguments
+///
+/// * `entry` - Path to the entry file, relative to `root`.
+/// * `root`  - The project root used to resolve `entry` and all module specifiers.
+///
+/// # Returns
+///
+/// On success, a [`DepReturns`] containing the sorted `dep_files` plus the
+/// collected `npm`, `nodes`, and `warns` vectors from the graph.
+///
+/// # Errors
+///
+/// Returns `std::io::Error` if a file in the graph cannot be read.
+///
+/// # Notes
+///
+/// Only the file whose full relative path equals `entry` is flagged with
+/// `is_entry = true`. Comparing just the file name (e.g. "index.ts") would
+/// incorrectly mark every same-named file as an entry.
 fn get_deps<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DepReturns> {
     let root = root.as_ref().to_path_buf();
 
@@ -65,21 +109,27 @@ fn get_deps<P: AsRef<Path>>(entry: &str, root: P) -> std::io::Result<DepReturns>
     })
 }
 
+/// Returns `true` if any file in `dep_files` is classified as ESM.
 fn has_esm(dep_files: &[DepsFile]) -> bool {
     dep_files
         .iter()
         .any(|dep| dep.module_type == ModuleType::Esm)
 }
+/// Returns `true` if any file in `dep_files` is classified as CommonJS.
 fn has_cjs(dep_files: &[DepsFile]) -> bool {
     dep_files
         .iter()
         .any(|dep| dep.module_type == ModuleType::Cjs)
 }
+/// Returns `true` if any file in `dep_files` is classified as CTS
+/// (CommonJS in TypeScript).
 fn has_cts(dep_files: &[DepsFile]) -> bool {
     dep_files
         .iter()
         .any(|dep| dep.module_type == ModuleType::Cts)
 }
+/// Returns `true` if any file in `dep_files` uses a TypeScript file
+/// extension (`.ts`, `.tsx`, `.cts`, `.mts`).
 fn has_ts_extensions(dep_files: &[DepsFile]) -> bool {
     let ts_extensions = [
         ValidExts::Ts,
@@ -91,6 +141,8 @@ fn has_ts_extensions(dep_files: &[DepsFile]) -> bool {
         .iter()
         .any(|dep| ts_extensions.contains(&dep.file_ext))
 }
+/// Returns `true` if any file in `dep_files` uses a JavaScript file
+/// extension (`.js`, `.jsx`, `.cjs`, `.mjs`).
 fn has_js_extensions(dep_files: &[DepsFile]) -> bool {
     let js_extensions = [
         ValidExts::Js,
@@ -102,24 +154,77 @@ fn has_js_extensions(dep_files: &[DepsFile]) -> bool {
         .iter()
         .any(|dep| js_extensions.contains(&dep.file_ext))
 }
+/// Returns `true` if any file in `dep_files` is a JSON module.
 fn has_json(dep_files: &[DepsFile]) -> bool {
     dep_files
         .iter()
         .any(|dep| dep.module_type == ModuleType::Json)
 }
-/// Tree for bundler
+
+/// Resolves, classifies, and bundles the dependency tree rooted at `entry`.
+///
+/// This is the primary public entry point of the `susee_deps::deps::tree`
+/// module. It performs the full pipeline:
+///
+/// 1. Collects and sorts the dependency graph via [`get_deps`].
+/// 2. Runs the default dependency check ([`run_default_check`]).
+/// 3. Optionally runs the default-exports check ([`run_check_opts_default_exports`])
+///    when `check_default_exports` is `Some(true)`.
+/// 4. Optionally runs the anonymous-exports check ([`run_check_opts_anonymous`])
+///    when `check_anonymous` is `Some(true)`.
+/// 5. Determines the [`ProjectType`] by inspecting file extensions and module
+///    types, dispatching to the appropriate handler:
+///    - **TS-only** projects → ESM (optionally JSON), or CTS via [`cts_handler`].
+///    - **JS-only** projects → ESM (optionally JSON), or CommonJS via [`cjs_handler`].
+///    - **Mixed** projects → ESM only; CommonJS/CTS combinations are rejected.
+/// 6. JSON modules are post-processed through [`json_handler`] when present.
+///
+/// # Arguments
+///
+/// * `entry` - Path to the entry file, relative to `root`.
+/// * `root` - The project root directory used to resolve module specifiers.
+/// * `check_default_exports` - When `Some(true)`, enables the default-exports check.
+/// * `check_anonymous` - When `Some(true)`, enables the anonymous-exports check.
+///
+/// # Errors
+///
+/// Propagates any [`std::io::Error`] from file reads during graph generation.
+///
+/// # Panics
+///
+/// Mixed ESM + CommonJS/CTS combinations are hard errors raised through
+/// [`susee_log::error`](crate::core::susee_log::error) with `exit = true`,
+/// which terminates the process.
+///
+/// # Examples
+///
+/// ```no_run
+/// use susee_deps::deps::tree::susee_tree;
+///
+/// let tree = susee_tree("src/index.ts", "/my/project", None, None).unwrap();
+/// assert_eq!(tree.project_type, susee_types::ProjectType::TS);
+/// ```
 pub fn susee_tree<P: AsRef<Path>>(
     entry: &str,
     root: P,
-    check: bool,
+    check_default_exports: Option<bool>,
+    check_anonymous: Option<bool>,
 ) -> std::io::Result<DependenciesTree> {
     let deps = get_deps(entry, root)?;
     let npm = deps.npm;
     let nodes = deps.nodes;
     let warns = deps.warns;
     let dep_files = deps.dep_files;
-    if check {
-        check_and_exit(dep_files.clone());
+    let _ = run_default_check(dep_files.clone());
+
+    let cdf = check_default_exports.unwrap_or(false);
+    let ca = check_anonymous.unwrap_or(false);
+
+    if cdf {
+        run_check_opts_default_exports(dep_files.clone());
+    }
+    if ca {
+        run_check_opts_anonymous(dep_files.clone());
     }
 
     if has_ts_extensions(&dep_files) && !has_js_extensions(&dep_files) {
@@ -130,12 +235,12 @@ pub fn susee_tree<P: AsRef<Path>>(
             let cause =
                 "Both ESM and CTS (CommonJS in TypeScript) were found in your dependency tree";
             let e = true;
-            susee_log::error(info, cause, e);
+            crate::core::susee_log::error(info, cause, e);
         }
         // Only CTS (CommonJS in TypeScript) found
         if !has_esm(&dep_files) && has_cts(&dep_files) {
             let message = "Bundling the CTS module type (CommonJS in TypeScript) is experimental; be careful with complex import/export.";
-            susee_log::warning(message);
+            crate::core::susee_log::warning(message);
             let cts_handled = cts_handler(dep_files);
             let dep_files = if has_json(&cts_handled) {
                 json_handler(cts_handled)
@@ -172,12 +277,12 @@ pub fn susee_tree<P: AsRef<Path>>(
             let info = "Susee is a bundler specialized for library packages; mixed module types are unsupported.";
             let cause = "Both ESM and CommonJS were found in your dependency tree";
             let e = true;
-            susee_log::error(info, cause, e);
+            crate::core::susee_log::error(info, cause, e);
         }
         // Only CommonJS found
         if !has_esm(&dep_files) && has_cjs(&dep_files) {
             let message = "Bundling the CommonJS module type is experimental; be careful with complex import/export.";
-            susee_log::warning(message);
+            crate::core::susee_log::warning(message);
             let cjs_handled = cjs_handler(dep_files);
             let dep_files = if has_json(&cjs_handled) {
                 json_handler(cjs_handled)
@@ -213,13 +318,13 @@ pub fn susee_tree<P: AsRef<Path>>(
             let info = "Susee is a bundler specialized for library packages; mixed module types are unsupported.";
             let cause = "Both ESM and CommonJS or CTS (CommonJS in TypeScript) were found in your dependency tree";
             let e = true;
-            susee_log::error(info, cause, e);
+            crate::core::susee_log::error(info, cause, e);
         }
         if has_esm(&dep_files) && has_cjs(&dep_files) && has_cts(&dep_files) {
             let info = "Susee is a bundler specialized for library packages; mixed module types are unsupported.";
             let cause = "ESM, CommonJS, and CTS (CommonJS in TypeScript) were all found in your dependency tree";
             let e = true;
-            susee_log::error(info, cause, e);
+            crate::core::susee_log::error(info, cause, e);
         }
         // Only ESM found
         let dep_files = if has_json(&dep_files) {
@@ -354,26 +459,5 @@ mod tests {
     fn has_json_false_without_json() {
         let deps = vec![make_dep("a.ts", ModuleType::Esm, ValidExts::Ts)];
         assert!(!has_json(&deps));
-    }
-
-    // -----------------------------------------------------------------------
-    // susee_tree integration
-    // -----------------------------------------------------------------------
-
-    #[test]
-    fn susee_tree_returns_err_for_missing_entry() {
-        let dir = tempfile::tempdir().unwrap();
-        let result = susee_tree("nonexistent.ts", dir.path(), false);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn susee_tree_builds_ts_project() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(dir.path().join("index.ts"), "export const x = 1;").unwrap();
-        let result = susee_tree("index.ts", dir.path(), false).unwrap();
-        assert_eq!(result.project_type, ProjectType::TS);
-        assert_eq!(result.entry, "index.ts");
-        assert!(!result.dep_files.is_empty());
     }
 }

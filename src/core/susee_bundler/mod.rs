@@ -1,6 +1,6 @@
+use crate::core::susee_deps::susee_tree;
 use crate::core::susee_hooks::{clean, run_tree_hooks};
 use crate::core::susee_log;
-use crate::core::susee_tree::susee_tree;
 use crate::core::susee_types::ProjectType;
 use crate::core::susee_utils::{is_non_local_import, merge_content, merge_imports_statement};
 use std::path::Path;
@@ -22,8 +22,13 @@ pub struct BundleResult {
 /// If any check finds an issue, `check_and_exit` prints the report and
 /// exits the process with code 1, so `run_tree_hooks` (and the rest of the
 /// bundle) never executes.
-pub fn bundler<P: AsRef<Path>>(entry: &str, root: P, check: bool) -> std::io::Result<BundleResult> {
-    let tree = susee_tree(entry, root, check)?;
+pub fn bundler<P: AsRef<Path>>(
+    entry: &str,
+    root: P,
+    check_default_exports: Option<bool>,
+    check_anonymous: Option<bool>,
+) -> std::io::Result<BundleResult> {
+    let tree = susee_tree(entry, root, check_default_exports, check_anonymous)?;
     let project_type = tree.project_type;
     // Check for warnings.
     if !tree.warns.is_empty() {
@@ -144,21 +149,21 @@ mod tests {
     #[test]
     fn bundler_produces_non_empty_output() {
         let dir = make_project();
-        let result = bundler("index.ts", dir.path(), false).unwrap();
+        let result = bundler("index.ts", dir.path(), Some(false), Some(false)).unwrap();
         assert!(!result.bundled_code.trim().is_empty());
     }
 
     #[test]
     fn bundler_returns_ts_project_type_for_ts_files() {
         let dir = make_project();
-        let result = bundler("index.ts", dir.path(), false).unwrap();
+        let result = bundler("index.ts", dir.path(), Some(false), Some(false)).unwrap();
         assert_eq!(result.project_type, ProjectType::TS);
     }
 
     #[test]
     fn bundler_inlines_dependency_content() {
         let dir = make_project();
-        let result = bundler("index.ts", dir.path(), false).unwrap();
+        let result = bundler("index.ts", dir.path(), Some(false), Some(false)).unwrap();
         // The bundled output should contain the `greet` definition.
         assert!(result.bundled_code.contains("greet"));
     }
@@ -166,7 +171,7 @@ mod tests {
     #[test]
     fn bundler_returns_err_for_missing_entry() {
         let dir = tempdir().unwrap();
-        let result = bundler("nonexistent.ts", dir.path(), false);
+        let result = bundler("index.ts", dir.path(), Some(false), Some(false));
         assert!(result.is_err());
     }
 
@@ -178,7 +183,7 @@ mod tests {
             "export const x = 1;\n\n;\nexport const y = 2;\n",
         )
         .unwrap();
-        let result = bundler("index.ts", dir.path(), false).unwrap();
+        let result = bundler("index.ts", dir.path(), Some(false), Some(false)).unwrap();
         // No line should be just a semicolon.
         for line in result.bundled_code.lines() {
             assert_ne!(line.trim(), ";");
@@ -200,7 +205,7 @@ mod tests {
             "export const greet = () => 'hello';\n",
         )
         .unwrap();
-        let result = bundler("index.js", dir.path(), false).unwrap();
+        let result = bundler("index.ts", dir.path(), Some(false), Some(false)).unwrap();
         assert_eq!(result.project_type, ProjectType::JS);
     }
 

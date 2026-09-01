@@ -31,7 +31,6 @@ use oxc::span::Span;
 
 use crate::core::susee_types::{DepsFile, ModuleType, ValidExts};
 use crate::core::susee_utils::with_parsed_program;
-
 /// The category sigil for JSON module default exports.
 ///
 /// Generated names follow the form `_j<key>$<n>`, consistent with the
@@ -470,7 +469,6 @@ pub fn json_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::susee_utils::make_dep;
 
     fn make_json_dep(file: &str, content: &str) -> DepsFile {
         DepsFile {
@@ -485,7 +483,21 @@ mod tests {
     }
 
     fn make_esm_dep(file: &str, content: &str) -> DepsFile {
-        make_dep(file, content)
+        DepsFile {
+            file: file.to_string(),
+            content: content.to_string(),
+            bytes: content.len(),
+            module_type: ModuleType::Esm,
+            file_ext: ValidExts::from_ext(
+                Path::new(file)
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .unwrap_or("js"),
+            )
+            .unwrap_or(ValidExts::Js),
+            is_jsx: false,
+            is_entry: false,
+        }
     }
 
     #[test]

@@ -44,11 +44,11 @@ pub enum CheckKind {
 impl CheckKind {
     pub fn label(self) -> &'static str {
         match self {
-            Self::Duplicates => "check:1",
-            Self::Anonymous => "check:2",
-            Self::ExportDefault => "check:3",
-            Self::MissingTypes => "check:4",
-            Self::UndefinedUsage => "check:5",
+            Self::Duplicates => "check:Duplicates",
+            Self::Anonymous => "check:Anonymous",
+            Self::ExportDefault => "check:ExportDefault",
+            Self::MissingTypes => "check:MissingTypes",
+            Self::UndefinedUsage => "check:UndefinedUsage",
         }
     }
 }

@@ -1,7 +1,14 @@
+//! Tree-shaking and bundling hooks for the susee bundler.
+//!
+//! This crate provides pre-process, tree-level, and post-process hooks that
+//! transform dependency files before they are concatenated into a single
+//! bundle.
+
 use crate::core::susee_types::DependenciesTree;
 
 mod post_process_hooks;
 mod pre_process_hooks;
+mod remove_handler;
 mod tree_hooks;
 
 pub use post_process_hooks::minify_js;
@@ -43,26 +50,27 @@ pub fn run_tree_hooks(tree: DependenciesTree) -> (DependenciesTree, Vec<String>)
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::susee_utils::make_dep;
     #[test]
     fn run_hooks_preserves_tree_fields() {
-        use crate::core::susee_types::{DependenciesTree, ProjectType};
-        let tree = DependenciesTree {
+        let tree = crate::core::susee_types::DependenciesTree {
             entry: "src/index.ts".to_string(),
             npm: vec!["react".to_string()],
             nodes: vec!["node:fs".to_string()],
             warns: vec![],
             dep_files: vec![
-                make_dep("src/a.ts", "export const shared = 1;\n"),
-                make_dep("src/b.ts", "export const shared = 2;\n"),
+                crate::core::susee_utils::make_dep("src/a.ts", "export const shared = 1;\n"),
+                crate::core::susee_utils::make_dep("src/b.ts", "export const shared = 2;\n"),
             ],
-            project_type: ProjectType::TS,
+            project_type: crate::core::susee_types::ProjectType::TS,
         };
         let (result, removed) = run_tree_hooks(tree);
         assert_eq!(result.entry, "src/index.ts");
         assert_eq!(result.npm, vec!["react".to_string()]);
         assert_eq!(result.nodes, vec!["node:fs".to_string()]);
-        assert_eq!(result.project_type, ProjectType::TS);
+        assert_eq!(
+            result.project_type,
+            crate::core::susee_types::ProjectType::TS
+        );
         // Duplicates should be renamed (the original `const shared`
         // declaration is gone; the renamed identifier uses the `_u` sigil).
         assert!(!result.dep_files[0].content.contains("const shared"));

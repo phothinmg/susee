@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
-use crate::core::susee_log;
 use crate::core::susee_types::{DepsFile, NameToFileMap, NamesSet};
-use crate::core::susee_unique_name::{UniqueName, sigil};
 use crate::core::susee_utils::{
-    apply_renames, collect_top_level_declaration_names, with_parsed_program,
+    UniqueName, apply_renames, collect_top_level_declaration_names, sigil, with_parsed_program,
 };
 
 /// Detect cross-file duplicate top-level declaration names and rename them.
@@ -70,7 +68,7 @@ pub fn check_duplicates(dep_files: Vec<DepsFile>) -> Vec<DepsFile> {
         );
         let cause =
             "These names will be renamed to unique names to avoid collisions during bundling.";
-        susee_log::warning(&info);
+        crate::core::susee_log::warning(&info);
         let _ = cause;
     }
 
@@ -135,13 +133,12 @@ pub fn check_duplicates(dep_files: Vec<DepsFile>) -> Vec<DepsFile> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::susee_utils::make_dep;
 
     #[test]
     fn no_duplicates_unchanged() {
         let deps = vec![
-            make_dep("src/a.ts", "export const alpha = 1;\n"),
-            make_dep("src/b.ts", "export const beta = 2;\n"),
+            crate::core::susee_utils::make_dep("src/a.ts", "export const alpha = 1;\n"),
+            crate::core::susee_utils::make_dep("src/b.ts", "export const beta = 2;\n"),
         ];
         let result = check_duplicates(deps);
         assert_eq!(result[0].content, "export const alpha = 1;\n");
@@ -151,11 +148,11 @@ mod tests {
     #[test]
     fn renames_duplicate_top_level_names() {
         let deps = vec![
-            make_dep(
+            crate::core::susee_utils::make_dep(
                 "src/a.ts",
                 "export const shared = 1;\nexport function useShared() { return shared; }\n",
             ),
-            make_dep("src/b.ts", "export const shared = 2;\n"),
+            crate::core::susee_utils::make_dep("src/b.ts", "export const shared = 2;\n"),
         ];
         let result = check_duplicates(deps);
         // Both `shared` declarations should have been renamed (to different names).
@@ -172,11 +169,11 @@ mod tests {
     #[test]
     fn nested_scopes_not_renamed() {
         let deps = vec![
-            make_dep(
+            crate::core::susee_utils::make_dep(
                 "src/a.ts",
                 "export function alpha() { const local = 1; return local; }\n",
             ),
-            make_dep(
+            crate::core::susee_utils::make_dep(
                 "src/b.ts",
                 "export function beta() { const local = 2; return local; }\n",
             ),
@@ -190,8 +187,14 @@ mod tests {
     #[test]
     fn duplicate_references_renamed() {
         let deps = vec![
-            make_dep("src/a.ts", "const shared = 1;\nexport { shared };\n"),
-            make_dep("src/b.ts", "const shared = 2;\nexport { shared };\n"),
+            crate::core::susee_utils::make_dep(
+                "src/a.ts",
+                "const shared = 1;\nexport { shared };\n",
+            ),
+            crate::core::susee_utils::make_dep(
+                "src/b.ts",
+                "const shared = 2;\nexport { shared };\n",
+            ),
         ];
         let result = check_duplicates(deps);
         // Both declaration and export specifier should be renamed.

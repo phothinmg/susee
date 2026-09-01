@@ -10,8 +10,7 @@
 mod core;
 use colored::*;
 use core::bundler;
-pub use core::susee_tree;
-pub use core::{EntryPoint, OutputFormat, SuSeeConfig};
+pub use core::{EntryPoint, GraphObject, OutputFormat, SuSeeConfig, generate_graph};
 use napi_derive::napi;
 use std::time::Instant;
 

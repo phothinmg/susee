@@ -71,8 +71,10 @@ pub struct BuildEntryPoint {
     pub tsconfig_file_path: Option<String>,
     /// Output directory for this entry point.
     pub output_directory_path: String,
-    /// Whether to treat missing-dependency warnings as fatal.
-    pub warning: bool,
+    /// minify
+    pub minify: bool,
+    pub check_default_exports: bool,
+    pub check_anonymous: bool,
 }
 
 impl std::fmt::Debug for BuildEntryPoint {
@@ -83,7 +85,9 @@ impl std::fmt::Debug for BuildEntryPoint {
             .field("format", &self.format)
             .field("tsconfig_file_path", &self.tsconfig_file_path)
             .field("output_directory_path", &self.output_directory_path)
-            .field("warning", &self.warning)
+            .field("minify", &self.minify)
+            .field("check_default_exports", &self.check_default_exports)
+            .field("check_anonymous", &self.check_anonymous)
             .finish()
     }
 }
@@ -103,7 +107,9 @@ impl Default for BuildEntryPoint {
             format: Vec::new(),
             tsconfig_file_path: None,
             output_directory_path: "dist".to_string(),
-            warning: false,
+            minify: false,
+            check_default_exports: false,
+            check_anonymous: false,
         }
     }
 }
@@ -116,10 +122,6 @@ pub struct BuildOptions {
     pub build_entry_points: Vec<BuildEntryPoint>,
     pub update_package: bool,
     pub out_dir: String,
-    pub minify: bool,
-    /// When `true`, run the `susee_check` diagnostics after generating
-    /// `susee_tree` and exit with code 1 if any issue is found.
-    pub check: bool,
 }
 
 impl std::fmt::Debug for BuildOptions {
@@ -128,8 +130,6 @@ impl std::fmt::Debug for BuildOptions {
             .field("build_entry_points", &self.build_entry_points)
             .field("update_package", &self.update_package)
             .field("out_dir", &self.out_dir)
-            .field("minify", &self.minify)
-            .field("check", &self.check)
             .finish()
     }
 }
@@ -150,7 +150,11 @@ pub struct EntryPoint {
     #[serde(default)]
     pub tsconfig_file_path: Option<String>,
     #[serde(default)]
-    pub warning: Option<bool>,
+    pub minify: Option<bool>,
+    #[serde(default)]
+    pub check_default_exports: Option<bool>,
+    #[serde(default)]
+    pub check_anonymous: Option<bool>,
 }
 
 /// The raw susee config, mirroring `SuSeeConfig`.
@@ -163,12 +167,6 @@ pub struct SuSeeConfig {
     pub out_dir: Option<String>,
     #[serde(default)]
     pub allow_update_package_json: Option<bool>,
-    #[serde(default)]
-    pub minify: Option<bool>,
-    /// Run the `susee_check` diagnostics after generating `susee_tree`.
-    /// When `true` and issues are found, the build exits with code 1.
-    #[serde(default)]
-    pub check: Option<bool>,
 }
 
 /// Look for `susee.config.json` in `cwd`, mirroring `getSuseeConfigPath`.
@@ -243,7 +241,9 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
                 seen.push(*f);
             }
         }
-        let warning = ent.warning.unwrap_or(false);
+        let minify = ent.minify.unwrap_or(false);
+        let check_default_exports = ent.check_default_exports.unwrap_or(false);
+        let check_anonymous = ent.check_anonymous.unwrap_or(false);
         let tsconfig_file_path = ent.tsconfig_file_path.clone();
         let output_directory_path = if ent.export_path == "." {
             out_dir.clone()
@@ -261,7 +261,9 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
             format: seen,
             tsconfig_file_path,
             output_directory_path,
-            warning,
+            minify,
+            check_anonymous,
+            check_default_exports,
         });
     }
 
@@ -269,10 +271,6 @@ pub fn generate_build_options(config: &SuSeeConfig) -> Result<BuildOptions, Stri
         build_entry_points: points,
         update_package: config.allow_update_package_json.unwrap_or(false),
         out_dir,
-        minify: config.minify.unwrap_or(false),
-        // susee_check runs by default so issues surface during a normal
-        // build. Opt out with `"check": false` in susee.config.jsonc.
-        check: config.check.unwrap_or(false),
     })
 }
 

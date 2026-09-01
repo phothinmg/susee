@@ -43,9 +43,12 @@ use oxc::ast::ast::{
 use oxc::ast_visit::Visit;
 use oxc::span::{GetSpan, Span};
 
+#[allow(unused)]
+use super::export_default::export_default_handler;
+#[allow(unused)]
+use super::remove::remove_handler;
 use crate::core::susee_types::DepsFile;
-use crate::core::susee_unique_name::{UniqueName, sigil};
-use crate::core::susee_utils::with_parsed_program;
+use crate::core::susee_utils::{UniqueName, sigil, with_parsed_program};
 
 /// The category key used for all anonymous export names, mirroring the TS
 /// implementation (`uniqueName.setPrefix({ key: "AnonymousName", ... })`).
@@ -543,6 +546,8 @@ pub fn anonymous_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
 
 #[cfg(test)]
 mod tests {
+    use super::export_default_handler;
+    use super::remove_handler;
     use super::*;
     use crate::core::susee_utils::make_dep;
 
@@ -732,12 +737,11 @@ mod tests {
         let src = "import ts6 from \"@suseejs/ts6\";\nexport default function (\n\tcontent: string,\n\tfile: string,\n\tcompilerOptions: ts6.CompilerOptions,\n) {\n\treturn content;\n}\n";
         let dep = make_dep("src/unusedCode.ts", src);
         // export_default first (named only — this anonymous one is skipped).
-        let phase1 =
-            crate::core::susee_hooks::tree_hooks::export_default::export_default_handler(vec![dep]);
+        let phase1 = export_default_handler(vec![dep]);
         // anonymous second — names the anonymous function.
         let phase2 = anonymous_handler(phase1);
         // remove handler — strips export/default keywords.
-        let (phase3, _) = crate::core::susee_hooks::tree_hooks::remove::remove_handler(phase2);
+        let (phase3, _) = remove_handler(phase2);
         let content = &phase3[0].content;
         assert!(
             content.contains("return content;"),
