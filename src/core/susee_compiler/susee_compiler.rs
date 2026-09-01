@@ -40,8 +40,6 @@ use crate::core::susee_types::ProjectType;
 pub struct CompilerParams<'a> {
     pub source_code: &'a str,
     pub file_name: &'a str,
-    pub temp_dir: &'a str,
-    pub export_path: String,
     pub compiler_options: &'a CompilerOptions,
     pub is_jsx: bool,
     #[allow(dead_code)]
@@ -162,10 +160,6 @@ pub fn susee_compiler(params: CompilerParams<'_>) -> Result<CompiledOutput, Stri
     let CompilerParams {
         source_code,
         file_name,
-        #[allow(unused)]
-        temp_dir,
-        #[allow(unused)]
-        export_path,
         compiler_options,
         is_jsx,
         project_type: _,

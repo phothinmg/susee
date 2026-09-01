@@ -11,7 +11,7 @@ mod susee_utils;
 
 pub use susee_build::build;
 pub use susee_bundler::bundler;
-#[allow(unused_imports)]
 pub use susee_cli::susee_cli_build_with_args;
-pub use susee_config::{EntryPoint, OutputFormat, SuSeeConfig};
+pub use susee_config::{EntryPoint, SuSeeConfig};
 pub use susee_deps::{GraphObject, generate_graph};
+pub use susee_types::OutputFormat;

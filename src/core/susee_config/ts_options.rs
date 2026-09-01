@@ -1,7 +1,7 @@
 // #![allow(dead_code)]
 use std::path::{Path, PathBuf};
 
-use super::config_types::OutputFormat;
+use crate::core::susee_types::OutputFormat;
 use serde::{Deserialize, Serialize};
 
 /// Module kind, mirroring `ts.ModuleKind`.

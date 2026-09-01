@@ -10,6 +10,7 @@ use oxc::ast::ast::{
     ExportDefaultDeclarationKind, ExportSpecifier, ImportDeclarationSpecifier, ModuleExportName,
 };
 
+use napi_derive::napi;
 use oxc::span::Span;
 
 /// File extensions considered valid for JS/TS/JSON modules.
@@ -486,6 +487,7 @@ impl<'a, 'b> SpecifierSpanCollector<'a, 'b> {
 /// Controls both the emitted module file extension and the corresponding
 /// type declaration file extension, as well as the runtime module system
 /// (CommonJS `require`/`module.exports` vs. ESM `import`/`export`).
+#[napi]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[derive(Default)]

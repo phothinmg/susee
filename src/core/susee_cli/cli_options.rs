@@ -16,7 +16,8 @@
 use std::time::Instant;
 
 use crate::core::susee_compiler::Compiler;
-use crate::core::susee_config::{BuildEntryPoint, BuildOptions, OutputFormat};
+use crate::core::susee_config::{BuildEntryPoint, BuildOptions};
+use crate::core::susee_types::OutputFormat;
 
 use super::cli_utils::CliBuildOptions;
 use super::cli_utils::fail;
@@ -30,14 +31,14 @@ fn build_options_from_cli(opts: &CliBuildOptions) -> BuildOptions {
         format: vec![opts.format],
         tsconfig_file_path: opts.tsconfig.clone(),
         output_directory_path: opts.out_dir.clone(),
-        warning: opts.warning,
+        minify: opts.minify.clone(),
+        check_anonymous: opts.check_anonymous.clone(),
+        check_default_exports: opts.check_default_exports.clone(),
     };
     BuildOptions {
         build_entry_points: vec![entry],
         update_package: opts.allow_update,
         out_dir: opts.out_dir.clone(),
-        minify: opts.minify,
-        check: opts.check,
     }
 }
 
@@ -70,9 +71,9 @@ mod tests {
             format,
             tsconfig: None,
             allow_update: false,
-            warning: false,
             minify: false,
-            check: false,
+            check_anonymous: false,
+            check_default_exports: false,
         }
     }
 
@@ -116,13 +117,5 @@ mod tests {
             bo.build_entry_points[0].tsconfig_file_path.as_deref(),
             Some("tsconfig.build.json")
         );
-    }
-
-    #[test]
-    fn build_options_propagates_check() {
-        let mut opts = cli_opts(OutputFormat::Esm);
-        opts.check = true;
-        let bo = build_options_from_cli(&opts);
-        assert!(bo.check);
     }
 }

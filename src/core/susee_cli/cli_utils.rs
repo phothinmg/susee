@@ -1,4 +1,4 @@
-use crate::core::susee_config::OutputFormat;
+use crate::core::susee_types::OutputFormat;
 use std::path::Path;
 use std::process::exit;
 
@@ -53,7 +53,8 @@ pub struct CliOptions {
     pub allow_update: Option<bool>,
     pub warning: Option<bool>,
     pub minify: Option<bool>,
-    pub check: Option<bool>,
+    pub check_default_exports: Option<bool>,
+    pub check_anonymous: Option<bool>,
 }
 
 /// Normalized build options for the CLI single-entry compiler, mirroring
@@ -66,9 +67,8 @@ pub struct CliBuildOptions {
     pub tsconfig: Option<String>,
     pub allow_update: bool,
     pub minify: bool,
-    pub warning: bool,
-    /// Run susee_check diagnostics before bundling (default: true).
-    pub check: bool,
+    pub check_default_exports: bool,
+    pub check_anonymous: bool,
 }
 
 /// `true` when `entry`'s extension is one susee accepts as an entry file.
@@ -195,9 +195,17 @@ pub fn parse_args(argv: &[String]) -> CliOptions {
                     &mut i,
                 ));
             }
-            "--check" => {
-                opts.check = Some(parse_bool_flag_value(
-                    "check",
+            "--check-anonymous" => {
+                opts.check_anonymous = Some(parse_bool_flag_value(
+                    "check anonymous",
+                    inline_value,
+                    next_value,
+                    &mut i,
+                ));
+            }
+            "--check-default-exports" => {
+                opts.check_default_exports = Some(parse_bool_flag_value(
+                    "check default exports",
                     inline_value,
                     next_value,
                     &mut i,
@@ -247,10 +255,9 @@ pub fn get_default_options(args: &CliOptions) -> CliBuildOptions {
         format: args.format.unwrap_or_default(),
         tsconfig: args.tsconfig.clone(),
         allow_update: args.allow_update.unwrap_or(false),
-        warning: args.warning.unwrap_or(false),
         minify: args.minify.unwrap_or(false),
-        // susee_check runs by default; opt out with `--check=false`.
-        check: args.check.unwrap_or(true),
+        check_anonymous: args.check_anonymous.unwrap_or(false),
+        check_default_exports: args.check_default_exports.unwrap_or(false),
     }
 }
 
@@ -302,29 +309,6 @@ mod tests {
 
     fn argv(args: &[&str]) -> Vec<String> {
         args.iter().map(|s| s.to_string()).collect()
-    }
-
-    #[test]
-    fn parse_args_check_flag_defaults_true() {
-        // No --check passed → get_default_options uses true.
-        let parsed = parse_args(&argv(&["src/index.ts"]));
-        assert!(parsed.check.is_none());
-        let opts = get_default_options(&parsed);
-        assert!(opts.check);
-    }
-
-    #[test]
-    fn parse_args_check_false_disables() {
-        let parsed = parse_args(&argv(&["src/index.ts", "--check=false"]));
-        assert_eq!(parsed.check, Some(false));
-        let opts = get_default_options(&parsed);
-        assert!(!opts.check);
-    }
-
-    #[test]
-    fn parse_args_check_true_explicit() {
-        let parsed = parse_args(&argv(&["src/index.ts", "--check=true"]));
-        assert_eq!(parsed.check, Some(true));
     }
 
     #[test]

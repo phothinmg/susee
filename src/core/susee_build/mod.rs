@@ -42,7 +42,8 @@ pub fn build(config: Option<&SuSeeConfig>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::susee_config::{EntryPoint, OutputFormat, SuSeeConfig};
+    use crate::core::susee_config::{EntryPoint, SuSeeConfig};
+    use crate::core::susee_types::OutputFormat;
 
     fn make_def(entry: &str) -> SuSeeConfig {
         SuSeeConfig {
@@ -51,12 +52,12 @@ mod tests {
                 export_path: ".".to_string(),
                 format: Some(vec![OutputFormat::Esm]),
                 tsconfig_file_path: None,
-                warning: Some(false),
+                minify: Some(false),
+                check_anonymous: Some(false),
+                check_default_exports: Some(false),
             }],
             out_dir: Some("dist".to_string()),
             allow_update_package_json: Some(false),
-            minify: Some(false),
-            check: Some(false),
         }
     }
 
@@ -75,8 +76,6 @@ mod tests {
             entry_points: vec![],
             out_dir: Some("dist".to_string()),
             allow_update_package_json: Some(false),
-            minify: Some(false),
-            check: Some(false),
         };
         let result = susee_build(&config);
         assert!(result.is_err());

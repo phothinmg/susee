@@ -19,11 +19,9 @@
 
 use super::susee_compiler::{CompilerParams, susee_compiler};
 use crate::core::susee_bundler::bundler;
-use crate::core::susee_config::{
-    BuildEntryPoint, BuildOptions, OutputFormat, get_compiler_options,
-};
+use crate::core::susee_config::{BuildEntryPoint, BuildOptions, get_compiler_options};
 use crate::core::susee_hooks::minify_js;
-use crate::core::susee_types::ProjectType;
+use crate::core::susee_types::{OutputFormat, ProjectType};
 use crate::core::susee_utils::write_file;
 use std::path::{Path, PathBuf};
 
@@ -81,7 +79,12 @@ impl Compiler {
             return Ok(cached.clone());
         }
         let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-        let bundle_result = bundler(&point.entry, &cwd, self.object.check)?;
+        let bundle_result = bundler(
+            &point.entry,
+            &cwd,
+            Some(point.check_default_exports),
+            Some(point.check_anonymous),
+        )?;
         let result = BundleEntryResult {
             code: bundle_result.bundled_code,
             project_type: bundle_result.project_type,
@@ -98,7 +101,6 @@ impl Compiler {
         &mut self,
         point: &BuildEntryPoint,
         format: OutputFormat,
-        temp_dir: &str,
     ) -> std::io::Result<()> {
         #[allow(unused_variables)]
         let is_main = point.is_main();
@@ -118,8 +120,6 @@ impl Compiler {
             file_name: &point.entry,
             compiler_options: &compiler_options,
             is_jsx,
-            temp_dir,
-            export_path: point.export_path.to_string(),
             project_type: bundle_entry_result.project_type,
         })
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
@@ -147,7 +147,7 @@ impl Compiler {
 
         // 5. Minify — when `BuildOptions::minify` is enabled, run the
         //    oxc minifier post-process on the emitted JS before writing.
-        if self.object.minify {
+        if point.minify {
             compiled_code = minify_js(&compiled_code, format, &point.entry);
         }
 
@@ -201,8 +201,8 @@ impl Compiler {
     ///
     /// Mirrors the `compile()` method of the TS `Compiler` class.
     pub fn compile(&mut self) -> std::io::Result<()> {
-        let temp_dir = ".susee_temp";
-        std::fs::create_dir_all(temp_dir).ok();
+        // let temp_dir = ".susee_temp";
+        // std::fs::create_dir_all(temp_dir).ok();
         clear_folder(&self.object.out_dir)?;
         // Iterate by index so we can borrow `self.object` for the entry
         // point while borrowing `self` mutably for `compile_format`. We
@@ -219,13 +219,12 @@ impl Compiler {
             // conflict without cloning the plugin list.
             let point = std::mem::take(&mut self.object.build_entry_points[idx]);
             for format in &formats {
-                self.compile_format(&point, *format, temp_dir)?;
+                self.compile_format(&point, *format)?;
             }
             // Restore the entry point (its plugins are untouched by
             // `compile_format`, which only reads them).
             self.object.build_entry_points[idx] = point;
         }
-        std::fs::remove_dir_all(temp_dir).ok();
         Ok(())
     }
 }
@@ -615,8 +614,6 @@ mod tests {
             build_entry_points: vec![],
             update_package: false,
             out_dir: "dist".to_string(),
-            minify: false,
-            check: false,
         };
         let compiler = Compiler::new(opts);
         assert!(compiler.bundled_cache.is_empty());
