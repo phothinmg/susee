@@ -210,7 +210,7 @@ mod tests {
         .unwrap();
         fs::write(
             dir.path().join("greeter.ts"),
-            "export const greet = (): string => 'hello';\n",
+            "export const greet: () => string = (): string => 'hello';\n",
         )
         .unwrap();
         dir
@@ -250,7 +250,7 @@ mod tests {
         let dir = tempdir().unwrap();
         fs::write(
             dir.path().join("index.ts"),
-            "export const x = 1;\n\n;\nexport const y = 2;\n",
+            "export const x: number = 1;\n\n;\nexport const y: number = 2;\n",
         )
         .unwrap();
         let result = bundler("index.ts", dir.path(), Some(false), Some(false)).unwrap();
@@ -272,10 +272,10 @@ mod tests {
         .unwrap();
         fs::write(
             dir.path().join("greeter.js"),
-            "export const greet = () => 'hello';\n",
+            "/** @returns {string} */\nexport const greet = () => 'hello';\n",
         )
         .unwrap();
-        let result = bundler("index.ts", dir.path(), Some(false), Some(false)).unwrap();
+        let result = bundler("index.js", dir.path(), Some(false), Some(false)).unwrap();
         assert_eq!(result.project_type, ProjectType::JS);
     }
 

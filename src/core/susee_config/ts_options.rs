@@ -1,3 +1,15 @@
+//! TypeScript compiler options (`tsconfig.json`) parsing.
+//!
+//! Mirrors the subset of `tsconfig.json` fields that SuSee needs:
+//! `module`, `target`, `jsx`, `strict`, etc. The [`CompilerOptions`] struct
+//! is the normalized form; [`CompilerOptionsBuilder`] provides a fluent API
+//! for overriding individual fields.
+//!
+//! [`get_ts_config_path`] searches for `tsconfig.json` in the current
+//! directory. [`read_tsconfig`] reads and parses it (with JSONC comment
+//! stripping). [`get_compiler_options`] combines both and returns a
+//! [`CompilerOptionsBuilder`] ready for the compiler.
+
 // #![allow(dead_code)]
 use std::path::{Path, PathBuf};
 

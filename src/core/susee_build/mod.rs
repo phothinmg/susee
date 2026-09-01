@@ -1,8 +1,18 @@
+//! Build orchestration — the top-level entry point for `susee build`.
+//!
+//! [`susee_build`] takes a normalized [`SuSeeConfig`], generates
+//! [`BuildOptions`], creates a [`Compiler`], and runs [`Compiler::compile`].
+//!
+//! [`build`] is the convenience wrapper used by the CLI and napi binding:
+//! when a config is provided it is used directly; otherwise the config is
+//! loaded from `susee.config.jsonc` (or `susee.config.json`) in the current
+//! directory. If no config file is found, an error is printed and the
+//! process exits with code 1.
+
 use crate::core::susee_compiler::Compiler;
 use crate::core::susee_config::{
     SuSeeConfig, generate_build_options, get_susee_config_path, read_config_file,
 };
-use std::fs;
 
 pub fn susee_build(config: &SuSeeConfig) -> Result<(), String> {
     let build_options = generate_build_options(config)?;
@@ -25,15 +35,16 @@ pub fn build(config: Option<&SuSeeConfig>) {
             std::process::exit(1);
         }
     } else {
-        let config_path = get_susee_config_path().expect("");
-        if fs::exists(&config_path).is_ok() {
-            let config_options = read_config_file(&config_path).expect("");
-            if let Err(e) = susee_build(&config_options) {
-                eprintln!("[Error] : {e}");
-                std::process::exit(1);
-            }
-        } else {
+        let Some(config_path) = get_susee_config_path() else {
             eprintln!("[Error] : no config file found and no config provided");
+            std::process::exit(1);
+        };
+        let config_options = read_config_file(&config_path).unwrap_or_else(|e| {
+            eprintln!("[Error] : failed to read config: {e}");
+            std::process::exit(1);
+        });
+        if let Err(e) = susee_build(&config_options) {
+            eprintln!("[Error] : {e}");
             std::process::exit(1);
         }
     }

@@ -1,3 +1,12 @@
+//! CLI utility functions — argument parsing, help text, and error handling.
+//!
+//! Provides [`parse_args`] for parsing `susee build` options from CLI
+//! arguments, [`print_help`] for the help screen, and [`fail`] for
+//! printing an error and exiting.
+//!
+//! [`CliOptions`] and [`CliBuildOptions`] are the intermediate structs
+//! produced by [`parse_args`] and consumed by [`get_default_options`].
+
 use crate::core::susee_types::OutputFormat;
 use std::path::Path;
 use std::process::exit;

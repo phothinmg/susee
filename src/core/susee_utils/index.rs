@@ -1,26 +1,23 @@
 //! Share Utils module for susee
 //!
 
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use oxc::ast::ast::{BindingPattern, Declaration, Program, Statement};
 use oxc::parser::Parser;
-use oxc::semantic::SemanticBuilder;
-use oxc::span::{GetSpan, SourceType, Span};
-use oxc::syntax::symbol::SymbolId;
+use oxc::span::SourceType;
 use oxc::{allocator::Allocator, ast_visit::Visit};
 
-use crate::core::susee_types::{
-    DepsFile, FileInfo, JsxDetector, ModuleType, ModuleTypeDetector, SpecifierSpanCollector,
-    ValidExts,
-};
+use crate::core::susee_types::{DepsFile, JsxDetector, ModuleType, ModuleTypeDetector, ValidExts};
 
-/// Replace the `.json` extension with `.ts` in a file path.
+/// Replace the trailing `.json` extension with `.ts` in a file path.
+///
+/// Only the *extension* is replaced — if the path contains `.json` in a
+/// directory name (e.g. `foo.json/bar.json`), only the final `.json` is
+/// changed, producing `foo.json/bar.ts`.
 pub fn json_ext_to_ts(file: &str) -> String {
-    if Path::new(file).extension().is_some_and(|ext| ext == "json") {
-        file.replace(".json", ".ts")
+    if let Some(stem) = file.strip_suffix(".json") {
+        format!("{stem}.ts")
     } else {
         file.to_string()
     }
@@ -111,224 +108,14 @@ pub fn read_file(root: &Path, rel_path: &str) -> std::io::Result<(String, usize)
 }
 
 // ---------------------------------------------------------------------------
-// Susee Hooks
-// ---------------------------------------------------------------------------
-
-/// Parse a file and collect all bindings declared in the root (module-top-
-/// level) scope using oxc's semantic analyzer.
-pub fn collect_root_bindings(dep: &DepsFile) -> FileInfo {
-    let ts_file = json_ext_to_ts(&dep.file);
-    let path = std::path::Path::new(&ts_file);
-    let source_type = SourceType::from_path(path).unwrap_or_default();
-    let allocator = Allocator::default();
-    let parser_return = Parser::new(&allocator, &dep.content, source_type).parse();
-    let program = &parser_return.program;
-
-    // Build semantic analysis (we need scopes + symbols).
-    let semantic_result = SemanticBuilder::new().with_build_nodes(true).build(program);
-
-    let scoping = semantic_result.semantic.scoping();
-    let root_scope_id = scoping.root_scope_id();
-
-    let mut root_symbols = Vec::new();
-    for symbol_id in scoping.iter_bindings_in(root_scope_id) {
-        let name = scoping.symbol_name(symbol_id).to_string();
-        root_symbols.push((name, symbol_id));
-    }
-
-    FileInfo { root_symbols }
-}
-
-// ---------------------------------------------------------------------------
-// Internal: applying renames to source text
-// ---------------------------------------------------------------------------
-
-/// Apply a set of renames to the source content of a file.
-///
-/// `rename_map` maps original top-level names to their new unique names.
-///
-/// The approach:
-/// 1. Parse the file and collect all byte-offset spans that need to be
-///    replaced — both declaration sites and reference sites.
-/// 2. Sort spans in reverse order (right to left) so that replacements don't
-///    invalidate earlier offsets.
-/// 3. Replace each span's text with the new name.
-pub fn apply_renames(file: &str, content: &str, rename_map: &HashMap<String, String>) -> String {
-    let ts_file = json_ext_to_ts(file);
-    let path = std::path::Path::new(&ts_file);
-    let source_type = SourceType::from_path(path).unwrap_or_default();
-    let allocator = Allocator::default();
-    let parser_return = Parser::new(&allocator, content, source_type).parse();
-    let program = &parser_return.program;
-
-    // Build semantic to get symbol resolution for references.
-    let semantic_result = SemanticBuilder::new().with_build_nodes(true).build(program);
-    let scoping = semantic_result.semantic.scoping();
-    let root_scope_id = scoping.root_scope_id();
-
-    // Build a set of symbol IDs that need renaming (root-scope symbols whose
-    // name is in rename_map).
-    let mut target_symbols: HashMap<SymbolId, String> = HashMap::new();
-    for symbol_id in scoping.iter_bindings_in(root_scope_id) {
-        let name = scoping.symbol_name(symbol_id);
-        if let Some(new_name) = rename_map.get(name) {
-            target_symbols.insert(symbol_id, new_name.clone());
-        }
-    }
-
-    if target_symbols.is_empty() {
-        return content.to_string();
-    }
-
-    // Collect all spans to replace.
-    let mut spans: Vec<(Span, String)> = Vec::new();
-
-    // 1. Declaration spans — from symbol spans (the binding identifier).
-    for (&symbol_id, new_name) in &target_symbols {
-        let span = scoping.symbol_span(symbol_id);
-        spans.push((span, new_name.clone()));
-    }
-
-    // 2. Reference spans — from resolved references to target symbols.
-    for symbol_id in scoping.symbol_ids() {
-        if let Some(new_name) = target_symbols.get(&symbol_id) {
-            for reference_id in scoping.get_resolved_reference_ids(symbol_id) {
-                let reference = scoping.get_reference(*reference_id);
-                let node_id = reference.node_id();
-                let node = semantic_result.semantic.nodes().get_node(node_id);
-                let span = node.kind().span();
-                spans.push((span, new_name.clone()));
-            }
-        }
-    }
-
-    // 3. Import/export specifier spans that bind or reference the renamed
-    //    names. We walk the AST to find these, because import/export
-    //    specifiers create bindings that might not be captured by the symbol
-    //    table in the same way (especially re-exports).
-    let mut specifier_collector = SpecifierSpanCollector {
-        rename_map,
-        spans: &mut spans,
-    };
-    specifier_collector.visit_program(program);
-
-    // Sort spans by start offset descending so we can replace right-to-left.
-    spans.sort_by_key(|(span, _)| std::cmp::Reverse(span.start));
-
-    // Remove duplicates (same span might be collected from both the symbol
-    // span and the reference span for the declaration node).
-    spans.dedup_by(|a, b| a.0 == b.0);
-
-    // Apply replacements.
-    let mut result = content.to_string();
-    for (span, new_name) in &spans {
-        let start = span.start as usize;
-        let end = span.end as usize;
-        if start <= result.len() && end <= result.len() && start <= end {
-            result.replace_range(start..end, new_name);
-        }
-    }
-
-    result
-}
-
-// ---------------------------------------------------------------------------
 // Internal: collecting top-level declaration names (AST-level fallback)
 // ---------------------------------------------------------------------------
-
-/// Collect top-level declaration names directly from the AST.
-///
-/// This is used as a fallback / complement to semantic analysis for
-/// detecting names. It looks at the direct children of the Program body
-/// and extracts names from:
-/// - `const/let/var x = ...` (all declarators)
-/// - `function foo() {}`
-/// - `class Foo {}`
-/// - `type Foo = ...`
-/// - `interface Foo {}`
-/// - `enum Foo {}`
-///
-/// This function is currently unused — semantic analysis covers all cases
-/// more robustly — but is kept for reference and future use.
-pub fn collect_top_level_declaration_names(program: &Program<'_>) -> Vec<(String, Span)> {
-    let mut names = Vec::new();
-    for stmt in &program.body {
-        match stmt {
-            Statement::VariableDeclaration(var_decl) => {
-                for declarator in &var_decl.declarations {
-                    if let BindingPattern::BindingIdentifier(id) = &declarator.id {
-                        names.push((id.name.as_str().to_string(), id.span));
-                    }
-                }
-            }
-            Statement::FunctionDeclaration(func) => {
-                if let Some(id) = &func.id {
-                    names.push((id.name.as_str().to_string(), id.span));
-                }
-            }
-            Statement::ClassDeclaration(cls) => {
-                if let Some(id) = &cls.id {
-                    names.push((id.name.as_str().to_string(), id.span));
-                }
-            }
-            Statement::TSTypeAliasDeclaration(type_alias) => {
-                names.push((type_alias.id.name.as_str().to_string(), type_alias.id.span));
-            }
-            Statement::TSInterfaceDeclaration(iface) => {
-                names.push((iface.id.name.as_str().to_string(), iface.id.span));
-            }
-            Statement::TSEnumDeclaration(enum_decl) => {
-                names.push((enum_decl.id.name.as_str().to_string(), enum_decl.id.span));
-            }
-            // `export const/function/class/type/interface/enum …` — peel off
-            // the `export` wrapper and collect the inner declaration's name(s).
-            Statement::ExportDeclaration(export_decl) => {
-                collect_declaration_names(&export_decl.declaration, &mut names);
-            }
-            _ => {}
-        }
-    }
-    names
-}
-
-/// Collect declaration names from a `Declaration` (the inner part of an
-/// `export <Declaration>` statement).
-fn collect_declaration_names(decl: &Declaration<'_>, names: &mut Vec<(String, Span)>) {
-    match decl {
-        Declaration::VariableDeclaration(var_decl) => {
-            for declarator in &var_decl.declarations {
-                if let BindingPattern::BindingIdentifier(id) = &declarator.id {
-                    names.push((id.name.as_str().to_string(), id.span));
-                }
-            }
-        }
-        Declaration::FunctionDeclaration(func) => {
-            if let Some(id) = &func.id {
-                names.push((id.name.as_str().to_string(), id.span));
-            }
-        }
-        Declaration::ClassDeclaration(cls) => {
-            if let Some(id) = &cls.id {
-                names.push((id.name.as_str().to_string(), id.span));
-            }
-        }
-        Declaration::TSTypeAliasDeclaration(type_alias) => {
-            names.push((type_alias.id.name.as_str().to_string(), type_alias.id.span));
-        }
-        Declaration::TSInterfaceDeclaration(iface) => {
-            names.push((iface.id.name.as_str().to_string(), iface.id.span));
-        }
-        Declaration::TSEnumDeclaration(enum_decl) => {
-            names.push((enum_decl.id.name.as_str().to_string(), enum_decl.id.span));
-        }
-        _ => {}
-    }
-}
 
 /// Creates a `DepsFile` for use in tests, from the given file path and content.
 ///
 /// The resulting `DepsFile` defaults to ESM module type, `.ts` file extension,
 /// with JSX and entry flags set to `false`.
+#[allow(dead_code)]
 pub fn make_dep(file: &str, content: &str) -> DepsFile {
     DepsFile {
         file: file.to_string(),
@@ -368,6 +155,19 @@ mod tests {
         // A file literally named `foo.json.ts` should NOT be changed to
         // `foo.ts.ts` — only a trailing `.json` extension counts.
         assert_eq!(json_ext_to_ts("foo.json.ts"), "foo.json.ts");
+    }
+
+    #[test]
+    fn json_ext_to_ts_replaces_only_trailing_extension() {
+        // Directory named `foo.json` should NOT be touched — only the
+        // trailing `.json` extension of `bar.json` is replaced.
+        assert_eq!(json_ext_to_ts("foo.json/bar.json"), "foo.json/bar.ts");
+    }
+
+    #[test]
+    fn json_ext_to_ts_no_double_replace() {
+        // `data.json.json` → only the last `.json` is the extension.
+        assert_eq!(json_ext_to_ts("data.json.json"), "data.json.ts");
     }
 
     // ---------------------------------------------------------------------------

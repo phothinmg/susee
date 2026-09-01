@@ -5,11 +5,9 @@
 			"entry": "__local__/cjs/index.cjs",
 			"exportPath": ".",
 			"format": ["esm", "commonjs"],
-			"tsconfigFilePath": null,
-			"warning": false
+			"tsconfigFilePath": null
 		}
 	],
 	"outDir": "test_out",
-	"allowUpdatePackageJson": false,
-	"minify":true
+	"allowUpdatePackageJson": false
 }

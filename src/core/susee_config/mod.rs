@@ -1,3 +1,8 @@
+//! Configuration module — types and parsing for `susee.config.jsonc`.
+//!
+//! Re-exports the public config types and functions from [`config_types`]
+//! and [`ts_options`].
+
 mod config_types;
 mod ts_options;
 // susee config

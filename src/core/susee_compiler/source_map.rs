@@ -1,3 +1,18 @@
+//! Source map generation utilities.
+//!
+//! Provides [`sm_commonjs`] and [`sm_esm`] for generating browser-ready
+//! source map JSON strings from parsed JavaScript/TypeScript source.
+//!
+//! Both functions parse the input with oxc, then re-emit via [`Codegen`]
+//! with `source_map_path` enabled. The resulting JSON string is returned
+//! directly, ready to be written to a `.map` file.
+//!
+//! # Fallback
+//!
+//! [`SourceType::from_path`] uses [`unwrap_or_default()`] so unusual file
+//! extensions do not panic — the default source type (ESM script) is used
+//! instead.
+
 use oxc::allocator::Allocator;
 use oxc::codegen::{Codegen, CodegenOptions};
 use oxc::parser::Parser;
@@ -8,7 +23,7 @@ pub fn sm_commonjs(source_text: &str, file_name: &str) -> Option<String> {
     let allocator = Allocator::default();
     let source_path = Path::new(file_name);
     let source_type = SourceType::from_path(source_path)
-        .unwrap()
+        .unwrap_or_default()
         .with_module(false);
     let parser = Parser::new(&allocator, source_text, source_type);
     let parsed = parser.parse();
@@ -38,7 +53,7 @@ pub fn sm_esm(source_text: &str, file_name: &str) -> Option<String> {
     let allocator = Allocator::default();
     let source_path = Path::new(file_name);
     let source_type = SourceType::from_path(source_path)
-        .unwrap()
+        .unwrap_or_default()
         .with_module(true);
     let parser = Parser::new(&allocator, source_text, source_type);
     let parsed = parser.parse();
@@ -87,6 +102,22 @@ mod tests {
     #[test]
     fn sm_esm_does_not_panic_on_empty_input() {
         let result = sm_esm("", "empty.mjs");
+        let _ = result;
+    }
+
+    #[test]
+    fn sm_commonjs_does_not_panic_on_unusual_extension() {
+        // Bug fix: `SourceType::from_path().unwrap()` panicked on unusual
+        // extensions. Now uses `unwrap_or_default()`.
+        let result = sm_commonjs("const x = 1;", "file.unknownext");
+        let _ = result;
+    }
+
+    #[test]
+    fn sm_esm_does_not_panic_on_unusual_extension() {
+        // Bug fix: `SourceType::from_path().unwrap()` panicked on unusual
+        // extensions. Now uses `unwrap_or_default()`.
+        let result = sm_esm("const x = 1;", "file.unknownext");
         let _ = result;
     }
 }

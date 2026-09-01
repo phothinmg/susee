@@ -592,22 +592,94 @@ fn assemble_header(usage: &HelperUsage) -> String {
 }
 
 /// Recursively check whether an [`Expression`] contains an `await`.
+///
+/// This walks the AST structure of the expression rather than doing a
+/// text-based scan, so string literals like `"await foo"` or template
+/// literals containing the word `await` are NOT false-positives.
 fn expression_has_await(expr: &Expression<'_>) -> bool {
     match expr {
-        Expression::AwaitExpression(_) => true,
+        Expression::AwaitExpression(await_expr) => {
+            // Check the await's argument too (e.g. `await foo()` → the
+            // `foo()` part is already covered by returning true, but
+            // nested awaits in the argument are also caught).
+            true || expression_has_await(&await_expr.argument)
+        }
         Expression::CallExpression(call) => {
             expression_has_await(&call.callee)
                 || call.arguments.iter().any(|arg| argument_has_await(arg))
         }
-        _ => {
-            // Fall back to codegen text check for any expression variant we
-            // don't explicitly handle — `await` is a reserved word that only
-            // appears as an AwaitExpression in the AST, so a textual scan is
-            // safe here.
-            let mut sub = Codegen::new();
-            sub.print_expression(expr);
-            sub.into_source_text().contains("await ")
+        Expression::NewExpression(new_expr) => {
+            expression_has_await(&new_expr.callee)
+                || new_expr.arguments.iter().any(|arg| argument_has_await(arg))
         }
+        Expression::BinaryExpression(bin) => {
+            expression_has_await(&bin.left) || expression_has_await(&bin.right)
+        }
+        Expression::LogicalExpression(log) => {
+            expression_has_await(&log.left) || expression_has_await(&log.right)
+        }
+        Expression::AssignmentExpression(assign) => {
+            // Only the right side can contain await (assignment target
+            // is a pattern, not an expression with await).
+            expression_has_await(&assign.right)
+        }
+        Expression::ConditionalExpression(cond) => {
+            expression_has_await(&cond.test)
+                || expression_has_await(&cond.consequent)
+                || expression_has_await(&cond.alternate)
+        }
+        Expression::SequenceExpression(seq) => seq.expressions.iter().any(expression_has_await),
+        Expression::ArrayExpression(arr) => {
+            arr.elements.iter().any(|el| match el {
+                oxc::ast::ast::ArrayExpressionElement::SpreadElement(spread) => {
+                    expression_has_await(&spread.argument)
+                }
+                oxc::ast::ast::ArrayExpressionElement::Elision(_) => false,
+                // INHERIT(Expression) — the element IS an expression.
+                _ => el.as_expression().is_some_and(expression_has_await),
+            })
+        }
+        Expression::ObjectExpression(obj) => obj.properties.iter().any(|prop| match prop {
+            oxc::ast::ast::ObjectPropertyKind::ObjectProperty(p) => expression_has_await(&p.value),
+            oxc::ast::ast::ObjectPropertyKind::SpreadProperty(spread) => {
+                expression_has_await(&spread.argument)
+            }
+        }),
+        Expression::TemplateLiteral(tpl) => tpl.expressions.iter().any(expression_has_await),
+        Expression::TaggedTemplateExpression(tagged) => {
+            expression_has_await(&tagged.tag)
+                || tagged.quasi.expressions.iter().any(expression_has_await)
+        }
+        Expression::ChainExpression(chain) => {
+            // ChainExpression wraps optional call/member access.
+            match &chain.expression {
+                oxc::ast::ast::ChainElement::CallExpression(call) => {
+                    expression_has_await(&call.callee)
+                        || call.arguments.iter().any(|arg| argument_has_await(arg))
+                }
+                oxc::ast::ast::ChainElement::TSNonNullExpression(ts_nn) => {
+                    expression_has_await(&ts_nn.expression)
+                }
+                // INHERIT(MemberExpression) — static or computed member.
+                _ => false,
+            }
+        }
+        Expression::ParenthesizedExpression(paren) => expression_has_await(&paren.expression),
+        Expression::TSAsExpression(ts_as) => expression_has_await(&ts_as.expression),
+        Expression::TSSatisfiesExpression(ts_sat) => expression_has_await(&ts_sat.expression),
+        Expression::TSTypeAssertion(ts_assert) => expression_has_await(&ts_assert.expression),
+        Expression::TSNonNullExpression(ts_nonnull) => expression_has_await(&ts_nonnull.expression),
+        Expression::TSInstantiationExpression(ts_inst) => expression_has_await(&ts_inst.expression),
+        Expression::YieldExpression(yield_expr) => yield_expr
+            .argument
+            .as_ref()
+            .is_some_and(|arg| expression_has_await(arg)),
+        // MemberExpression (static/computed), literals, identifiers, `this`,
+        // `super`, arrow functions, function expressions, class expressions,
+        // import expressions, import.meta, regex, bigint, boolean, null —
+        // none of these directly contain `await` (their sub-expressions are
+        // handled by the recursive cases above for the ones that matter).
+        _ => false,
     }
 }
 
@@ -1433,5 +1505,60 @@ mod tests {
     fn emit_cjs_no_import_meta_shim() {
         let out = emit_cjs("export const x = 1;", SourceType::mjs(), None);
         assert!(!out.contains("__import_meta"), "got: {out}");
+    }
+
+    // ─── expression_has_await ──────────────────────────────────────────
+
+    fn parse_expression_has_await(src: &str) -> bool {
+        let allocator = Allocator::default();
+        let program = Parser::new(&allocator, src, SourceType::mjs())
+            .parse()
+            .program;
+        program_has_top_level_await(&program)
+    }
+
+    #[test]
+    fn expression_has_await_detects_real_await() {
+        assert!(parse_expression_has_await("await foo();"));
+        assert!(parse_expression_has_await("const x = await foo();"));
+    }
+
+    #[test]
+    fn expression_has_await_string_literal_no_false_positive() {
+        // A string literal containing "await " should NOT be detected.
+        assert!(!parse_expression_has_await("const s = 'await foo';"));
+        assert!(!parse_expression_has_await(
+            "const s = \"await something\";"
+        ));
+    }
+
+    #[test]
+    fn expression_has_await_template_literal_no_false_positive() {
+        // A template literal containing "await" in its text portion.
+        assert!(!parse_expression_has_await("const s = `await foo`;"));
+    }
+
+    #[test]
+    fn expression_has_await_template_literal_with_expression_detects() {
+        // A template literal with an await expression inside ${}.
+        assert!(parse_expression_has_await("const s = `${await foo()}`;"));
+    }
+
+    #[test]
+    fn expression_has_await_nested_in_binary() {
+        assert!(parse_expression_has_await("const x = 1 + await foo();"));
+    }
+
+    #[test]
+    fn expression_has_await_nested_in_conditional() {
+        assert!(parse_expression_has_await(
+            "const x = cond ? await foo() : bar();"
+        ));
+    }
+
+    #[test]
+    fn expression_has_await_no_false_positive_on_property_name() {
+        // `obj.await` — `await` is a property name, not an await expression.
+        assert!(!parse_expression_has_await("obj.await;"));
     }
 }

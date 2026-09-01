@@ -42,6 +42,7 @@ pub mod sigil {
     /// Named default export (`d`efault).
     pub const DEFAULT: &str = "d";
     /// Cross-file duplicate top-level declaration (`u`nique).
+    #[allow(dead_code)]
     pub const DUPLICATE: &str = "u";
     /// JSON module default export (`j`son).
     #[allow(dead_code)]

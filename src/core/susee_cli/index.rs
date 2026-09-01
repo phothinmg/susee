@@ -1,3 +1,21 @@
+//! CLI entry points for the `susee` command.
+//!
+//! Mirrors `index.ts` from the TypeScript implementation.
+//!
+//! # Subcommands
+//!
+//! | Command         | Description                              |
+//!|-----------------|------------------------------------------|
+//!| `susee`         | Run build with config from cwd.          |
+//!| `susee build`   | Run build with explicit entry/options.   |
+//!| `susee init`    | Create a `susee.config.jsonc` template.  |
+//!| `susee -v`      | Print version.                           |
+//!| `susee -h`      | Print help.                              |
+//!
+//! [`susee_cli_build`] reads `std::env::args()` (for the standalone binary);
+//! [`susee_cli_build_with_args`] accepts an explicit `Vec<String>` (for the
+//! napi binding, where `process.argv` includes the Node executable).
+
 use std::path::PathBuf;
 
 use super::cli_options::cli_compiler_build;
@@ -36,6 +54,10 @@ fn set_profile_enabled(enabled: bool) {
 
 /// Template for `susee init`, mirroring `tsFileText` / `jsFileText` from
 /// `index.ts` but in JSON form (since the Rust CLI reads JSON configs).
+///
+/// The field names match the Rust `SuSeeConfig` / `EntryPoint` structs:
+/// - Per-entry: `minify`, `checkAnonymous`, `checkDefaultExports`
+/// - Top-level: `entryPoints`, `outDir`, `allowUpdatePackageJson`
 const CONFIG_TEMPLATE: &str = r#"{
   // Entry points to bundle
   "entryPoints": [
@@ -44,18 +66,15 @@ const CONFIG_TEMPLATE: &str = r#"{
       "exportPath": ".",
       "format": ["esm", "commonjs"],
       "tsconfigFilePath": null,
-      "warning": false
+      "minify": true,
+      "checkDefaultExports": false,
+      "checkAnonymous": false
     }
   ],
   // Output directory (default: "dist")
   "outDir": "dist",
   // Update package.json fields from build output (default: false)
-  "allowUpdatePackageJson": false,
-  // Minify output JS with the oxc minifier (default: false)
-  "minify": true,
-  // Run susee_check diagnostics after generating the dependency tree and
-  // exit with code 1 if any issue is found (default: true)
-  "check": true
+  "allowUpdatePackageJson": false
 }
 "#;
 

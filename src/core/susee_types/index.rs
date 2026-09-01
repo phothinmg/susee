@@ -2,16 +2,9 @@
 
 use oxc::ast::ast::Expression;
 use oxc::ast_visit::Visit;
-use oxc::syntax::symbol::SymbolId;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-use oxc::ast::ast::{
-    ExportDefaultDeclarationKind, ExportSpecifier, ImportDeclarationSpecifier, ModuleExportName,
-};
 
 use napi_derive::napi;
-use oxc::span::Span;
 
 /// File extensions considered valid for JS/TS/JSON modules.
 ///
@@ -136,16 +129,7 @@ pub enum ProjectType {
     /// A project mixing both TypeScript and JavaScript.
     MIXED,
 }
-impl ProjectType {
-    /// Return the project type as a lowercase string (e.g. `ts`, `js`, `mixed`).
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::JS => "js",
-            Self::TS => "ts",
-            Self::MIXED => "mixed",
-        }
-    }
-}
+
 /// A single dependency file entry in the dependency tree.
 ///
 /// All JSON fields use `snake_case` (e.g. `module_type`, `file_ext`,
@@ -186,23 +170,6 @@ pub struct DependenciesTree {
     /// Type of the project
     pub project_type: ProjectType,
 }
-
-/// Holds naming metadata used when resolving/renaming identifiers
-/// (such as imports or exports) during transformation.
-#[derive(Debug, Clone)]
-pub struct NamesSet {
-    /// The base (original) name of the identifier.
-    pub base: String,
-    /// The source file associated with the identifier.
-    pub file: String,
-    /// The computed replacement name, if any.
-    pub new_name: String,
-    /// Whether this name set has already been edited/renamed.
-    pub is_ed: bool,
-}
-
-/// A collection of [`NamesSet`] entries.
-pub type NamesSets = Vec<NamesSet>;
 
 /// Detects the module system used by a source file by walking its AST.
 ///
@@ -331,156 +298,6 @@ pub struct DepReturns {
 // ---------------------------------------------------------------------------
 // susee_hooks
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Type aliases for readability
-// ---------------------------------------------------------------------------
-
-/// Maps a top-level declaration name to the list of (file_index, symbol_ids)
-/// that declare it at root scope.
-pub type NameToFileMap = HashMap<String, Vec<(usize, Vec<SymbolId>)>>;
-// ---------------------------------------------------------------------------
-// Internal: collecting root-scope bindings
-// ---------------------------------------------------------------------------
-
-/// Information collected from a single file's semantic analysis.
-#[allow(dead_code)]
-pub struct FileInfo {
-    /// (name, symbol_id) for each binding in the root scope.
-    pub root_symbols: Vec<(String, SymbolId)>,
-}
-
-// ---------------------------------------------------------------------------
-// Internal: AST visitor for import/export specifier spans
-// ---------------------------------------------------------------------------
-
-/// Collect spans of import/export specifiers whose local or imported name
-/// matches a name in the rename map.
-///
-/// This handles:
-/// - `import { foo } from "mod"` — rename the `foo` specifier (both imported
-///   and local spans, which are the same in this case).
-/// - `import { foo as bar } from "mod"` — if `bar` is in the rename map,
-///   rename the local binding.
-/// - `import foo from "mod"` — if `foo` is in the rename map.
-/// - `import * as foo from "mod"` — if `foo` is in the rename map.
-/// - `export { foo }` — if `foo` is in the rename map.
-/// - `export { foo as bar }` — if `foo` (the local) is in the rename map.
-pub struct SpecifierSpanCollector<'a, 'b> {
-    /// Map from the original (old) name to the replacement (new) name.
-    pub rename_map: &'a HashMap<String, String>,
-    /// Collected `(span, new_name)` pairs for specifiers that need renaming.
-    pub spans: &'b mut Vec<(Span, String)>,
-}
-
-impl<'a, 'b> SpecifierSpanCollector<'a, 'b> {
-    fn check_and_add(&mut self, name: &str, span: Span) {
-        if let Some(new_name) = self.rename_map.get(name) {
-            self.spans.push((span, new_name.clone()));
-        }
-    }
-}
-
-impl<'a, 'b, 'ast> Visit<'ast> for SpecifierSpanCollector<'a, 'b> {
-    fn visit_import_declaration(&mut self, it: &oxc::ast::ast::ImportDeclaration<'ast>) {
-        if let Some(specifiers) = &it.specifiers {
-            for spec in specifiers {
-                match spec {
-                    ImportDeclarationSpecifier::ImportSpecifier(imp_spec) => {
-                        // `import { imported as local } from "mod"`
-                        // The local binding is what we need to rename.
-                        let local_name = imp_spec.local.name.as_str().to_string();
-                        self.check_and_add(&local_name, imp_spec.local.span);
-                    }
-                    ImportDeclarationSpecifier::ImportDefaultSpecifier(def_spec) => {
-                        // `import foo from "mod"`
-                        let local_name = def_spec.local.name.as_str().to_string();
-                        self.check_and_add(&local_name, def_spec.local.span);
-                    }
-                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns_spec) => {
-                        // `import * as foo from "mod"`
-                        let local_name = ns_spec.local.name.as_str().to_string();
-                        self.check_and_add(&local_name, ns_spec.local.span);
-                    }
-                }
-            }
-        }
-    }
-
-    fn visit_export_named_declaration(&mut self, it: &oxc::ast::ast::ExportNamedDeclaration<'ast>) {
-        // `export { foo, bar }` or `export { foo as baz }`
-        for spec in &it.specifiers {
-            self.check_export_specifier(spec);
-        }
-    }
-
-    fn visit_export_from_declaration(&mut self, it: &oxc::ast::ast::ExportFromDeclaration<'ast>) {
-        // `export { foo } from "mod"` — these are re-exports; the local name
-        // is not a binding in this file, so we should only rename if the
-        // local name matches. In practice, re-exports of renamed symbols
-        // need the local (source) name updated.
-        for spec in &it.specifiers {
-            self.check_export_specifier(spec);
-        }
-    }
-
-    fn visit_export_declaration(&mut self, it: &oxc::ast::ast::ExportDeclaration<'ast>) {
-        // `export const foo = ...` / `export function foo() {}` etc.
-        // The declaration itself is already handled by the symbol span
-        // collection. But we need to handle the export wrapper if it
-        // introduces a new name. In oxc, `ExportDeclaration` wraps a
-        // `Declaration`, and the binding inside is already captured by
-        // semantic analysis. So we just walk children.
-        oxc::ast_visit::walk::walk_export_declaration(self, it);
-    }
-
-    fn visit_export_default_declaration(
-        &mut self,
-        it: &oxc::ast::ast::ExportDefaultDeclaration<'ast>,
-    ) {
-        // `export default function foo() {}` — `foo` is local, not exported
-        // by name. If it's in the rename map, rename it.
-        match &it.declaration {
-            ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
-                if let Some(id) = &func.id {
-                    let name = id.name.as_str().to_string();
-                    self.check_and_add(&name, id.span);
-                }
-            }
-            ExportDefaultDeclarationKind::ClassDeclaration(cls) => {
-                if let Some(id) = &cls.id {
-                    let name = id.name.as_str().to_string();
-                    self.check_and_add(&name, id.span);
-                }
-            }
-            ExportDefaultDeclarationKind::TSInterfaceDeclaration(iface) => {
-                let name = iface.id.name.as_str().to_string();
-                self.check_and_add(&name, iface.id.span);
-            }
-            _ => {}
-        }
-        oxc::ast_visit::walk::walk_export_default_declaration(self, it);
-    }
-}
-
-impl<'a, 'b> SpecifierSpanCollector<'a, 'b> {
-    fn check_export_specifier(&mut self, spec: &ExportSpecifier<'_>) {
-        // `export { local as exported }`
-        // `local` is the local binding name in this file.
-        // `exported` is the publicly exported name.
-        match &spec.local {
-            ModuleExportName::IdentifierReference(ident) => {
-                let name = ident.name.as_str().to_string();
-                self.check_and_add(&name, ident.span);
-            }
-            ModuleExportName::IdentifierName(ident) => {
-                let name = ident.name.as_str().to_string();
-                self.check_and_add(&name, ident.span);
-            }
-            ModuleExportName::StringLiteral(_) => {}
-        }
-    }
-}
 
 /// The module format used when emitting compiled output.
 ///
@@ -622,13 +439,6 @@ mod tests {
         assert_eq!(json, "\"ts\"");
         let parsed: ProjectType = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, ProjectType::TS);
-    }
-
-    #[test]
-    fn project_type_as_str() {
-        assert_eq!(ProjectType::TS.as_str(), "ts");
-        assert_eq!(ProjectType::JS.as_str(), "js");
-        assert_eq!(ProjectType::MIXED.as_str(), "mixed");
     }
 
     // -----------------------------------------------------------------------

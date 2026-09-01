@@ -1,3 +1,12 @@
+//! Colored console output utilities for SuSee.
+//!
+//! Provides [`error`], [`info`], and [`warning`] helpers that print
+//! formatted messages to stderr. [`error`] with `e = true` calls
+//! `std::process::exit(1)` after printing.
+//!
+//! [`build_time`] and [`bundle_time`] measure and print elapsed time
+//! for the build and bundle operations respectively.
+
 use colored::*;
 use std::time::Instant;
 

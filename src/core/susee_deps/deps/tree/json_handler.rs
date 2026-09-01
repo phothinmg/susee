@@ -109,15 +109,15 @@ fn json_module_name(file_key: &str, count: usize) -> String {
 /// Convert JSON content into an ESM module string.
 ///
 /// Mirrors `toJsonModuleCode` from `resolveJSON.ts`.
-fn to_json_module_code(var_name: &str, content: &str, file: &str) -> String {
-    let parsed: serde_json::Value = match serde_json::from_str(content) {
-        Ok(v) => v,
-        Err(_) => {
-            panic!("Invalid JSON syntax in dependency file: {file}");
-        }
-    };
-    let json_object = serde_json::to_string(&parsed).unwrap_or_default();
-    format!("const {var_name} = {json_object};\nexport default {var_name}")
+///
+/// Returns `None` if the JSON content is invalid, so the caller can log
+/// a diagnostic and skip the file instead of panicking.
+fn to_json_module_code(var_name: &str, content: &str, _file: &str) -> Option<String> {
+    let parsed: serde_json::Value = serde_json::from_str(content).ok()?;
+    let json_object = serde_json::to_string(&parsed).ok()?;
+    Some(format!(
+        "const {var_name} = {json_object};\nexport default {var_name}"
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -210,7 +210,15 @@ fn resolve_json_handler(deps: Vec<DepsFile>, state: &mut JsonState) -> Vec<DepsF
                 new_name: json_var_name.clone(),
             });
 
-            let content = to_json_module_code(&json_var_name, &dep.content, &dep.file);
+            let Some(content) = to_json_module_code(&json_var_name, &dep.content, &dep.file) else {
+                // Invalid JSON — log and pass the file through unchanged so
+                // the bundler can continue instead of panicking.
+                crate::core::susee_log::warning(&format!(
+                    "Invalid JSON syntax in dependency file: {}; skipping JSON module conversion",
+                    dep.file
+                ));
+                return dep;
+            };
             let bytes = content.len();
 
             DepsFile {
@@ -587,10 +595,14 @@ mod tests {
     }
 
     #[test]
-    fn invalid_json_panics() {
+    fn invalid_json_does_not_panic() {
+        // Bug fix: previously panicked on invalid JSON; now returns the
+        // file unchanged with a warning.
         let dep = make_json_dep("src/bad.json", "{invalid json}");
-        let result = std::panic::catch_unwind(|| json_handler(vec![dep]));
-        assert!(result.is_err());
+        let result = json_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        // File should be passed through unchanged (not converted to ESM).
+        assert_eq!(result[0].module_type, ModuleType::Json);
     }
 
     #[test]
@@ -609,7 +621,7 @@ mod tests {
 
     #[test]
     fn to_json_module_code_produces_valid_esm() {
-        let code = to_json_module_code("_jconfig$1", r#"{"a":1}"#, "config.json");
+        let code = to_json_module_code("_jconfig$1", r#"{"a":1}"#, "config.json").unwrap();
         assert!(code.contains(r#"const _jconfig$1 = {"a":1};"#));
         assert!(code.contains("export default _jconfig$1"));
     }
@@ -630,5 +642,23 @@ mod tests {
         let content = &result[0].content;
         assert!(content.contains("[1,2,3]"));
         assert_eq!(result[0].module_type, ModuleType::Esm);
+    }
+
+    #[test]
+    fn to_json_module_code_invalid_json_returns_none() {
+        // Bug fix: previously panicked on invalid JSON; now returns None.
+        assert!(to_json_module_code("_jconfig$1", "{invalid}", "config.json").is_none());
+    }
+
+    #[test]
+    fn json_handler_invalid_json_does_not_panic() {
+        // Bug fix: `json_handler` should not panic on invalid JSON content.
+        // It should pass the file through unchanged and log a warning.
+        let dep = make_json_dep("broken.json", "{not valid json");
+        let result = json_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        // The file should be passed through (not converted to ESM).
+        assert_eq!(result[0].module_type, ModuleType::Json);
+        assert_eq!(result[0].content, "{not valid json");
     }
 }

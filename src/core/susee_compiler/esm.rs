@@ -1,3 +1,10 @@
+//! ESM output emitter.
+//!
+//! Parses the bundled source, runs oxc's transformer (to strip TS types
+//! when needed), and re-emits as ECMAScript module syntax via oxc's
+//! codegen. The output is ready to be written to a `.mjs`/`.js` file with
+//! `"type": "module"` in `package.json`.
+
 use oxc::allocator::Allocator;
 use oxc::codegen::Codegen;
 use oxc::parser::Parser;

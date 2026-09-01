@@ -1,3 +1,23 @@
+//! Configuration types and parsing for `susee.config.jsonc`.
+//!
+//! Defines the raw config structs ([`SuSeeConfig`], [`EntryPoint`]) that
+//! mirror the TypeScript `SuSeeConfig` interface, and the normalized
+//! build-time structs ([`BuildOptions`], [`BuildEntryPoint`]) produced by
+//! [`generate_build_options`].
+//!
+//! # JSONC support
+//!
+//! Config files may contain `//` and `/* */` comments. [`read_config_file`]
+//! strips them via [`strip_jsonc_comments`] before handing the text to
+//! `serde_json`.
+//!
+//! # Validation
+//!
+//! [`check_entries`] validates that:
+//! - At least one entry point is provided.
+//! - No two entry points share the same `exportPath`.
+//! - Every entry file exists on disk.
+
 // #![allow(dead_code)]
 use std::path::PathBuf;
 
@@ -121,12 +141,14 @@ pub struct SuSeeConfig {
     pub allow_update_package_json: Option<bool>,
 }
 
-/// Look for `susee.config.json` in `cwd`, mirroring `getSuseeConfigPath`.
+/// Look for a susee config file in `cwd`, mirroring `getSuseeConfigPath`.
 ///
 /// The TS version checks `susee.config.ts|js|mjs`; here we check the JSON
-/// form only.
+/// forms only. Both `.jsonc` (with comments) and `.json` (plain) are
+/// supported so that `susee init` output and hand-written configs are
+/// both found.
 pub fn get_susee_config_path() -> Option<PathBuf> {
-    let candidates = ["susee.config.jsonc"];
+    let candidates = ["susee.config.jsonc", "susee.config.json"];
     let cwd = std::env::current_dir().ok()?;
     for name in candidates {
         let p = cwd.join(name);
@@ -168,7 +190,7 @@ fn check_entries(entries: &[EntryPoint]) -> Result<(), String> {
     for ent in entries {
         let p = cwd.join(&ent.entry);
         if !p.exists() {
-            return Err(format!("Entry file {} dose not exists.", ent.entry));
+            return Err(format!("Entry file {} does not exist.", ent.entry));
         }
     }
     Ok(())
@@ -293,5 +315,50 @@ mod tests {
         assert_eq!(config.entry_points[0].entry, "src/index.ts");
         assert_eq!(config.out_dir.as_deref(), Some("dist"));
         assert!(config.allow_update_package_json.unwrap_or(false));
+    }
+
+    #[test]
+    fn check_entries_error_message_has_correct_spelling() {
+        // Bug fix: "dose not exists" → "does not exist"
+        let entries = vec![EntryPoint {
+            entry: "nonexistent.ts".to_string(),
+            export_path: ".".to_string(),
+            format: None,
+            tsconfig_file_path: None,
+            minify: None,
+            check_default_exports: None,
+            check_anonymous: None,
+        }];
+        let result = check_entries(&entries);
+        assert!(result.is_err());
+        let msg = result.unwrap_err();
+        assert!(msg.contains("does not exist"), "got: {msg}");
+        assert!(
+            !msg.contains("dose not exists"),
+            "typo still present: {msg}"
+        );
+    }
+
+    #[test]
+    fn get_susee_config_path_finds_json_file() {
+        // Bug fix: `get_susee_config_path` only looked for `.jsonc`,
+        // not `.json`. Now both are supported.
+        let dir = tempfile::tempdir().unwrap();
+        let json_path = dir.path().join("susee.config.json");
+        std::fs::write(&json_path, r#"{"entryPoints":[]}"#).unwrap();
+
+        let orig = std::env::current_dir().unwrap();
+        // SAFETY: single-threaded test (run with --test-threads=1 for
+        // env-mutating tests).
+        let _ = std::env::set_current_dir(dir.path());
+        let found = get_susee_config_path();
+        let _ = std::env::set_current_dir(&orig);
+
+        assert!(found.is_some(), "should find susee.config.json");
+        let found_path = found.unwrap();
+        assert!(
+            found_path.to_string_lossy().ends_with("susee.config.json"),
+            "got: {found_path:?}"
+        );
     }
 }

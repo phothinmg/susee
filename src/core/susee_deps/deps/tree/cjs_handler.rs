@@ -1,3 +1,21 @@
+//! CommonJS → ESM conversion handler.
+//!
+//! Mirrors `cjsHandler.ts` from the TypeScript implementation.
+//!
+//! Converts `require()` calls and `module.exports`/`exports.x` assignments
+//! in CommonJS `.js`/`.cjs` files into ESM `import`/`export` syntax so they
+//! can be merged with the rest of the dependency tree.
+//!
+//! # Pipeline
+//!
+//! 1. [`commonjs_imports_handler`] — Rewrite `const x = require("…")` →
+//!    `import x from "…"` (also handles destructuring and member-access
+//!    patterns like `require("mod").prop`).
+//! 2. [`commonjs_exports_handler`] — Rewrite `module.exports = …` →
+//!    `export default …` and `exports.foo = …` → `export const foo = …`.
+//! 3. Rename `.cjs`/`.js` extensions to `.js`.
+//! 4. Flip `module_type` to [`ModuleType::Esm`].
+
 use std::collections::HashSet;
 
 use oxc::ast::ast::{
@@ -118,7 +136,15 @@ fn process_require_var(
     var_decl: &VariableDeclaration<'_>,
     _properties: &HashSet<String>,
 ) -> Option<RequireImport> {
-    if var_decl.kind != VariableDeclarationKind::Const {
+    // Handle `const`, `let`, and `var` require declarations. The TS
+    // implementation only checked `const`, but `let x = require("mod")` and
+    // `var x = require("mod")` are equally valid CJS patterns.
+    if !matches!(
+        var_decl.kind,
+        VariableDeclarationKind::Const
+            | VariableDeclarationKind::Let
+            | VariableDeclarationKind::Var
+    ) {
         return None;
     }
     let decl = var_decl.declarations.first()?;
@@ -806,5 +832,54 @@ mod tests {
         if let (Some(d), Some(n)) = (default_pos, named_pos) {
             assert!(d > n, "default export should be hoisted to end");
         }
+    }
+
+    #[test]
+    fn test_commonjs_handler_converts_let_require() {
+        // Bug fix: `let x = require("mod")` was not converted to ESM.
+        let dep = make_cjs_dep(
+            "mod.js",
+            "let fs = require(\"node:fs\");\nmodule.exports = { read: fs };",
+        );
+        let result = cjs_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        assert!(
+            result[0].content.contains("import"),
+            "let require should be converted, got: {}",
+            result[0].content
+        );
+        assert_eq!(result[0].module_type, ModuleType::Esm);
+    }
+
+    #[test]
+    fn test_commonjs_handler_converts_var_require() {
+        // Bug fix: `var x = require("mod")` was not converted to ESM.
+        let dep = make_cjs_dep(
+            "mod.js",
+            "var fs = require(\"node:fs\");\nmodule.exports = { read: fs };",
+        );
+        let result = cjs_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        assert!(
+            result[0].content.contains("import"),
+            "var require should be converted, got: {}",
+            result[0].content
+        );
+    }
+
+    #[test]
+    fn test_commonjs_handler_converts_let_require_destructuring() {
+        // Bug fix: `let { a } = require("mod")` was not converted to ESM.
+        let dep = make_cjs_dep(
+            "mod.js",
+            "let { readFileSync } = require(\"fs\");\nmodule.exports = { readFileSync };",
+        );
+        let result = cjs_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        assert!(
+            result[0].content.contains("import"),
+            "let destructuring require should be converted, got: {}",
+            result[0].content
+        );
     }
 }

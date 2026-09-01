@@ -1,3 +1,21 @@
+//! CTS (CommonJS-TypeScript) → ESM conversion handler.
+//!
+//! Mirrors the CTS handler from the TypeScript implementation.
+//!
+//! `.cts` files use TypeScript syntax with CommonJS semantics (`import x =
+//! require("…")` and `export = expr`). This handler converts them to
+//! ESM-style TypeScript so they can be bundled alongside regular `.ts`
+//! files.
+//!
+//! # Conversions
+//!
+//! - `import x = require("mod")` → `import x from "mod"`
+//! - `export = expr` → `export default expr;`
+//! - `.cts` extension renamed to `.ts`
+//! - `module_type` flipped to [`ModuleType::Esm`]
+//!
+//! Namespace aliases like `import x = foo.bar` are preserved unchanged.
+
 use oxc::ast::ast::{Statement, TSExportAssignment, TSImportEqualsDeclaration, TSModuleReference};
 use oxc::span::GetSpan;
 
@@ -136,10 +154,11 @@ pub fn cts_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
         if is_cts_file(dep) {
             let content = strip_empty_semicolon_lines(&cts_file_handler(dep));
             let file = rename_cts_to_ts(&dep.file);
+            let bytes = content.len();
             result.push(DepsFile {
                 file,
                 content,
-                bytes: dep.bytes,
+                bytes,
                 module_type: ModuleType::Esm,
                 file_ext: ValidExts::Ts,
                 is_jsx: dep.is_jsx,
@@ -350,5 +369,15 @@ mod tests {
         let result = cts_handler(vec![dep]);
         assert_eq!(result.len(), 1);
         assert!(result[0].content.contains("export default class"));
+    }
+
+    #[test]
+    fn test_cts_handler_bytes_match_content_length() {
+        // Bug fix: `bytes` was `dep.bytes` (stale) instead of `content.len()`.
+        // The handler rewrites the content (e.g. `export = x` →
+        // `export default x;`), so `bytes` must reflect the NEW content.
+        let dep = make_cts_dep("mod.cts", "const x = 1;\nexport = x;");
+        let result = cts_handler(vec![dep]);
+        assert_eq!(result[0].bytes, result[0].content.len());
     }
 }

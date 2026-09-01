@@ -225,16 +225,20 @@ fn find_keyword_end(text: &str) -> Option<usize> {
     let trimmed = text.trim_start();
     let leading_ws = text.len() - trimmed.len();
 
-    // Check for `async function` or `function` or `class`
-    for keyword in ["async function", "function", "class", "abstract class"] {
+    // Check longer/more-specific keywords FIRST so that `function*` is not
+    // swallowed by the `function` check, and `async function*` is not
+    // swallowed by `async function`.
+    for keyword in [
+        "async function*",
+        "async function",
+        "function*",
+        "function",
+        "abstract class",
+        "class",
+    ] {
         if trimmed.starts_with(keyword) {
             return Some(leading_ws + keyword.len());
         }
-    }
-
-    // Check for generator: `function*`
-    if trimmed.starts_with("function*") {
-        return Some(leading_ws + "function*".len());
     }
 
     None
@@ -534,4 +538,143 @@ pub fn anonymous_handler(deps: Vec<DepsFile>) -> Vec<DepsFile> {
         .collect();
 
     phase3
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─── find_keyword_end ──────────────────────────────────────────────
+
+    #[test]
+    fn find_keyword_end_function() {
+        assert_eq!(find_keyword_end("function() {}"), Some(8));
+    }
+
+    #[test]
+    fn find_keyword_end_function_generator() {
+        // Bug fix: `function*` must be matched before `function`.
+        assert_eq!(find_keyword_end("function*() {}"), Some(9));
+    }
+
+    #[test]
+    fn find_keyword_end_async_function() {
+        assert_eq!(find_keyword_end("async function() {}"), Some(14));
+    }
+
+    #[test]
+    fn find_keyword_end_async_function_generator() {
+        // `async function*` must be matched before `async function`.
+        assert_eq!(find_keyword_end("async function*() {}"), Some(15));
+    }
+
+    #[test]
+    fn find_keyword_end_class() {
+        assert_eq!(find_keyword_end("class {}"), Some(5));
+    }
+
+    #[test]
+    fn find_keyword_end_abstract_class() {
+        assert_eq!(find_keyword_end("abstract class Foo {}"), Some(14));
+    }
+
+    #[test]
+    fn find_keyword_end_with_leading_whitespace() {
+        assert_eq!(find_keyword_end("  function() {}"), Some(10));
+    }
+
+    #[test]
+    fn find_keyword_end_no_match() {
+        assert_eq!(find_keyword_end("const x = 1;"), None);
+    }
+
+    // ─── file_stem ─────────────────────────────────────────────────────
+
+    #[test]
+    fn file_stem_extracts_basename_without_ext() {
+        assert_eq!(file_stem("src/foo.ts"), "foo");
+        assert_eq!(file_stem("foo.js"), "foo");
+        assert_eq!(file_stem("a/b/c/index.tsx"), "index");
+    }
+
+    // ─── anonymous_handler integration ─────────────────────────────────
+
+    fn make_dep(file: &str, content: &str) -> DepsFile {
+        crate::core::susee_utils::make_dep(file, content)
+    }
+
+    #[test]
+    fn anonymous_handler_names_anonymous_function() {
+        let dep = make_dep("mod.ts", "export default function() { return 1; }");
+        let result = anonymous_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        // The anonymous function should be named with the `_a` sigil.
+        assert!(result[0].content.contains("_amod$1"));
+        assert!(result[0].content.contains("function _amod$1"));
+    }
+
+    #[test]
+    fn anonymous_handler_names_anonymous_class() {
+        let dep = make_dep("mod.ts", "export default class {}");
+        let result = anonymous_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        assert!(result[0].content.contains("class _amod$1"));
+    }
+
+    #[test]
+    fn anonymous_handler_names_anonymous_arrow() {
+        let dep = make_dep("mod.ts", "export default () => 42;");
+        let result = anonymous_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        assert!(result[0].content.contains("const _amod$1"));
+        assert!(result[0].content.contains("export default _amod$1"));
+    }
+
+    #[test]
+    fn anonymous_handler_names_anonymous_generator() {
+        // Bug fix: `function*` was not detected by `find_keyword_end`.
+        let dep = make_dep("mod.ts", "export default function*() { yield 1; }");
+        let result = anonymous_handler(vec![dep]);
+        assert_eq!(result.len(), 1);
+        assert!(result[0].content.contains("_amod$1"));
+        // The name should be inserted after `function*`, not after `function`.
+        assert!(
+            result[0].content.contains("function* _amod$1"),
+            "got: {}",
+            result[0].content
+        );
+    }
+
+    #[test]
+    fn anonymous_handler_renames_default_import() {
+        let export_dep = make_dep("mod.ts", "export default function() { return 1; }");
+        let import_dep = make_dep("main.ts", "import fn from './mod';\nconsole.log(fn());");
+        let result = anonymous_handler(vec![export_dep, import_dep]);
+        // The import should be renamed to the anonymous export name.
+        assert!(
+            result[1].content.contains("_amod$1"),
+            "got: {}",
+            result[1].content
+        );
+    }
+
+    #[test]
+    fn anonymous_handler_no_change_without_anonymous_exports() {
+        let dep = make_dep("mod.ts", "export const x = 1;");
+        let result = anonymous_handler(vec![dep]);
+        assert_eq!(result[0].content, "export const x = 1;");
+    }
+
+    #[test]
+    fn anonymous_handler_preserves_named_default_export() {
+        // `export default function foo() {}` is NOT anonymous — should not
+        // be renamed.
+        let dep = make_dep("mod.ts", "export default function foo() { return 1; }");
+        let result = anonymous_handler(vec![dep]);
+        assert!(
+            !result[0].content.contains("_amod$1"),
+            "named default should not be renamed, got: {}",
+            result[0].content
+        );
+    }
 }

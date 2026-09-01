@@ -4,7 +4,6 @@
 //! representing dependencies and module information.
 mod index;
 pub use index::{
-    DepReturns, DependenciesTree, DepsFile, FileInfo, JsxDetector, ModuleType, ModuleTypeDetector,
-    NameToFileMap, NamesSet, NamesSets, OutputFormat, ProjectType, SpecifierSpanCollector,
-    ValidExts,
+    DepReturns, DependenciesTree, DepsFile, JsxDetector, ModuleType, ModuleTypeDetector,
+    OutputFormat, ProjectType, ValidExts,
 };

@@ -1,3 +1,19 @@
+//! TypeScript declaration (`.d.ts`) emitter.
+//!
+//! Generates `.d.ts` files from TypeScript source by parsing the AST and
+//! extracting type information. When JSDoc annotations are present in JS
+//! files, they are used to infer types that would otherwise be missing.
+//!
+//! # JSDoc awareness
+//!
+//! For JS files, a [`JSDocTypeMap`] is built from `program.comments` and
+//! looked up by node start offset. Supported tags:
+//! - `@returns` / `@return` → return type
+//! - `@param {type} name` → parameter type
+//! - `@type {type}` / `@typedef` → variable/property type
+//!
+//! TS files always use inline-annotation checks (JSDoc map is `None`).
+
 use oxc::allocator::Allocator;
 use oxc::parser::Parser;
 use oxc::span::SourceType;
