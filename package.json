@@ -38,9 +38,6 @@
   "bugs": {
     "url": "https://github.com/phothinmg/susee/issues"
   },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.8.6"
-  },
   "workspaces": [
     "susee-docs"
   ],

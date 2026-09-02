@@ -28,7 +28,7 @@ read -p "Enter commit message: " message
 # npm run lint
 # Run formatter
 # npm run fmt
-cargo fmt
+# cargo fmt
 # Generate coverage report
 # npm run coverage
 # Get full commit message pattern
