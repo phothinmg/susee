@@ -9,8 +9,8 @@ We follow SemVer and provide security fixes for actively maintained versions onl
 
 | Version | Supported |
 | ------- | --------- |
-| 1.6     | Yes       |
-| < 1.6   | No        |
+| 2.1     | Yes       |
+| < 2.1   | No        |
 
 If a fix is not practical for an older release line, we may provide guidance to upgrade to a supported version.
 
@@ -59,9 +59,13 @@ After confirmation:
 Relevant areas include:
 
 - CLI argument parsing and command handling (`src/cli/**`).
-- Configuration loading/resolution (`src/lib/suseeConfig.ts`).
-- Build/compiler orchestration (`src/lib/compiler.ts`).
-- Dependency risk in runtime packages (`@suseejs/*`).
+- Configuration loading, validation, and normalization (`src/config/index.ts`).
+- Build orchestration and entry-point resolution (`src/build.ts`).
+- In-memory TypeScript compilation and JSX runtime validation (`src/compiler/**`).
+- Bundler wrapper around `@suseejs/susee_bundler` (`src/bundler.ts`).
+- File system writes and `package.json` updates (`src/helpers/files.ts`).
+- Minification via `oxc-minify` (`src/helpers/minify.ts`).
+- Dependency risk in runtime packages (`@suseejs/*`, `oxc-minify`).
 
 ## Dependency and Supply Chain Practices
 

@@ -72,20 +72,18 @@ mmdocs:
               link: /guide/entry-points
             - text: tsconfig & Custom Path Integration
               link: /guide/tsconfig-and-custom-path-integration
-        - sidebar_label: Plugin System
+        - sidebar_label: Build
           items:
-            - text: Plugin Types and Lifecycle
-              link: /guide/plugin-types-lifecycle
-            - text: How to Write Plugins
-              link: /guide/how-to-write-plugins
+            - text: Build Lifecycle
+              link: /guide/build-lifecycle
+            - text: Extending the Build
+              link: /guide/extending-the-build
         - sidebar_label: Ecosystem
           items:
             - text: Ecosystem Overview
               link: /guide/ecosystem-overview
             - text: Core Build Packages
               link: /guide/ecosystem-core-build-packages
-            - text: Plugin Packages
-              link: /guide/ecosystem-plugin-packages
             - text: Foundation Packages
               link: /guide/ecosystem-foundation-packages
         - sidebar_label: Contribution

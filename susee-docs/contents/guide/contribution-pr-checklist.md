@@ -34,7 +34,7 @@ Use this checklist before opening a PR for this repository:
 ## Release impact
 
 - [ ] Breaking changes are clearly called out.
-- [ ] Consumer impact is documented, especially for CLI, config, plugin, or build-output changes.
+- [ ] Consumer impact is documented, especially for CLI, config, or build-output changes.
 
 ## Final sanity check
 
@@ -42,6 +42,7 @@ Use this checklist before opening a PR for this repository:
 - [ ] Commit messages are clear.
 - [ ] Dependencies were installed with `npm` (not mixed package managers).
 - [ ] `npm run hooks:install` was run when the repository provides it.
+- [ ] `npm run lint` and `npm run fmt:check` pass.
 - [ ] PR is ready for review.
 
 ## Related pages

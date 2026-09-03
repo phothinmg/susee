@@ -68,10 +68,8 @@
     "build": "oxnode build.ts"
   },
   "dependencies": {
-    "@suseejs/color": "^0.0.9",
     "@suseejs/susee_bundler": "^0.2.2",
     "@suseejs/ts6": "^1.0.0",
-    "@suseejs/type": "^0.0.9",
     "oxc-minify": "^0.148.0"
   },
   "devDependencies": {

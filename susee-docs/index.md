@@ -21,9 +21,9 @@ features:
   - title: Package.json Management
     tabler_icon: ti-package-export
     details: Optionally updates package metadata to match generated build artifacts.
-  - title: Plugin System
-    tabler_icon: ti-edit
-    details: Add custom build behavior through plugin extension points.
+  - title: Bundler Lint Checks
+    tabler_icon: ti-shield-check
+    details: Optional checks for anonymous exports, default export patterns, and npm dependency verification.
   - title: CLI and Programmatic API
     tabler_icon: ti-terminal-2
     details: Run builds from commands in CI or call the build API inside custom scripts.

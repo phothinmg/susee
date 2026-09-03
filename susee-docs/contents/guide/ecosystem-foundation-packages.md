@@ -4,15 +4,13 @@ label: guide
 title: Foundation Packages
 ---
 
-These packages provide shared types, helpers, and terminal ergonomics used across Susee packages.
+These packages provide shared types, helpers, and terminal ergonomics used across the `@suseejs/*` ecosystem.
 
 ## `@suseejs/type`
 
-- Purpose: shared type definitions for plugin APIs and package contracts
-- Description: Type Def for SuseeJs
-- Common usage: plugin type unions, dependency-file structures, ecosystem-wide API consistency
-
-> **Note**: The current native (Rust/napi-rs) build does not expose a user-configurable plugin API, so `@suseejs/type`'s plugin types are not consumed by the config today. They remain available for when the plugin API is reintroduced.
+- Purpose: shared type definitions for package contracts
+- Description: Type definitions for SuseeJs
+- Common usage: dependency-file structures, ecosystem-wide API consistency
 
 ## `@suseejs/utilities`
 
@@ -26,12 +24,13 @@ These packages provide shared types, helpers, and terminal ergonomics used acros
 - Description: Susee Terminal Color
 - Common usage: clearer warnings, errors, and status output in tooling
 
+> **Note**: These foundation packages are used internally by the `@suseejs/*` ecosystem packages (e.g., `@suseejs/susee_bundler`) but are not direct dependencies of the `susee` package itself.
+
 ## Why this layer matters
 
 Keeping types and shared helpers in focused packages helps:
 
 - reduce duplication across build packages
-- keep plugin contracts consistent
 - simplify maintenance and versioning inside the `@suseejs/*` scope
 
 ## Quick install and examples
@@ -77,22 +76,7 @@ const merged = utils.gen.mergeImportsStatement([
 ]);
 ```
 
-Use shared plugin types:
-
-```ts
-import type { SuseePlugin } from "@suseejs/type";
-
-const plugin: SuseePlugin = {
-  type: "pre-process",
-  async: false,
-  func(code) {
-    return code;
-  },
-};
-```
-
 ## Related pages
 
 - [Ecosystem Overview](/guide/ecosystem-overview)
 - [Core Build Packages](/guide/ecosystem-core-build-packages)
-- [Plugin Packages](/guide/ecosystem-plugin-packages)

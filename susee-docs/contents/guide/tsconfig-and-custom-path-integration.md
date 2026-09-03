@@ -22,8 +22,8 @@ In Susee, these options are applied to build output generation for each entry po
 Susee resolves TypeScript options using this order:
 
 1. A custom path (`entryPoints[].tsconfigFilePath` in config mode, or `--tsconfig` in CLI build mode)
-2. Root `tsconfig.json`
-3. Internal default compiler options
+2. Root `tsconfig.json` (found via `ts6.findConfigFile`)
+3. Internal default compiler options (`CommonJS` / `ES2020` module kind, `Latest` target)
 
 This gives you predictable behavior while still allowing advanced setups.
 
@@ -33,40 +33,44 @@ If you do not pass a custom path, Susee tries to use your root `tsconfig.json`.
 
 Example:
 
-```jsonc
+```json
 {
   "compilerOptions": {
     "target": "esnext",
     "module": "nodenext",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-  },
+    "sourceMap": true
+  }
 }
 ```
 
-## Config-mode integration (`susee.config.jsonc`)
+## Config-mode integration
 
 Use `tsconfigFilePath` when one entry point needs compiler settings that differ from the rest of the package.
 
-```jsonc
-{
-  "entryPoints": [
+```ts
+import type { SuSeeConfig } from "susee";
+
+const config: SuSeeConfig = {
+  entryPoints: [
     {
-      "entry": "src/index.ts",
-      "exportPath": ".",
-      "format": ["esm", "commonjs"],
-      "tsconfigFilePath": "tsconfig.build.json"
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: ["esm", "commonjs"],
+      tsconfigFilePath: "tsconfig.build.json",
     },
     {
-      "entry": "src/cli.ts",
-      "exportPath": "./cli",
-      "format": ["esm"],
-      "tsconfigFilePath": "configs/tsconfig.cli.json"
-    }
+      entry: "src/cli.ts",
+      exportPath: "./cli",
+      format: ["esm"],
+      tsconfigFilePath: "configs/tsconfig.cli.json",
+    },
   ],
-  "outDir": "dist"
-}
+  outDir: "dist",
+};
+
+export default config;
 ```
 
 ## CLI-mode integration (`susee build`)
@@ -77,7 +81,19 @@ For direct CLI builds, pass a custom path with `--tsconfig`.
 susee build src/index.ts --format esm --tsconfig ./configs/tsconfig.build.json
 ```
 
-This is useful for one-off builds in CI or local experiments without changing `susee.config.jsonc`.
+This is useful for one-off builds in CI or local experiments without changing your config file.
+
+## How Susee processes tsconfig options
+
+When a tsconfig is found (either custom or root), Susee reads and parses it using `@suseejs/ts6`'s `readConfigFile` and `parseJsonConfigFileContent`. For each output format, it extracts the parsed options and overrides:
+
+- `outDir` — set to the entry's output directory
+- `module` — set to `CommonJS` or `ES2020` depending on the format
+- `allowJs` — set to `true`
+
+Other options from your tsconfig (such as `target`, `declaration`, `sourceMap`, `strict`, etc.) are preserved.
+
+When no tsconfig is found, Susee uses minimal defaults: `outDir`, `module` (per format), and `target: Latest`.
 
 ## Recommended pattern: base + build tsconfig
 
@@ -111,7 +127,7 @@ For medium and large packages, keep a shared base file and extend it in build-sp
 
 Then reference `tsconfig.build.json` from either:
 
-- `entryPoints[].tsconfigFilePath` in `susee.config.jsonc`
+- `entryPoints[].tsconfigFilePath` in your config file
 - `--tsconfig` in `susee build`
 
 ## Path tips

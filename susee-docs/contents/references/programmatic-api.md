@@ -8,31 +8,32 @@ This page documents how to use susee programmatically from TypeScript or JavaScr
 
 ## Overview
 
-Susee is a native Node addon built with [napi-rs](https://napi.rs). The Rust `susee` crate exposes three `#[napi]`-annotated functions, each delegating to an internal `core` module. From JavaScript they are available on the package's main entry point:
+The `susee` package is a pure TypeScript library that re-exports the async `build` function and the `SuSeeConfig` type from its main entry point.
 
-| Export         | JS signature                              | Rust function                                    | Description                                          |
-| -------------- | ----------------------------------------- | ------------------------------------------------ | ---------------------------------------------------- |
-| `suseeBuild`   | `(config?: SuSeeConfig) => void`          | `susee_build(config: Option<SuSeeConfig>)`       | Full config-driven build                             |
-| `cliBuild`     | `(args: string[]) => void`                | `cli_build(args: Vec<String>)`                   | Run the CLI dispatcher with an explicit argument list |
-| `suseeBundler` | `(entry: string) => string`               | `susee_bundler(entry: String) -> String`         | Bundle one entry into a merged source string          |
-| `SuSeeConfig`  | *(type)*                                  | `SuSeeConfig` struct                             | Configuration object                                  |
-| `EntryPoint`   | *(type)*                                  | `EntryPoint` struct                              | One entry in `entryPoints`                           |
-| `OutputFormat` | *(type)*                                  | `OutputFormat` enum (`"esm" | "commonjs"`)       | Output module format                                  |
+| Export         | JS signature                     | Description                                           |
+| -------------- | -------------------------------- | ----------------------------------------------------- |
+| `build`        | `(config?: SuSeeConfig) => Promise<void>` | Full config-driven build                     |
+| `SuSeeConfig`  | *(type)*                         | Configuration object                                  |
 
-`suseeBuild` is the main programmatic build API. It orchestrates configuration loading, dependency resolution, bundling, and compilation. The native addon can be consumed in both ESM and CommonJS environments.
+`build` is the main programmatic build API. It orchestrates configuration loading, dependency resolution, bundling, and compilation. The package provides dual-format exports (ESM + CommonJS).
 
-> The functions are **synchronous** in the native addon. `suseeBuild` returns `void`; `suseeBundler` returns the bundled source string directly. Do not `await` these calls.
+> The `build` function is **async** — always `await` the call.
 
 ## Package Exports
 
-The susee package provides dual-format exports. The main entry point (`index.js` / `index.d.ts`) re-exports the napi-generated functions and TypeScript types.
+The susee package provides dual-format exports:
+
+- **ESM**: `dist/index.mjs` with types at `dist/index.d.mts`
+- **CommonJS**: `dist/index.cjs` with types at `dist/index.d.cts`
+
+There is also a `./cli` subpath export for programmatic access to the CLI entry point.
 
 ### Import Syntax
 
 #### ESM Example
 
 ```ts
-import { suseeBuild, type SuSeeConfig } from "susee";
+import { build, type SuSeeConfig } from "susee";
 
 const options: SuSeeConfig = {
   entryPoints: [
@@ -44,17 +45,16 @@ const options: SuSeeConfig = {
   ],
   outDir: "dist",
   allowUpdatePackageJson: true,
-  minify: false,
 };
 
-suseeBuild(options);
+await build(options);
 ```
 
 #### CommonJS Example
 
 ```js
-const { suseeBuild } = require("susee");
-/** @type {import("susee").SuSeeConfig} */
+const { build } = require("susee");
+
 const options = {
   entryPoints: [
     {
@@ -65,94 +65,77 @@ const options = {
   ],
   outDir: "dist",
   allowUpdatePackageJson: true,
-  minify: false,
 };
 
-suseeBuild(options);
+build(options);
 ```
 
-## `suseeBuild(config?)`
+## `build(config?)`
 
 The primary interface for programmatic execution.
 
-- **Name** : `suseeBuild`
-- **Parameters** : `config?: SuSeeConfig`
-- **Return type** : `void`
-- **Async** : No (synchronous native call)
+- **Parameters**: `config?: SuSeeConfig`
+- **Return type**: `Promise<void>`
+- **Async**: Yes
 
-When `config` is omitted, `suseeBuild` loads `susee.config.jsonc` from the current working directory. When a `SuSeeConfig` is provided, it overrides the file-based configuration. After the build completes, the elapsed time is logged via the internal `susee_log` module.
+When `config` is omitted, `build` looks for a config file (`susee.config.ts`, `susee.config.js`, or `susee.config.mjs`) in the current working directory. When a `SuSeeConfig` is provided, it overrides the file-based configuration. After the build completes, the elapsed time is logged.
 
-On a build error the function prints `[Error] : <message>` to stderr and exits the process with code `1`.
-
-## Other runtime exports
-
-### `suseeBundler(entry)`
-
-Use this when you want the merged bundled source string without running the compiler or writing files.
-
-- **Parameters** : `entry: string` — resolved relative to the current working directory (`.`)
-- **Return type** : `string` — the bundled JavaScript/TypeScript source
-
-On a bundler error the message `"Error when bundling"` is printed and the process panics.
-
-### `cliBuild(args)`
-
-Use this when embedding the CLI entry flow into another Node.js process.
-
-- **Parameters** : `args: string[]` — pass `process.argv.slice(2)` (the user-supplied arguments with the Node executable and script path already stripped)
-- **Return type** : `void`
-
-This is the same dispatcher the `susee` bin script uses. See [Command Line Interface](/references/command-line-interface) for the supported subcommands and flags.
+On a build error the function logs an error message and exits the process with code `1`.
 
 ## `SuSeeConfig`
-
-The configuration struct, defined in Rust and exposed to JavaScript via napi-rs `#[napi(object)]`. JSON field names use camelCase.
 
 ```ts
 interface SuSeeConfig {
   entryPoints: EntryPoint[];
-  outDir?: string;                  // default: "dist"
-  allowUpdatePackageJson?: boolean;  // default: false
-  minify?: boolean;                  // default: false
+  outDir?: string;                   // default: "dist"
+  allowUpdatePackageJson?: boolean;   // default: false
 }
 
 interface EntryPoint {
-  entry: string;                     // required, must exist on disk
-  exportPath: "." | `./${string}`;   // required, must be unique
-  format?: ("commonjs" | "esm")[];   // default: ["esm"]
-  tsconfigFilePath?: string | null;   // default: null
-  warning?: boolean;                  // default: false
+  entry: string;                      // required, must exist on disk
+  exportPath: "." | `./${string}`;    // required, must be unique
+  format?: ("commonjs" | "esm")[];    // default: ["esm"]
+  tsconfigFilePath?: string | undefined; // default: undefined
+  checks?: CheckOptions;              // default: { checkAnonymous: false, checkDefaultExports: false, checkNpmInstalled: false }
+  minify?: boolean | { options: MinifyOptions }; // default: false
+}
+
+interface CheckOptions {
+  checkAnonymous: boolean;
+  checkDefaultExports: boolean;
+  checkNpmInstalled: boolean;
 }
 ```
 
 ## Execution Pipeline
 
-`suseeBuild` implements a three-stage pipeline.
+`build` implements a three-stage pipeline.
 
 ### 1. Configuration Resolution
 
-If a `config` argument is provided, it is normalized via `generate_build_options`. If `config` is omitted, the loader looks for `susee.config.jsonc` in the current working directory and parses it (stripping JSONC comments) into a `SuSeeConfig`.
+If a `config` argument is provided, it is normalized via `generateBuildOptions`. If `config` is omitted, the loader looks for a config file (`susee.config.ts`, `susee.config.js`, `susee.config.mjs`) in the current working directory and imports its default export as a `SuSeeConfig`.
 
 ### 2. Validation
 
-Entry points are validated by `check_entries`:
+Entry points are validated by `checkEntries`:
 
 - At least one entry is required.
 - Every `entry` file must exist on disk.
 - Every `exportPath` must be unique.
 
-If validation fails, an error message is returned and the process exits with code `1`.
+If validation fails, an error message is logged and the process exits with code `1`.
 
 ### 3. Compilation Orchestration
 
-A `Compiler` instance is created with the resolved `BuildOptions`. `compiler.compile()` then handles, for each entry point and each requested `OutputFormat`:
+A `Compiler` instance is created with the resolved `BuildOptions`. `compiler.compile()` then handles, for each entry point and each requested output format:
 
-1. Bundling the entry's local dependency tree into a single source string (`bundler`).
-2. Running internal tree hooks (export-default normalization, anonymous-export naming, duplicate-declaration detection, import/export removal).
-3. Compiling the bundled source with the oxc parser/transformer/codegen.
-4. Optionally minifying the emitted JS with the oxc minifier (when `minify: true`).
-5. Writing `.mjs`/`.cjs`, `.d.mts`/`.d.cts`, and `.js.map`/`.cjs.map` files to the output directory.
-6. Optionally updating `package.json` export metadata (when `allowUpdatePackageJson: true`).
+1. Bundling the entry's local dependency tree into a single source string (via `@suseejs/susee_bundler`).
+2. Resolving TypeScript compiler options from `tsconfigFilePath`, root `tsconfig.json`, or internal defaults (via `@suseejs/ts6`).
+3. Detecting JSX in the bundled source and adjusting compiler options if needed.
+4. Compiling the bundled source in-memory using `@suseejs/ts6`.
+5. Optionally minifying the emitted JS with `oxc-minify` (when `minify` is enabled for the entry).
+6. Writing `.mjs`/`.cjs`, `.d.mts`/`.d.cts`, and `.mjs.map`/`.cjs.map` files to the output directory.
+7. Optionally updating `package.json` export metadata (when `allowUpdatePackageJson: true`).
 
 ## Related pages
 

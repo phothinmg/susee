@@ -8,25 +8,26 @@ This page is for contributions to Susee's core build internals in this repositor
 
 ## Target modules
 
-The main build stages are implemented in Rust under `src/core/`:
+The main build stages are implemented in TypeScript under `src/`:
 
-- `src/core/susee_bundler`
-- `src/core/susee_compiler`
-- `src/core/susee_tree`
-- `src/core/susee_config`
-- `src/core/susee_hooks`
-- `src/core/susee_build`
-- `src/core/susee_cli`
-- `src/core/susee_utils`
-- `src/core/susee_unique_name`
-- `src/core/susee_log`
-- `src/core/susee_types`
+- `src/build.ts` — build orchestration
+- `src/bundler.ts` — bundling wrapper (delegates to `@suseejs/susee_bundler`)
+- `src/compiler/index.ts` — compiler class that drives compilation per format
+- `src/compiler/suseeCompiler.ts` — in-memory TypeScript compilation host
+- `src/compiler/tsoptions.ts` — tsconfig resolution and compiler option generation
+- `src/config/index.ts` — config loading, validation, and build option generation
+- `src/cli/index.ts` — CLI entry point and dispatch
+- `src/cli/parse_args.ts` — CLI argument parsing
+- `src/cli/init.ts` — config file scaffolding
+- `src/cli/print_help.ts` — help text
+- `src/helpers/files.ts` — file system operations and package.json updates
+- `src/helpers/minify.ts` — oxc-minify wrapper
 
-The native addon entry points live in `src/lib.rs` (`suseeBuild`, `cliBuild`, `suseeBundler`).
+The package's main entry point is `src/index.ts`, which re-exports `build` and `SuSeeConfig`.
 
 ## 1. Work in this repository
 
-Install Node dependencies for the napi-rs build tooling:
+Install dependencies:
 
 ```sh
 npm install
@@ -38,40 +39,41 @@ If the repository has a hooks installation script, run:
 npm run hooks:install
 ```
 
-Build the native addon:
+Build the project:
 
 ```sh
 npm run build
 ```
 
-Run Rust checks and tests with cargo:
+Run linting and formatting:
 
 ```sh
-cargo check
-cargo test
+npm run lint
+npm run fmt
 ```
 
 ## 2. Pick the owning module first
 
 Before coding, choose exactly where the fix belongs:
 
-- API surface or transforms in bundling: `src/core/susee_bundler`
-- compiler behavior: `src/core/susee_compiler`
-- dependency graph logic: `src/core/susee_tree`
-- filesystem/output handling or `package.json` updates: `src/core/susee_utils`
-- TypeScript options resolution: `src/core/susee_config/ts_options`
-- config parsing/validation: `src/core/susee_config/config_types`
-- built-in hooks (minify, unused code, duplicates, ...): `src/core/susee_hooks`
-- CLI dispatch: `src/core/susee_cli`
-- native addon bindings: `src/lib.rs`
+- Build orchestration: `src/build.ts`
+- Bundling logic: `src/bundler.ts` (or the `@suseejs/susee_bundler` package)
+- Compiler behavior: `src/compiler/suseeCompiler.ts`
+- Compiler option resolution: `src/compiler/tsoptions.ts`
+- Config parsing/validation: `src/config/index.ts`
+- CLI dispatch: `src/cli/index.ts`
+- CLI argument parsing: `src/cli/parse_args.ts`
+- Config file scaffolding: `src/cli/init.ts`
+- File system/output handling: `src/helpers/files.ts`
+- Minification: `src/helpers/minify.ts`
 
 ## 3. Implement and test in-module
 
 Recommended flow:
 
 1. Make changes in one module slice first.
-2. Run the narrowest local test or validation that covers that slice (`cargo test`).
-3. Validate adjacent build stages if your change affects shared contracts.
+2. Run the build to validate: `npm run build`.
+3. Run lint to check for issues: `npm run lint`.
 
 ## 4. Keep public behavior in mind
 

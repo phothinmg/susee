@@ -242,8 +242,6 @@ npm run fmt      # oxfmt
 
 - [`@suseejs/susee_bundler`](https://www.npmjs.com/package/@suseejs/susee_bundler) — oxc-powered bundling engine
 - [`@suseejs/ts6`](https://www.npmjs.com/package/@suseejs/ts6) — TypeScript compiler fork for type-checking and declaration emit
-- [`@suseejs/color`](https://www.npmjs.com/package/@suseejs/color) — terminal color output
-- [`@suseejs/type`](https://www.npmjs.com/package/@suseejs/type) — shared type utilities
 - [`oxc-minify`](https://www.npmjs.com/package/oxc-minify) — JavaScript minification
 
 ## License

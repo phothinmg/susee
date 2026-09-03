@@ -4,58 +4,59 @@ label: guide
 title: Ecosystem Overview
 ---
 
-The current Susee ecosystem mixes the public `susee` package (a native Node addon built with Rust + napi-rs) with internal build modules.
+The Susee ecosystem centers on the public `susee` package — a TypeScript library bundler — and its dependency packages.
 
 ## Package map
 
-### Core build pipeline in this repository (Rust)
+### Core build pipeline in this repository (TypeScript)
 
-The build engine is implemented in Rust under `src/core/`:
+The build engine is implemented in TypeScript under `src/`:
 
-- `src/core/susee_bundler` — dependency-aware source bundling
-- `src/core/susee_compiler` — oxc-based compilation (ESM/CJS + declarations + source maps)
-- `src/core/susee_tree` — dependency graph generation and dependency-file collection
-- `src/core/susee_config` — config parsing (`susee.config.jsonc`), entry validation, compiler-option resolution
-- `src/core/susee_hooks` — built-in tree/pre-process/post-process hooks (including the oxc minifier)
-- `src/core/susee_build` — the `build()` driver that loads config and runs the compiler
-- `src/core/susee_cli` — the CLI dispatcher and single-entry compiler
-- `src/core/susee_utils` — file system and AST helpers
-- `src/core/susee_unique_name` — generated identifier naming for renamed declarations
-- `src/core/susee_log` — build timing and error logging
-- `src/core/susee_types` — shared types (`DependenciesTree`, `ProjectType`, `OutputFormat`, ...)
+- `src/build.ts` — the `build()` driver that loads config and runs the compiler
+- `src/bundler.ts` — bundling wrapper (delegates to `@suseejs/susee_bundler`)
+- `src/compiler/index.ts` — the `Compiler` class that drives per-format compilation
+- `src/compiler/suseeCompiler.ts` — in-memory TypeScript compilation host using `@suseejs/ts6`
+- `src/compiler/tsoptions.ts` — tsconfig resolution and compiler option generation
+- `src/config/index.ts` — config loading, validation, and build option generation
+- `src/cli/index.ts` — the CLI dispatcher
+- `src/cli/parse_args.ts` — CLI argument parsing
+- `src/cli/init.ts` — config file scaffolding
+- `src/cli/print_help.ts` — help text
+- `src/helpers/files.ts` — file system operations and package.json updates
+- `src/helpers/minify.ts` — oxc-minify wrapper
 
-The native addon entry points live in `src/lib.rs` and expose `suseeBuild`, `cliBuild`, and `suseeBundler` to Node.js via napi-rs.
+The package's main entry point (`src/index.ts`) re-exports `build` and `SuSeeConfig`.
 
-### Plugin packages
+### Runtime dependencies
 
-- `@suseejs/banner-text-plugin`
-- `@suseejs/terser-plugin`
-
-> **Note**: The current native (Rust/napi-rs) build does not expose a `plugins` field on `EntryPoint`, so these plugin packages are not wired into the config today. Minification is built in via the `minify` option (oxc minifier). Banner/transform plugins require the user-configurable plugin API to be re-introduced.
+- `@suseejs/susee_bundler` — dependency-aware source bundling (the core bundler engine)
+- `@suseejs/ts6` — TypeScript compiler used for in-memory compilation
+- `oxc-minify` — JavaScript minifier (compression + mangling)
 
 ### Foundation packages
 
-- `@suseejs/type`
-- `@suseejs/utilities`
-- `@suseejs/color`
+- `@suseejs/type` — shared type definitions
+- `@suseejs/utilities` — common utility helpers
+- `@suseejs/color` — terminal color helpers
+
+> **Note**: These foundation packages are used internally by the `@suseejs/*` ecosystem packages but are not direct dependencies of the `susee` package itself.
 
 ## How these pieces work together
 
 A typical Susee build flow:
 
-1. `src/core/susee_tree` builds the dependency graph (`dependensa::generate_graph`).
-2. `src/core/susee_bundler` merges and normalizes dependency and entry code, running the built-in tree hooks.
-3. `src/core/susee_compiler` compiles the bundled source into ESM/CJS output with declarations and source maps.
-4. `src/core/susee_utils` writes output artifacts and handles file operations.
-5. `src/core/susee_config/ts_options` resolves compiler options from tsconfig/defaults.
-6. The `minify` post-process hook runs the oxc minifier when enabled.
+1. `src/config/index.ts` loads the config file and generates `BuildOptions`.
+2. `src/bundler.ts` calls `@suseejs/susee_bundler` to bundle the entry's dependency tree into a single source string.
+3. `src/compiler/tsoptions.ts` resolves compiler options from tsconfig/defaults.
+4. `src/compiler/suseeCompiler.ts` compiles the bundled source using `@suseejs/ts6` into ESM/CJS output with declarations and source maps.
+5. `src/helpers/minify.ts` runs `oxc-minify` when the entry's `minify` option is enabled.
+6. `src/helpers/files.ts` writes output artifacts and optionally updates `package.json`.
 
 ## Which page to read next
 
 - For pipeline internals: [Core Build Packages](/guide/ecosystem-core-build-packages)
-- For installable plugins: [Plugin Packages](/guide/ecosystem-plugin-packages)
 - For shared primitives and types: [Foundation Packages](/guide/ecosystem-foundation-packages)
-- For contribution workflows across public APIs and internal build modules: [Contribution Overview](/guide/contribution-overview)
+- For contribution workflows: [Contribution Overview](/guide/contribution-overview)
 
 ## Install examples
 
@@ -63,12 +64,6 @@ Install the top-level tool:
 
 ```sh
 npm i -D susee
-```
-
-Install plugin packages:
-
-```sh
-npm i @suseejs/banner-text-plugin @suseejs/terser-plugin
 ```
 
 Install foundation packages:

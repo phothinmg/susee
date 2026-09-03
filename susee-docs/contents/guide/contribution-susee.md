@@ -27,11 +27,12 @@ git checkout -b feat/my-change
 
 Common contribution areas:
 
-- Native addon bindings (`src/lib.rs`)
-- CLI behavior (`src/core/susee_cli/**`)
-- Build pipeline internals (`src/core/susee_bundler/**`, `src/core/susee_compiler/**`, `src/core/susee_tree/**`)
+- CLI behavior (`src/cli/**`) — entry point dispatch, argument parsing, init scaffolding, help text
+- Build pipeline (`src/build.ts`, `src/bundler.ts`) — build orchestration and bundling
+- Compiler (`src/compiler/**`) — TypeScript compilation, compiler option resolution, JSX detection
+- Config (`src/config/**`) — config loading, validation, build option generation
+- Helpers (`src/helpers/**`) — file system operations, minification
 - Documentation (`susee-docs/contents/**`)
-- Tests (in-module `#[cfg(test)]` blocks run via `cargo test`)
 
 ## 4. Run local quality checks
 
@@ -39,10 +40,11 @@ Use the scripts and commands from this repository:
 
 ```sh
 npm install
-npm run build      # build the native addon (napi-rs)
-cargo check
-cargo test
-cargo fmt
+npm run build      # build via oxnode build.ts
+npm run lint       # oxlint
+npm run lint:fix   # oxlint --fix
+npm run fmt        # oxfmt
+npm run fmt:check  # oxfmt --check
 ```
 
 For docs work, use the available docs scripts when needed:

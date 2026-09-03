@@ -56,23 +56,26 @@ git checkout -b feat/my-change
 
 Common areas:
 
-- `src/cli/**` for CLI behavior
-- `src/lib/**` for compiler/build integration
-- `docs/**` for docs updates
-- `__tests__/test-suites/**` for tests
+- `src/cli/**` for CLI behavior (argument parsing, init, help)
+- `src/compiler/**` for in-memory TypeScript compilation and JSX handling
+- `src/config/index.ts` for config types, validation, and normalization
+- `src/build.ts` and `src/bundler.ts` for build orchestration and bundling
+- `src/helpers/**` for file system operations and minification
+- `susee-docs/contents/**` for documentation updates
 
 ### 4. Run local checks
 
 ```sh
-npm run test
-npm run lint
-npm run docs:build
+npm run build     # compile src/ via oxnode build.ts
+npm run lint      # oxlint
+npm run fmt:check # oxfmt --check
 ```
 
 Optional formatting:
 
 ```sh
-npm run fmt
+npm run fmt       # oxfmt
+npm run lint:fix  # oxlint --fix
 ```
 
 ### 5. Commit and open PR
@@ -100,13 +103,10 @@ npm run hooks:install
 
 ### 2. Pick package scope first
 
-Core build packages:
+Core build packages consumed by `susee`:
 
-- `@suseejs/bundler` (`packages/bundler`)
-- `@suseejs/compiler` (`packages/compiler`)
-- `@suseejs/graph` (`packages/graph`)
-- `@suseejs/files` (`packages/files`)
-- `@suseejs/tsoptions` (`packages/tsoptions`)
+- `@suseejs/susee_bundler` — oxc-powered bundling engine
+- `@suseejs/ts6` — TypeScript compiler fork for type-checking and declaration emit
 
 ### 3. Implement and test in-package
 

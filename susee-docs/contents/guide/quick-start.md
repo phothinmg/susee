@@ -29,31 +29,34 @@ npx susee --version
 
 ## Create a config file
 
-Generate a starter `susee.config.jsonc` in your project root:
+Generate a starter config file in your project root:
 
 ```sh
 npx susee init
 ```
 
-The generated file uses JSONC (JSON with comments), so you can annotate each field inline.
+The interactive prompt will ask whether your project uses TypeScript. If yes, it generates `susee.config.ts`. If no, it generates `susee.config.js` (for ESM projects) or `susee.config.mjs` (for CommonJS projects).
 
 ## Define your package entries
 
-Example `susee.config.jsonc`:
+Example `susee.config.ts`:
 
-```jsonc
-{
-  // Entry points to bundle
-  "entryPoints": [
+```ts
+import type { SuSeeConfig } from "susee";
+
+const config: SuSeeConfig = {
+  entryPoints: [
     {
-      "entry": "src/index.ts",
-      "exportPath": ".",
-      "format": ["esm", "commonjs"]
-    }
+      entry: "src/index.ts",
+      exportPath: ".",
+      format: ["esm", "commonjs"],
+    },
   ],
-  "outDir": "dist",
-  "allowUpdatePackageJson": false
-}
+  outDir: "dist",
+  allowUpdatePackageJson: false,
+};
+
+export default config;
 ```
 
 ## Build with config
@@ -61,10 +64,10 @@ Example `susee.config.jsonc`:
 Run susee from your project root:
 
 ```bash
-npx susee
+npx susee build
 ```
 
-Susee reads your `susee.config.jsonc`, builds each entry, and writes output to `dist` by default.
+Susee reads your config file, builds each entry, and writes output to `dist` by default.
 
 ## Build directly from CLI (without config)
 
@@ -76,24 +79,24 @@ npx susee build src/index.ts --outdir dist --format esm
 
 Common options:
 
-- `--format <esm|commonjs|cjs>`
-- `--outdir <path>`
-- `--tsconfig <path>`
-- `--allow-update[=true|false]`
-- `--warning[=true|false]`
-- `--minify[=true|false]`
-- `--profile[=true|false]`
+- `--entry <path>` — Entry file (optional if provided as positional argument)
+- `--outdir <path>` — Output directory (default: `dist`)
+- `--format <cjs|commonjs|esm|both>` — Output format (default: `esm`)
+- `--tsconfig <path>` — Custom tsconfig path
+- `--allow-update[=true|false]` — Allow package.json updates (default: `false`)
+- `--minify[=true|false]` — Minify output JS with the oxc minifier (default: `false`)
+- `--check[=true|false]` — Enable bundler lint checks (default: `false`)
 
 If the bundled dependency set contains conflicting top-level declarations, Susee fails the build and reports the conflict instead of renaming identifiers automatically.
 
 ## Use the programmatic API
 
-You can also run builds in scripts. The native addon exposes `suseeBuild`, `cliBuild`, and `suseeBundler`:
+You can also run builds from scripts. The `susee` package exports the `build` function and the `SuSeeConfig` type:
 
 ```ts
-const { suseeBuild } = require("susee");
+import { build } from "susee";
 
-suseeBuild({
+await build({
   entryPoints: [
     {
       entry: "src/index.ts",
@@ -103,7 +106,6 @@ suseeBuild({
   ],
   outDir: "dist",
   allowUpdatePackageJson: true,
-  minify: false,
 });
 ```
 
