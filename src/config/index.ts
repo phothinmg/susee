@@ -1,87 +1,83 @@
-import tcolor from "@suseejs/color";
-import ts6 from "@suseejs/ts6";
-import type { SuseePlugin, SuseePluginFunction } from "@suseejs/type";
-import type { CheckOptions } from "@suseejs/susee_bundler";
+// import ts6 from "@suseejs/ts6";
+import { type CheckOptions, logError } from "@suseejs/susee_bundler";
+import { type MinifyOptions } from "oxc-minify";
+import path from "node:path";
+import fs from "node:fs";
 
 export type OutputFormat = ("commonjs" | "esm")[];
 export interface EntryPoint {
-	/**
-	 * Entry of file path of package
-	 *
-	 * required
-	 */
-	entry: string;
-	/**
-	 * Info for output
-	 *
-	 * required
-	 */
-	/**
-	 *  path for package
-	 *
-	 * required
-	 */
-	exportPath: "." | `./${string}`;
-	/**
-	 * Output module type of package
-	 *
-	 * default - [esm]
-	 */
-	format?: OutputFormat;
-	/**
-	 * Custom tsconfig.json path for package typescript compiler options
-	 *
-	 * Priority -
-	 *  1. this custom tsconfig.json
-	 *  2. tsconfig.json at root directory
-	 *  3. default compiler options of susee
-	 *
-	 * default - undefined
-	 *
-	 */
-	tsconfigFilePath?: string | undefined;
-	/**
-	 * Array of susee plugins
-	 *
-	 * default - []
-	 */
-	plugins?: (SuseePlugin | SuseePluginFunction)[];
-	/**
-	 * Susee fails the build when duplicate top-level declarations are found across bundled files.
-	 * Resolve those conflicts in source files before building.
-	 */
-	/**
-	 * When generating a dependency graph, Susee checks whether referenced npm modules are installed.
-	 * If a module is not installed in your project, Susee emits a warning message.
-	 * If this option is `true`, Susee treats those warnings as fatal and exits with code 1.
-	 *
-	 * default - false
-	 */
-	warning?: boolean;
-	checks?:CheckOptions;
+  /**
+   * Entry of file path of package
+   *
+   * required
+   */
+  entry: string;
+  /**
+   * Info for output
+   *
+   * required
+   */
+  /**
+   *  path for package
+   *
+   * required
+   */
+  exportPath: "." | `./${string}`;
+  /**
+   * Output module type of package
+   *
+   * default - [esm]
+   */
+  format?: OutputFormat;
+  /**
+   * Custom tsconfig.json path for package typescript compiler options
+   *
+   * Priority -
+   *  1. this custom tsconfig.json
+   *  2. tsconfig.json at root directory
+   *  3. default compiler options of susee
+   *
+   * default - undefined
+   *
+   */
+  tsconfigFilePath?: string | undefined;
+  /**
+   * Lint checks to run on the bundled output.
+   *
+   * default - { checkAnonymous: false, checkDefaultExports: false, checkNpmInstalled: false }
+   */
+  checks?: CheckOptions;
+  /**
+   * Minify the bundled output.
+   *
+   * Pass `true` for default minification, or an object with custom `MinifyOptions`.
+   *
+   * default - false
+   */
+  minify?: boolean | {options:MinifyOptions};
 }
 /**
  * Configuration for Susee Bundler
  */
 export interface SuSeeConfig {
-	/**
-	 * Array of entry points object
-	 *
-	 * required
-	 */
-	entryPoints: EntryPoint[];
-	/**
-	 * Out directory
-	 *
-	 * default - dist
-	 */
-	outDir?: string;
-	/**
-	 * Allow bundler to update your package.json.
-	 *
-	 * default - false
-	 */
-	allowUpdatePackageJson?: boolean;
+  /**
+   * Array of entry points object
+   *
+   * required
+   */
+  entryPoints: EntryPoint[];
+  /**
+   * Out directory
+   *
+   * default - dist
+   */
+  outDir?: string;
+  /**
+   * Allow bundler to update your package.json.
+   *
+   * default - false
+   */
+  allowUpdatePackageJson?: boolean;
 }
 
 /**
@@ -91,16 +87,16 @@ export interface SuSeeConfig {
  * @returns {string | undefined} - path to the susee.config file or undefined if it does not exist.
  */
 const getSuseeConfigPath = (): string | undefined => {
-	const fileNames = ["susee.config.ts", "susee.config.js", "susee.config.mjs"];
-	let configFile: string | undefined;
-	for (const file of fileNames) {
-		const _file = ts6.sys.resolvePath(file);
-		if (ts6.sys.fileExists(_file)) {
-			configFile = _file;
-			break;
-		}
-	}
-	return configFile;
+  const fileNames = ["susee.config.ts", "susee.config.js", "susee.config.mjs"];
+  let configFile: string | undefined;
+  for (const file of fileNames) {
+    const filePath = path.resolve(process.cwd(),file);
+    if (fs.existsSync(filePath)) {
+      configFile = filePath;
+      break;
+    }
+  }
+  return configFile;
 };
 
 /**
@@ -111,57 +107,51 @@ const getSuseeConfigPath = (): string | undefined => {
  * @param {EntryPoint[]} entries - array of entry points
  */
 function checkEntries(entries: EntryPoint[]) {
-	if (entries.length < 1) {
-		console.error(
-			tcolor.magenta(
-				`No entry found in susee.config file or build options, at least one entry required`,
-			),
-		);
-		ts6.sys.exit(1);
-	}
-	const objectStore: Record<string, boolean> = {};
-	const duplicateExportPaths: string[] = [];
+  if (entries.length < 1) {
+    const info = "At least one entry required";
+    const cause = "No entry found in susee.config file or build options";
+    logError(info, cause, true);
+  }
+  const objectStore: Record<string, boolean> = {};
+  const duplicateExportPaths: string[] = [];
 
-	for (const obj of entries) {
-		const value = obj.exportPath;
+  for (const obj of entries) {
+    const value = obj.exportPath;
 
-		if (objectStore[value]) {
-			duplicateExportPaths.push(`"${value}"`);
-		} else {
-			objectStore[value] = true;
-		}
-	}
-	if (duplicateExportPaths.length > 0) {
-		console.error(
-			tcolor.magenta(
-				`Duplicate export paths/path (${duplicateExportPaths.join(",")}) found in your susee.config file or build options , that will error for bundled output`,
-			),
-		);
-		ts6.sys.exit(1);
-	}
+    if (objectStore[value]) {
+      duplicateExportPaths.push(`"${value}"`);
+    } else {
+      objectStore[value] = true;
+    }
+  }
+  if (duplicateExportPaths.length > 0) {
+    const info = "Found duplicated export paths/path";
+    const cause = `Duplicate export paths/path (${duplicateExportPaths.join(",")}) found in your susee.config file or build options , that will error for bundled output`;
+    logError(info, cause, true);
+  }
 
-	for (const obj of entries) {
-		if (!ts6.sys.fileExists(ts6.sys.resolvePath(obj.entry))) {
-			console.error(tcolor.magenta(`Entry file ${obj.entry} dose not exists.`));
-			ts6.sys.exit(1);
-		}
-	}
+  for (const obj of entries) {
+    if (!fs.existsSync(path.resolve(process.cwd(),obj.entry))) {
+      const info = "Entry file error";
+      const cause = `Entry file ${obj.entry} dose not exists.`;
+      logError(info, cause, true);
+    }
+  }
 }
 
 export type BuildEntryPoint = {
-	entry: string;
-	exportPath: "." | `./${string}`;
-	format: OutputFormat;
-	plugins: (SuseePlugin | SuseePluginFunction)[];
-	outputDirectoryPath: string;
-	warning: boolean;
-	tsconfigFilePath: string | undefined;
-	checks:CheckOptions;
+  entry: string;
+  exportPath: "." | `./${string}`;
+  format: OutputFormat;
+  outputDirectoryPath: string;
+  tsconfigFilePath: string | undefined;
+  checks: CheckOptions;
+  minify: boolean | {options:MinifyOptions};
 };
 export type BuildOptions = {
-	buildEntryPoints: BuildEntryPoint[];
-	updatePackage: boolean;
-	outDir: string;
+  buildEntryPoints: BuildEntryPoint[];
+  updatePackage: boolean;
+  outDir: string;
 };
 
 /**
@@ -172,41 +162,37 @@ export type BuildOptions = {
  * @returns {BuildOptions} normalized build options for the compiler.
  */
 function generateBuildOptions(config: SuSeeConfig): BuildOptions {
-	const outDir = config.outDir ?? "dist";
-	const points: BuildEntryPoint[] = [];
-	checkEntries(config.entryPoints);
-	for (const ent of config.entryPoints) {
-		const entry = ent.entry;
-		const exportPath = ent.exportPath;
-		const format: OutputFormat = ent.format
-			? [...new Set(ent.format)]
-			: ["esm"];
-		const warning = ent.warning ?? false;
-		const plugins = ent.plugins ?? [];
-		const tsconfigFilePath = ent.tsconfigFilePath ?? undefined;
-		const outputDirectoryPath =
-			ent.exportPath === "." ? outDir : `${outDir}${ent.exportPath.slice(1)}`;
-		const checks:CheckOptions = {
-           checkAnonymous: ent.checks?.checkAnonymous ?? false,
-		   checkDefaultExports: ent.checks?.checkDefaultExports ?? false,
-		   checkNpmInstalled: ent.checks?.checkNpmInstalled ?? false
-		}
-		points.push({
-			entry,
-			exportPath,
-			format,
-			plugins,
-			warning,
-			outputDirectoryPath,
-			tsconfigFilePath,
-			checks
-		});
-	}
-	return {
-		buildEntryPoints: points,
-		updatePackage: config.allowUpdatePackageJson ?? false,
-		outDir,
-	} as BuildOptions;
+  const outDir = config.outDir ?? "dist";
+  const points: BuildEntryPoint[] = [];
+  checkEntries(config.entryPoints);
+  for (const ent of config.entryPoints) {
+    const entry = ent.entry;
+    const exportPath = ent.exportPath;
+    const format: OutputFormat = ent.format ? [...new Set(ent.format)] : ["esm"];
+    const tsconfigFilePath = ent.tsconfigFilePath ?? undefined;
+    const outputDirectoryPath =
+      ent.exportPath === "." ? outDir : `${outDir}${ent.exportPath.slice(1)}`;
+    const checks: CheckOptions = {
+      checkAnonymous: ent.checks?.checkAnonymous ?? false,
+      checkDefaultExports: ent.checks?.checkDefaultExports ?? false,
+      checkNpmInstalled: ent.checks?.checkNpmInstalled ?? false,
+    };
+    const minify = ent.minify ?? false;
+    points.push({
+      entry,
+      exportPath,
+      format,
+      outputDirectoryPath,
+      tsconfigFilePath,
+      checks,
+      minify,
+    });
+  }
+  return {
+    buildEntryPoints: points,
+    updatePackage: config.allowUpdatePackageJson ?? false,
+    outDir,
+  } as BuildOptions;
 }
 
 /**
@@ -215,14 +201,12 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
  * @returns {Promise<BuildOptions | undefined>} normalized build options or undefined when no config file exists.
  */
 async function finalSuseeConfig(): Promise<BuildOptions | undefined> {
-	const configPath = getSuseeConfigPath();
-	if (configPath) {
-		const _default: { default: SuSeeConfig } = await import(
-			configPath as string
-		);
-		const config = _default.default;
-		return generateBuildOptions(config);
-	}
+  const configPath = getSuseeConfigPath();
+  if (configPath) {
+    const _default: { default: SuSeeConfig } = await import(configPath as string);
+    const config = _default.default;
+    return generateBuildOptions(config);
+  }
 }
 
 export { finalSuseeConfig, generateBuildOptions };

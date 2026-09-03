@@ -170,9 +170,9 @@ suseeBuild({
 suseeBuild();
 ```
 
-| Parameter       | Type                        | Required | Default | Description                                      |
-| --------------- | --------------------------- | -------- | ------- | ------------------------------------------------ |
-| `config`        | `SuSeeConfig \| undefined`   | No       | —       | Build options. If omitted, loads config file.    |
+| Parameter | Type                       | Required | Default | Description                                   |
+| --------- | -------------------------- | -------- | ------- | --------------------------------------------- |
+| `config`  | `SuSeeConfig \| undefined` | No       | —       | Build options. If omitted, loads config file. |
 
 ### `cliBuild(args)`
 
@@ -184,9 +184,9 @@ import { cliBuild } from "susee";
 cliBuild(process.argv.slice(2));
 ```
 
-| Parameter | Type         | Required | Description                                                        |
-| --------- | ------------ | -------- | ------------------------------------------------------------------ |
-| `args`    | `string[]`   | Yes      | CLI arguments (typically `process.argv.slice(2)`).               |
+| Parameter | Type       | Required | Description                                        |
+| --------- | ---------- | -------- | -------------------------------------------------- |
+| `args`    | `string[]` | Yes      | CLI arguments (typically `process.argv.slice(2)`). |
 
 ### `suseeBundler(entry)`
 
@@ -221,9 +221,9 @@ enum OutputFormat {
 ```ts
 interface SuSeeConfig {
   entryPoints: EntryPoint[];
-  outDir?: string;                 // default: "dist"
+  outDir?: string; // default: "dist"
   allowUpdatePackageJson?: boolean; // default: false
-  minify?: boolean;                // default: false
+  minify?: boolean; // default: false
 }
 ```
 
@@ -232,10 +232,10 @@ interface SuSeeConfig {
 ```ts
 interface EntryPoint {
   entry: string;
-  exportPath: string;             // "." or "./sub/path"
-  format?: OutputFormat[];         // default: ["esm"]
+  exportPath: string; // "." or "./sub/path"
+  format?: OutputFormat[]; // default: ["esm"]
   tsconfigFilePath?: string | null; // default: null
-  warning?: boolean;               // default: false
+  warning?: boolean; // default: false
 }
 ```
 
@@ -430,31 +430,31 @@ The config file uses the **JSONC** format (JSON with comments) and must be named
       "exportPath": ".",
       "format": ["esm", "commonjs"],
       "tsconfigFilePath": null,
-      "warning": false
-    }
+      "warning": false,
+    },
   ],
   // Output directory (default: "dist")
   "outDir": "dist",
   // Update package.json fields from build output (default: false)
   "allowUpdatePackageJson": false,
   // Minify output JS with the oxc minifier (default: false)
-  "minify": true
+  "minify": true,
 }
 ```
 
 ### Config schema
 
-| Field                    | Type         | Required | Default     | Description                                  |
-| ----------------------- | ------------ | -------- | ----------- | -------------------------------------------- |
-| `entryPoints`           | `EntryPoint[]` | Yes    | —           | List of entry points to build.               |
-| `outDir`                | `string`     | No       | `"dist"`   | Root output directory.                       |
-| `allowUpdatePackageJson`| `boolean`    | No       | `false`    | Update package.json from build output.       |
-| `minify`                | `boolean`    | No       | `false`    | Minify emitted JS with the oxc minifier.     |
-| `entryPoints[].entry`   | `string`     | Yes      | —           | Entry file path.                             |
-| `entryPoints[].exportPath` | `string`   | Yes      | —           | Package export path (`.` or `./sub`).        |
-| `entryPoints[].format`  | `string[]`   | No       | `["esm"]`  | Output formats: `"esm"`, `"commonjs"`.      |
-| `entryPoints[].tsconfigFilePath` | `string\|null` | No | `null` | Custom tsconfig path.                   |
-| `entryPoints[].warning` | `boolean`    | No       | `false`    | Treat dependency warnings as fatal.          |
+| Field                            | Type           | Required | Default   | Description                              |
+| -------------------------------- | -------------- | -------- | --------- | ---------------------------------------- |
+| `entryPoints`                    | `EntryPoint[]` | Yes      | —         | List of entry points to build.           |
+| `outDir`                         | `string`       | No       | `"dist"`  | Root output directory.                   |
+| `allowUpdatePackageJson`         | `boolean`      | No       | `false`   | Update package.json from build output.   |
+| `minify`                         | `boolean`      | No       | `false`   | Minify emitted JS with the oxc minifier. |
+| `entryPoints[].entry`            | `string`       | Yes      | —         | Entry file path.                         |
+| `entryPoints[].exportPath`       | `string`       | Yes      | —         | Package export path (`.` or `./sub`).    |
+| `entryPoints[].format`           | `string[]`     | No       | `["esm"]` | Output formats: `"esm"`, `"commonjs"`.   |
+| `entryPoints[].tsconfigFilePath` | `string\|null` | No       | `null`    | Custom tsconfig path.                    |
+| `entryPoints[].warning`          | `boolean`      | No       | `false`   | Treat dependency warnings as fatal.      |
 
 ---
 

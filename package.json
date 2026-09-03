@@ -2,24 +2,53 @@
   "name": "susee",
   "version": "2.0.3",
   "description": "A high-performance TypeScript library bundler",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "bin": {
-    "susee": "bin/susee"
-  },
   "type": "module",
-  "scripts": {
-    "build": "npx napi build --platform --config-path napi.config.json --output-dir ./dist",
-    "hooks:install": "bash scripts/install-hooks.sh",
-    "commit": "bash scripts/commit.sh"
+  "main": "dist/index.cjs",
+  "types": "dist/index.d.cts",
+  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./cli": {
+      "import": {
+        "types": "./dist/cli/index.d.mts",
+        "default": "./dist/cli/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
   },
   "keywords": [
     "bundler",
     "susee",
     "suseejs"
   ],
-  "author": "Pho Thin Mg <phothinmg@disroot.org> (https://phothinmg.github.io/)",
+  "homepage": "https://susee.js.org/",
+  "bugs": {
+    "url": "https://github.com/phothinmg/susee/issues"
+  },
   "license": "Apache-2.0",
+  "author": "Pho Thin Mg <phothinmg@disroot.org> (https://phothinmg.github.io/)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phothinmg/susee.git"
+  },
+  "bin": {
+    "susee": "bin/susee"
+  },
+  "workspaces": [
+    "susee-docs"
+  ],
   "files": [
     "README.md",
     "LICENSE",
@@ -28,31 +57,33 @@
     "bin/**/*"
   ],
   "publishConfig": {
-    "provenance": true,
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
-  "repository": {
-    "url": "git+https://github.com/phothinmg/susee.git",
-    "type": "git"
-  },
-  "homepage": "https://susee.js.org/",
-  "bugs": {
-    "url": "https://github.com/phothinmg/susee/issues"
-  },
-  "workspaces": [
-    "susee-docs"
-  ],
-  "allowScripts": {
-    "esbuild@0.28.2": true
-  },
-  "devDependencies": {
-    "@types/node": "^26.4.1",
-    "typescript": "^7.0.2"
+  "scripts": {
+    "hooks:install": "bash scripts/install-hooks.sh",
+    "commit": "bash scripts/commit.sh",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "build": "oxnode build.ts"
   },
   "dependencies": {
     "@suseejs/color": "^0.0.9",
-    "@suseejs/susee_bundler": "^0.2.1",
+    "@suseejs/susee_bundler": "^0.2.2",
     "@suseejs/ts6": "^1.0.0",
-    "@suseejs/type": "^0.0.9"
+    "@suseejs/type": "^0.0.9",
+    "oxc-minify": "^0.148.0"
+  },
+  "devDependencies": {
+    "@oxc-node/cli": "^0.1.0",
+    "@types/node": "^26.4.1",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
+    "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }

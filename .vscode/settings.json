@@ -1,80 +1,82 @@
 {
-	"files.associations": {
-		"*.scss": "scss",
-		"*.html": "liquid"
-	},
-	"[liquid]": {
-		"editor.defaultFormatter": "sissel.shopify-liquid",
-		"editor.formatOnSave": true
-	},
-	"scss.validate": false,
+  "files.associations": {
+    "*.scss": "scss",
+    "*.html": "liquid"
+  },
+  "[liquid]": {
+    "editor.defaultFormatter": "sissel.shopify-liquid",
+    "editor.formatOnSave": true
+  },
+  "scss.validate": false,
 
-	// Formatting
-	"ruby.format": "rufo",
-	"editor.formatOnSave": false,
+  // Formatting
+  "ruby.format": "rufo",
+  "editor.formatOnSave": false,
 
-	// Run Rufo via Bundler when available
-	"ruby.rufo.useBundler": true,
+  // Run Rufo via Bundler when available
+  "ruby.rufo.useBundler": true,
 
-	// Keep RuboCop linting enabled (optional) and run via Bundler
-	"ruby.lint": {
-		"rubocop": true
-	},
-	"ruby.lint.rubocop": {
-		"useBundler": true,
-		"lintOnSave": true,
-		"config": ".rubocop.yml"
-	},
-	"rust-analyzer.cargo.targetDir": true,
-    "rust-analyzer.cachePriming.enable": false,
-	"cSpell.words": [
-		"aanon",
-		"abar",
-		"afoo",
-		"androideabi",
-		"armv",
-		"asome",
-		"aunused",
-		"cdylib",
-		"clippy",
-		"codegen",
-		"contentinfo",
-		"dependensa",
-		"dfoo",
-		"dgram",
-		"dhello",
-		"efault",
-		"execjs",
-		"finalizer",
-		"getset",
-		"giscus",
-		"gnueabihf",
-		"iface",
-		"indexmap",
-		"inlines",
-		"jconfig",
-		"Maung",
-		"Microtask",
-		"mistagged",
-		"Moji",
-		"msvc",
-		"napi",
-		"nique",
-		"nonymous",
-		"noopener",
-		"pname",
-		"println",
-		"repositoryformatversion",
-		"rlib",
-		"serde",
-		"susee",
-		"suseejs",
-		"tcolor",
-		"topo",
-		"tsoptions",
-		"ushared",
-		"usrc",
-		"wasi",
-		"wasip"
-	]
+  // Keep RuboCop linting enabled (optional) and run via Bundler
+  "ruby.lint": {
+    "rubocop": true
+  },
+  "ruby.lint.rubocop": {
+    "useBundler": true,
+    "lintOnSave": true,
+    "config": ".rubocop.yml"
+  },
+  "rust-analyzer.cargo.targetDir": true,
+  "rust-analyzer.cachePriming.enable": false,
+  "cSpell.words": [
+    "aanon",
+    "abar",
+    "afoo",
+    "androideabi",
+    "armv",
+    "asome",
+    "aunused",
+    "cdylib",
+    "clippy",
+    "codegen",
+    "contentinfo",
+    "dependensa",
+    "dfoo",
+    "dgram",
+    "dhello",
+    "efault",
+    "execjs",
+    "finalizer",
+    "getset",
+    "giscus",
+    "gnueabihf",
+    "iface",
+    "indexmap",
+    "inlines",
+    "jconfig",
+    "Maung",
+    "Microtask",
+    "mistagged",
+    "Moji",
+    "msvc",
+    "napi",
+    "nique",
+    "nonymous",
+    "noopener",
+    "oxnode",
+    "pkgtext",
+    "pname",
+    "println",
+    "repositoryformatversion",
+    "rlib",
+    "serde",
+    "susee",
+    "suseejs",
+    "tcolor",
+    "topo",
+    "tsoptions",
+    "ushared",
+    "usrc",
+    "wasi",
+    "wasip"
+  ]
 }
