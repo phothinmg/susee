@@ -56,8 +56,7 @@
     "bin/**/*"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "hooks:install": "bash scripts/install-hooks.sh",
