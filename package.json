@@ -52,8 +52,7 @@
   "files": [
     "README.md",
     "LICENSE",
-    "index.js",
-    "index.d.ts",
+    "dist/**/*",
     "bin/**/*"
   ],
   "publishConfig": {
