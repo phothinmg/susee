@@ -41,5 +41,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "aa.ts"]
+  "include": ["src/**/*", "aa.ts","build.ts"]
 }
