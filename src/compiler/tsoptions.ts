@@ -1,5 +1,5 @@
 import path from "node:path";
-import tcolor from "@suseejs/color";
+import { logError } from "@suseejs/susee_bundler";
 import ts6 from "@suseejs/ts6";
 
 /**
@@ -9,17 +9,24 @@ import ts6 from "@suseejs/ts6";
  * @param {string | undefined} customConfigPath path of the custom configuration file.
  * @returns {string | undefined} path of the configuration file or undefined if customConfigPath does not exist.
  */
-function getTsConfigPath(customConfigPath?: string | undefined): string | undefined {
+function getTsConfigPath(
+  customConfigPath?: string | undefined,
+): string | undefined {
   let config_path: string | undefined;
   if (customConfigPath) {
     if (!ts6.sys.fileExists(ts6.sys.resolvePath(customConfigPath))) {
-      console.error(`> ${tcolor.magenta(`Given custom file ${customConfigPath} does not exists`)}`);
-      ts6.sys.exit(1);
+      const info = `Given custom file ${customConfigPath} does not exists`;
+      const cause =
+        "If you set options.tsconfigFilePath,this file must be exists";
+      logError(info, cause, true);
     }
     config_path = customConfigPath;
     return config_path;
   } else {
-    config_path = ts6.findConfigFile(ts6.sys.getCurrentDirectory(), ts6.sys.fileExists);
+    config_path = ts6.findConfigFile(
+      ts6.sys.getCurrentDirectory(),
+      ts6.sys.fileExists,
+    );
     return config_path;
   }
 }
@@ -38,7 +45,11 @@ function getCompilerOptions(customConfigPath?: string | undefined): {
   if (config_path) {
     const config = ts6.readConfigFile(config_path, ts6.sys.readFile);
     const basePath = path.dirname(config_path);
-    const parsed = ts6.parseJsonConfigFileContent(config.config, ts6.sys, basePath);
+    const parsed = ts6.parseJsonConfigFileContent(
+      config.config,
+      ts6.sys,
+      basePath,
+    );
     tsconfig_opts = { ...parsed.options };
   }
 
@@ -46,7 +57,8 @@ function getCompilerOptions(customConfigPath?: string | undefined): {
     const _out = out_dir ? out_dir : "dist";
     if (tsconfig_opts !== undefined) {
       // oxlint-disable-next-line no-unused-vars
-      const { rootDir, outDir, module, allowJs, declarationDir, ...rest } = tsconfig_opts;
+      const { rootDir, outDir, module, allowJs, declarationDir, ...rest } =
+        tsconfig_opts;
       return {
         outDir: _out,
         module: ts6.ModuleKind.CommonJS,
@@ -65,7 +77,8 @@ function getCompilerOptions(customConfigPath?: string | undefined): {
     const _out = out_dir ? out_dir : "dist";
     if (tsconfig_opts !== undefined) {
       // oxlint-disable-next-line no-unused-vars
-      const { rootDir, outDir, module, allowJs, declarationDir, ...rest } = tsconfig_opts;
+      const { rootDir, outDir, module, allowJs, declarationDir, ...rest } =
+        tsconfig_opts;
       return {
         outDir: _out,
         module: ts6.ModuleKind.ES2020,

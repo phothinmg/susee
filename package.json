@@ -1,6 +1,6 @@
 {
   "name": "susee",
-  "version": "2.1.1",
+  "version": "2.2.4",
   "description": "A high-performance TypeScript library bundler",
   "type": "module",
   "main": "dist/index.cjs",
@@ -68,7 +68,7 @@
     "build": "oxnode build.ts"
   },
   "dependencies": {
-    "@suseejs/susee_bundler": "^0.2.2",
+    "@suseejs/susee_bundler": "^0.2.4",
     "@suseejs/ts6": "^1.0.0",
     "oxc-minify": "^0.148.0"
   },
