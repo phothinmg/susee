@@ -27,7 +27,7 @@ git checkout -b feat/my-change
 
 Common contribution areas:
 
-- CLI behavior (`src/cli/**`) — entry point dispatch, argument parsing, init scaffolding, help text
+- CLI behavior (`src/cli/**`) — entry point dispatch, argument parsing, init scaffolding, help text, lint checks
 - Build pipeline (`src/build.ts`, `src/bundler.ts`) — build orchestration and bundling
 - Compiler (`src/compiler/**`) — TypeScript compilation, compiler option resolution, JSX detection
 - Config (`src/config/**`) — config loading, validation, build option generation

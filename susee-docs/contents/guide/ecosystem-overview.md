@@ -22,14 +22,15 @@ The build engine is implemented in TypeScript under `src/`:
 - `src/cli/parse_args.ts` — CLI argument parsing
 - `src/cli/init.ts` — config file scaffolding
 - `src/cli/print_help.ts` — help text
+- `src/cli/lint.ts` — lint-only check command (delegates to `suseeLint`)
 - `src/helpers/files.ts` — file system operations and package.json updates
 - `src/helpers/minify.ts` — oxc-minify wrapper
 
-The package's main entry point (`src/index.ts`) re-exports `build` and `SuSeeConfig`.
+The package's main entry point (`src/index.ts`) re-exports `build`, `suseeBundle`, `SuSeeConfig`, and `CheckOptions`.
 
 ### Runtime dependencies
 
-- `@suseejs/susee_bundler` — dependency-aware source bundling (the core bundler engine)
+- `@suseejs/susee_bundler` — dependency-aware source bundling (the core bundler engine), also provides `suseeLint`, `logError`/`logWarning`/`logInfo`, and `LogTimer`
 - `@suseejs/ts6` — TypeScript compiler used for in-memory compilation
 - `oxc-minify` — JavaScript minifier (compression + mangling)
 

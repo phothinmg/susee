@@ -53,6 +53,19 @@ Susee automatically detects JSX syntax in the bundled source. When JSX is found,
 
 Susee supports both command-line usage and direct integration through its async `build()` API. Use the CLI for local development and CI commands, or call the API when you need custom scripting and orchestration.
 
+The `susee` package exports:
+
+- `build(options?)` — async config-driven build (loads a config file when `options` is omitted)
+- `suseeBundle(entry, checkOptions?)` — synchronous lower-level bundling that returns the merged source string without compiling
+- `SuSeeConfig` (type) and `CheckOptions` (type)
+
+The CLI provides four subcommands:
+
+- `susee build` — config-driven or flag-based build (compiles and writes output)
+- `susee bundle` — bundle-only (writes bundled source without compilation)
+- `susee check` — lint-only (runs checks without bundling or compiling)
+- `susee init` — scaffold a starter config file
+
 ## Why these features matter
 
 Together, these features make susee a strong choice for TypeScript library maintainers who want reliable outputs, broad module compatibility, and a straightforward path from source code to npm-ready packages.

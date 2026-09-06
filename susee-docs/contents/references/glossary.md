@@ -37,15 +37,15 @@ The `susee` execution flow is managed by the `Compiler` class (`src/compiler/ind
 
 The system loads the config file and converts it into `BuildOptions`.
 
-- **Key Function**: `build(config?)` in `src/build.ts`.
+- **Key Function**: `build(options?)` in `src/build.ts`. It normalizes the config via `generateFinalBuildOptions`, which prefers an explicit `options` argument over the config file.
 - **Resolution**: `getSuseeConfigPath()` checks for `susee.config.ts`, `susee.config.js`, and `susee.config.mjs` in the current working directory.
 
 #### 2. Bundling Phase
 
 The system uses `@suseejs/susee_bundler` to resolve the dependency tree and merge files into a single source string.
 
-- **Key Function**: `bundler(point)` in `src/bundler.ts`, which calls `suseeBundler(entry, root, checks)` from `@suseejs/susee_bundler`.
-- **Logic**: It applies dependency resolution, bundling, and lint checks. The bundled source is cached per entry point using a `WeakMap`.
+- **Key Functions**: `bundler(point)` in `src/bundler.ts` calls `suseeBundler(entry, root, checks)` from `@suseejs/susee_bundler`. `suseeBundle(entry, checkOptions?)` is the public lower-level API that returns the bundled source string without compiling. `suseeCliBundle(opts)` in `src/bundler.ts` is used by the CLI `bundle` command to write the bundled source to disk without compilation.
+- **Logic**: It applies dependency resolution, bundling, and lint checks. The bundled source is cached per entry point using a `WeakMap` inside `@suseejs/susee_bundler`.
 
 #### 3. Compilation Phase
 
@@ -70,3 +70,21 @@ The `checks` field on each `EntryPoint` provides optional lint validation:
 - `checkAnonymous` — detects anonymous default exports/imports
 - `checkDefaultExports` — lints default export patterns
 - `checkNpmInstalled` — verifies referenced npm modules are installed; when `true`, missing modules cause the build to fail
+
+### CLI Commands
+
+The CLI dispatcher (`src/cli/index.ts`) routes to four subcommands:
+
+- `build` — config-driven or flag-based build (compiles and writes output)
+- `bundle` — bundle-only; writes the bundled source string to disk without compilation (handled by `suseeCliBundle` in `src/bundler.ts`)
+- `check` — lint-only; runs `suseeCheck` (`src/cli/lint.ts`) on every config entry point using `suseeLint` from `@suseejs/susee_bundler`, without bundling or compiling
+- `init` — scaffolds a starter config file
+
+### Public Exports
+
+The `susee` package main entry (`src/index.ts`) re-exports:
+
+- `build` — async config-driven build function
+- `suseeBundle` — synchronous lower-level bundling function returning the merged source string
+- `SuSeeConfig` (type) — configuration interface
+- `CheckOptions` (type) — lint check options, re-exported from `@suseejs/susee_bundler`

@@ -6,10 +6,12 @@ title: Command Line Interface
 
 This document details the Command Line Interface (CLI) for susee, covering installation methods, execution patterns, and the command behavior implemented in `src/cli/` (the CLI entry point, argument parser, init scaffolding, and help text).
 
-The CLI includes a utility for initializing project configurations and provides two primary build modes:
+The CLI includes a utility for initializing project configurations and provides three primary build modes:
 
 - Configuration-based execution for complex projects
 - Flag-based execution for single-entry builds
+- Bundle-only execution (writes bundled source without compiling)
+- Lint checking (runs checks without bundling or compiling)
 
 ## Installation and Execution
 
@@ -25,11 +27,13 @@ The CLI accepts entry files ending in `.js`, `.ts`, `.mts`, `.mjs`, `.cjs`, `.ct
 
 ## Architecture and Data Flow
 
-The CLI is structured to handle three distinct workflows:
+The CLI is structured to handle four distinct workflows:
 
 - configuration initialization
 - standard configuration-based builds
 - single-file builds using command-line arguments
+- bundle-only output (bundled source without compilation)
+- lint checks without building
 
 ### Commands and Options
 
@@ -67,7 +71,33 @@ npx susee build src/index.ts --minify
 npx susee build src/index.ts --check
 ```
 
-#### 3. Initialization
+#### 3. Bundle-only
+
+**Command**: `susee bundle <entry> [options]` or `npx susee bundle <entry> [options]`
+
+This command bundles the entry's local dependency tree into a single source string and writes it directly to the output directory — without TypeScript compilation, declaration generation, or `package.json` updates. The output file keeps the same base name as the entry file.
+
+```
+--entry <path>                Entry file (optional if provided as positional <entry>)
+--outdir <path>               Output directory (default: current working directory)
+--check[=true|false]          Enable lint checks on the bundled output (default: false)
+```
+
+Examples:
+
+```
+npx susee bundle src/index.ts --outdir dist
+npx susee bundle src/index.ts --check
+npx susee bundle --entry src/index.ts --outdir bundled
+```
+
+#### 4. Lint check
+
+**Command**: `susee check` or `npx susee check`
+
+This command runs lint checks on every entry point defined in your config file — without bundling, compiling, or writing any output. It enables all three checks (`checkAnonymous`, `checkDefaultExports`, `checkNpmInstalled`) and reports errors and warnings per entry. If all checks pass for an entry, a success message is logged.
+
+#### 5. Initialization
 
 **Command**: `susee init` or `npx susee init`
 
@@ -80,7 +110,7 @@ This command interactively generates a starter config file in the current direct
 
 If a config file already exists at the target path, it is overwritten.
 
-#### 4. Help and Version
+#### 6. Help and Version
 
 - `susee --help` or `susee -h` prints the usage text.
 - `susee --version` or `susee -v` prints the current package version (read from the project's `package.json`).

@@ -17,7 +17,10 @@ Run inside `src/bundler.ts`, which calls `suseeBundler(entry, root, checks)` fro
 - Resolves the dependency tree from the entry file
 - Merges dependency and entry content into a single source string
 - Runs dependency analysis and lint checks (anonymous exports, default exports, npm-installed verification)
-- The bundled source is cached per entry point using a `WeakMap`
+- Emits a warning when the dependency set contains CommonJS modules (suggesting ESM migration)
+- The bundled source is cached per entry point inside `@suseejs/susee_bundler`
+
+> **Note**: The public `suseeBundle(entry, checkOptions?)` API and the CLI `bundle` command both expose this stage directly, returning (or writing) the bundled source string without running compilation.
 
 ### 2) Compiler option resolution
 

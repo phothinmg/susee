@@ -115,7 +115,37 @@ await build({
 });
 ```
 
+For lower-level access to just the bundled source string (no compilation), use `suseeBundle`:
+
+```ts
+import { suseeBundle } from "susee";
+
+const code = suseeBundle("src/index.ts", {
+  checkAnonymous: true,
+  checkDefaultExports: true,
+  checkNpmInstalled: true,
+});
+```
+
 See the [Programmatic API](/references/programmatic-api) reference for all exports.
+
+## 5. Run lint checks without building
+
+Use the `susee check` CLI command to run lint checks on every entry point in your config — without bundling, compiling, or writing output:
+
+```sh
+npx susee check
+```
+
+This enables all three checks (`checkAnonymous`, `checkDefaultExports`, `checkNpmInstalled`) and reports errors and warnings per entry.
+
+## 6. Bundle without compiling
+
+Use the `susee bundle` CLI command to write the bundled source string for a single entry to disk — without TypeScript compilation, declarations, or `package.json` updates:
+
+```sh
+npx susee bundle src/index.ts --outdir dist
+```
 
 ## Related pages
 

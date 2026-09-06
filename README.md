@@ -10,7 +10,8 @@
 [![NPM][nodei_img]][nodei_url]
 
 [![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
-
+> [!IMPORTANT]
+> Use **susee v2.3.0 or above**. The core bundler was ported to Rust in v2.3.0, fixing multiple bugs present in earlier versions. Older versions are no longer recommended.
 ## Overview
 
 `susee` is a **TypeScript-first bundler** powered by `oxc`, specialized for library packages. Unlike general-purpose bundlers, `susee` focuses on consolidating a package's local TypeScript dependency tree into consolidated source units and compiling them into dual-format artifacts (ESM and CommonJS).
@@ -91,6 +92,8 @@ Susee reads your config, bundles each entry point, compiles to ESM and/or Common
 ```
 susee build                           Build using susee.config.{ts,js,mjs}
 susee init                            Generate susee.config.{ts,js,mjs}
+susee check                           Run lint checks on a dependency tree without bundling
+susee bundle <entry> [options]        Bundle a single entry file to disk without compiling
 susee --version / -v                  Print version
 susee --help / -h                     Show help
 susee build <entry> [options]         Build from a single entry file
@@ -102,11 +105,15 @@ susee build <entry> [options]         Build from a single entry file
 |------|------|---------|-------------|
 | `--entry <path>` | string | — | Entry file (optional if given positionally) |
 | `--outdir <path>` | string | `dist` | Output directory |
-| `--format` | `cjs\|commonjs\|esm` | `esm` | Output module format |
+| `--format` | `cjs\|commonjs\|esm\|both` | `esm` | Output module format (`both` = CJS + ESM) |
 | `--tsconfig <path>` | string | `undefined` | Custom tsconfig path |
 | `--allow-update[=true\|false]` | boolean | `false` | Allow `package.json` updates |
 | `--minify[=true\|false]` | boolean | `false` | Minify output JS |
 | `--check[=true\|false]` | boolean | `false` | Run bundler lint checks |
+
+### Bundle Flags
+
+The `susee bundle` command writes the bundled source (before TypeScript compilation) to disk. It supports `--entry`, `--outdir`, and `--check[=true|false]`.
 
 Flags accept both `--flag=value` and `--flag value` syntax.
 
@@ -115,11 +122,17 @@ Flags accept both `--flag=value` and `--flag value` syntax.
 ```sh
 npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
+npx susee build src/index.ts --format both        # emit CJS + ESM
 npx susee build --entry src/index.ts --format esm --tsconfig tsconfig.build.json
 npx susee build src/index.ts --minify
+npx susee build src/index.ts --check              # run lint checks during build
+npx susee bundle src/index.ts --outdir bundled   # write bundled source only
+npx susee check                                   # lint the dependency tree from config
 ```
 
 ## Programmatic API
+
+### `build()`
 
 ```ts
 import { build, type SuSeeConfig } from "susee";
@@ -136,6 +149,26 @@ await build(config);
 ```
 
 `build()` resolves options from the argument first, then from a root config file. If neither is available it logs an error and exits with code 1.
+
+### `suseeBundle()`
+
+Bundle a single entry point into a consolidated source string without compiling or writing to disk:
+
+```ts
+import { suseeBundle, type CheckOptions } from "susee";
+
+const code: string = suseeBundle("src/index.ts");
+
+// with lint checks enabled
+const checks: CheckOptions = {
+  checkAnonymous: true,
+  checkDefaultExports: true,
+  checkNpmInstalled: true,
+};
+const checked = suseeBundle("src/index.ts", checks);
+```
+
+`suseeBundle()` runs the oxc-powered bundler over the entry's local dependency tree and returns the bundled source. When `CheckOptions` are provided the bundler runs diagnostics (anonymous declarations, default exports, npm-installed deps) before returning.
 
 ## How It Works
 
@@ -172,13 +205,14 @@ The pipeline bundles each entry point's local dependency tree into a single sour
 
 ```
 src/
-├── index.ts            # Public API — re-exports build + SuSeeConfig
+├── index.ts            # Public API — re-exports build, suseeBundle, SuSeeConfig, CheckOptions
 ├── build.ts            # Build orchestrator — resolves config, runs Compiler
-├── bundler.ts          # Wrapper around @suseejs/susee_bundler (oxc)
+├── bundler.ts          # Wrapper around @suseejs/susee_bundler (oxc) + CLI bundle writer
 ├── cli/
-│   ├── index.ts        # CLI entrypoint & command dispatch
-│   ├── parse_args.ts   # Parses CLI flags into SuSeeConfig
+│   ├── index.ts        # CLI entrypoint & command dispatch (build/init/check/bundle)
+│   ├── parse_args.ts   # Parses CLI flags into SuSeeConfig / bundle opts
 │   ├── init.ts         # `susee init` — scaffolds config file
+│   ├── lint.ts         # `susee check` — runs suseeLint over the dependency tree
 │   └── print_help.ts   # `susee --help` output
 ├── compiler/
 │   ├── index.ts        # Compiler class — bundles + emits CJS/ESM + types
@@ -256,8 +290,8 @@ npm run fmt      # oxfmt
 
 <!-- Need to update version -->
 
-[sb_img]: https://badge.socket.dev/npm/package/susee/1.5.2
-[sb_url]: https://badge.socket.dev/npm/package/susee/1.5.2
+[sb_img]: https://badge.socket.dev/npm/package/susee/2.2.4
+[sb_url]: https://badge.socket.dev/npm/package/susee/2.2.4
 
 <!--  -->
 

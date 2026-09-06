@@ -9,7 +9,7 @@ These internal TypeScript modules make up the main Susee build pipeline inside t
 ## `src/bundler.ts`
 
 - Purpose: bundling wrapper
-- Description: delegates to `@suseejs/susee_bundler`'s `suseeBundler` function, caching results per entry point
+- Description: delegates to `@suseejs/susee_bundler`'s `suseeBundler` function. Exposes three functions: `bundler(point)` (internal, used by the Compiler), `suseeBundle(entry, checkOptions?)` (public API, returns the bundled source string), and `suseeCliBundle(opts)` (used by the CLI `bundle` command to write the bundled source to disk without compilation)
 - Role in flow: bundles the entry's local dependency tree into a single merged source string
 
 ## `src/compiler/index.ts`
@@ -39,8 +39,32 @@ These internal TypeScript modules make up the main Susee build pipeline inside t
 ## `src/cli/index.ts`
 
 - Purpose: CLI dispatch
-- Description: parses `process.argv` and routes to `build`, `init`, version, or help
+- Description: parses `process.argv` and routes to `build`, `bundle`, `init`, `check`, version, or help
 - Role in flow: entry point for the `susee` bin script
+
+## `src/cli/parse_args.ts`
+
+- Purpose: CLI argument parsing
+- Description: parses flags for `build` and `bundle` commands, builds a `SuSeeConfig` (for `build`) or `CliBundleOpts` (for `bundle`)
+- Role in flow: feeds parsed options to `build` or `suseeCliBundle`
+
+## `src/cli/lint.ts`
+
+- Purpose: lint-only check command
+- Description: the `suseeCheck` function runs `suseeLint` from `@suseejs/susee_bundler` on every config entry point with all checks enabled, reporting errors and warnings
+- Role in flow: powers the `susee check` CLI command (no bundling or compilation)
+
+## `src/cli/init.ts`
+
+- Purpose: config file scaffolding
+- Description: interactively generates `susee.config.ts`, `susee.config.js`, or `susee.config.mjs` based on project type
+- Role in flow: powers the `susee init` CLI command
+
+## `src/cli/print_help.ts`
+
+- Purpose: help text
+- Description: prints CLI usage and available options
+- Role in flow: powers `susee --help` / `susee -h`
 
 ## `src/helpers/files.ts`
 
@@ -77,7 +101,8 @@ These modules are wired together in the current codebase like this:
 
 Most users should interact with the pipeline through the public `susee` package exports:
 
-- `build(config?)` — async build function
+- `build(options?)` — async config-driven build function
+- `suseeBundle(entry, checkOptions?)` — synchronous lower-level bundling function returning the merged source string
 
 Example:
 

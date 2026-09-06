@@ -91,7 +91,7 @@ If the bundled dependency set contains conflicting top-level declarations, Susee
 
 ## Use the programmatic API
 
-You can also run builds from scripts. The `susee` package exports the `build` function and the `SuSeeConfig` type:
+You can also run builds from scripts. The `susee` package exports the `build` and `suseeBundle` functions, plus the `SuSeeConfig` and `CheckOptions` types:
 
 ```ts
 import { build } from "susee";
@@ -107,6 +107,14 @@ await build({
   outDir: "dist",
   allowUpdatePackageJson: true,
 });
+```
+
+For lower-level access, `suseeBundle` returns the bundled source string without compiling:
+
+```ts
+import { suseeBundle } from "susee";
+
+const code = suseeBundle("src/index.ts");
 ```
 
 ## Verify output

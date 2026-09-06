@@ -8,16 +8,18 @@ This page documents how to use susee programmatically from TypeScript or JavaScr
 
 ## Overview
 
-The `susee` package is a pure TypeScript library that re-exports the async `build` function and the `SuSeeConfig` type from its main entry point.
+The `susee` package is a pure TypeScript library that re-exports the `build` and `suseeBundle` functions, the `SuSeeConfig` type, and the `CheckOptions` type from its main entry point (`src/index.ts`). `build` is async; `suseeBundle` is synchronous.
 
-| Export         | JS signature                     | Description                                           |
-| -------------- | -------------------------------- | ----------------------------------------------------- |
-| `build`        | `(config?: SuSeeConfig) => Promise<void>` | Full config-driven build                     |
-| `SuSeeConfig`  | *(type)*                         | Configuration object                                  |
+| Export         | JS signature                                  | Description                                                              |
+| -------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| `build`        | `(options?: SuSeeConfig) => Promise<void>`    | Full config-driven build (loads config file when `options` is omitted)  |
+| `suseeBundle`  | `(entry: string, checkOptions?: CheckOptions) => string` | Bundle a single entry's dependency tree into a source string (sync)  |
+| `SuSeeConfig`  | *(type)*                                      | Configuration object for `build`                                         |
+| `CheckOptions` | *(type)*                                      | Lint check options for `suseeBundle` and `entryPoints[].checks`           |
 
-`build` is the main programmatic build API. It orchestrates configuration loading, dependency resolution, bundling, and compilation. The package provides dual-format exports (ESM + CommonJS).
+`build` is the main programmatic build API. It orchestrates configuration loading, dependency resolution, bundling, and compilation. `suseeBundle` is a lower-level synchronous API that returns the bundled source string for a single entry without compiling or writing files. The package provides dual-format exports (ESM + CommonJS).
 
-> The `build` function is **async** — always `await` the call.
+> The `build` function is **async** — always `await` the call. `suseeBundle` is synchronous.
 
 ## Package Exports
 
@@ -67,20 +69,48 @@ const options = {
   allowUpdatePackageJson: true,
 };
 
-build(options);
+await build(options);
 ```
 
-## `build(config?)`
+The `build` function is async — always `await` the call in an async context.
+
+## `build(options?)`
 
 The primary interface for programmatic execution.
 
-- **Parameters**: `config?: SuSeeConfig`
+- **Parameters**: `options?: SuSeeConfig`
 - **Return type**: `Promise<void>`
 - **Async**: Yes
 
-When `config` is omitted, `build` looks for a config file (`susee.config.ts`, `susee.config.js`, or `susee.config.mjs`) in the current working directory. When a `SuSeeConfig` is provided, it overrides the file-based configuration. After the build completes, the elapsed time is logged.
+When `options` is provided, it is normalized via `generateBuildOptions` and takes priority over any config file. When `options` is omitted, `build` looks for a config file (`susee.config.ts`, `susee.config.js`, or `susee.config.mjs`) in the current working directory and imports its default export. If neither source is available, `build` logs an error and exits with code `1`. After the build completes, the elapsed time is logged.
 
 On a build error the function logs an error message and exits the process with code `1`.
+
+## `suseeBundle(entry, checkOptions?)`
+
+A lower-level bundling API that resolves and merges an entry's local dependency tree into a single source string — without compiling or writing any files.
+
+- **Parameters**:
+  - `entry: string` — path to the entry file (must exist on disk)
+  - `checkOptions?: CheckOptions` — lint check options (defaults to all-`false` when omitted)
+- **Return type**: `string` (the bundled source code)
+- **Async**: No (synchronous)
+
+Example:
+
+```ts
+import { suseeBundle } from "susee";
+
+const code = suseeBundle("src/index.ts", {
+  checkAnonymous: true,
+  checkDefaultExports: true,
+  checkNpmInstalled: true,
+});
+
+// `code` is the merged source string — compile or write it yourself
+```
+
+When the bundled dependency set contains CommonJS modules, `suseeBundle` emits a warning suggesting migration to ESM.
 
 ## `SuSeeConfig`
 
@@ -105,6 +135,10 @@ interface CheckOptions {
   checkDefaultExports: boolean;
   checkNpmInstalled: boolean;
 }
+
+interface MinifyOptions {
+  // see the `oxc-minify` package for available options
+}
 ```
 
 ## Execution Pipeline
@@ -113,7 +147,7 @@ interface CheckOptions {
 
 ### 1. Configuration Resolution
 
-If a `config` argument is provided, it is normalized via `generateBuildOptions`. If `config` is omitted, the loader looks for a config file (`susee.config.ts`, `susee.config.js`, `susee.config.mjs`) in the current working directory and imports its default export as a `SuSeeConfig`.
+If an `options` argument is provided, it is normalized via `generateBuildOptions`. If `options` is omitted, the loader looks for a config file (`susee.config.ts`, `susee.config.js`, `susee.config.mjs`) in the current working directory and imports its default export as a `SuSeeConfig`. The `generateFinalBuildOptions` function coordinates this resolution: it prefers an explicit `options` argument, falls back to the config file, and exits with code `1` if neither is available.
 
 ### 2. Validation
 
@@ -129,7 +163,7 @@ If validation fails, an error message is logged and the process exits with code 
 
 A `Compiler` instance is created with the resolved `BuildOptions`. `compiler.compile()` then handles, for each entry point and each requested output format:
 
-1. Bundling the entry's local dependency tree into a single source string (via `@suseejs/susee_bundler`).
+1. Bundling the entry's local dependency tree into a single source string (via `bundler(point)` in `src/bundler.ts`, which calls `@suseejs/susee_bundler`).
 2. Resolving TypeScript compiler options from `tsconfigFilePath`, root `tsconfig.json`, or internal defaults (via `@suseejs/ts6`).
 3. Detecting JSX in the bundled source and adjusting compiler options if needed.
 4. Compiling the bundled source in-memory using `@suseejs/ts6`.

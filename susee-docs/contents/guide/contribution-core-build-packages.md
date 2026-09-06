@@ -19,11 +19,12 @@ The main build stages are implemented in TypeScript under `src/`:
 - `src/cli/index.ts` — CLI entry point and dispatch
 - `src/cli/parse_args.ts` — CLI argument parsing
 - `src/cli/init.ts` — config file scaffolding
+- `src/cli/lint.ts` — lint-only check command
 - `src/cli/print_help.ts` — help text
 - `src/helpers/files.ts` — file system operations and package.json updates
 - `src/helpers/minify.ts` — oxc-minify wrapper
 
-The package's main entry point is `src/index.ts`, which re-exports `build` and `SuSeeConfig`.
+The package's main entry point is `src/index.ts`, which re-exports `build`, `suseeBundle`, `SuSeeConfig`, and `CheckOptions`.
 
 ## 1. Work in this repository
 
@@ -63,6 +64,7 @@ Before coding, choose exactly where the fix belongs:
 - Config parsing/validation: `src/config/index.ts`
 - CLI dispatch: `src/cli/index.ts`
 - CLI argument parsing: `src/cli/parse_args.ts`
+- Lint checks: `src/cli/lint.ts`
 - Config file scaffolding: `src/cli/init.ts`
 - File system/output handling: `src/helpers/files.ts`
 - Minification: `src/helpers/minify.ts`
