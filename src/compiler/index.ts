@@ -1,6 +1,5 @@
 import type { BuildEntryPoint, BuildOptions } from "../config/index.js";
 import { files } from "../helpers/files.js";
-//import { utils } from "../helpers/utilities.js";
 import { suseeCompiler } from "./suseeCompiler.js";
 import { getCompilerOptions } from "./tsoptions.js";
 import { bundler } from "../bundler.js";
@@ -162,6 +161,8 @@ class Compiler {
       }
       if (isMain && this._files.esm) {
         this._files.module = this._files.esm;
+        if (this._files.esmTypes)
+          this._files.types = this._files.esmTypes;
       }
     } //update
     await files.writeFile(mainFilePath, compiledCode);
@@ -176,6 +177,15 @@ class Compiler {
   async compile(): Promise<void> {
     await files.clearFolder(this._object.outDir);
     for (const point of this._object.buildEntryPoints) {
+      this._files = {
+        commonjs: undefined,
+        commonjsTypes: undefined,
+        esm: undefined,
+        esmTypes: undefined,
+        main: undefined,
+        module: undefined,
+        types: undefined,
+      };
       const bundleCode = bundler(point);
       for (const format of point.format) {
         switch (format) {

@@ -4,6 +4,7 @@ export function printHelp() {
 Usage:
   susee build                           Build using susee.config.{ts,js,mjs}
   susee init                            Generate susee.config.{ts,js,mjs}
+  susee check                           Run lint checks on a dependency tree without bundling.
   susee --help                          Show this message
   susee build <entry> [options]         Build from a single entry file
 
@@ -14,7 +15,7 @@ Options:
   --tsconfig <path>                    Custom tsconfig path. (default to undefined)
   --allow-update[=true|false]          Enable package.json update. (default to false)
   --minify[=true|false]                Enable minify to output JS code.(default to false)
-  --check[=true|false]                Enable minify to output JS code.(default to false)
+  --check[=true|false]                Enable lint checks on bundled output.(default to false)
 
 Notes:
   Duplicate top-level declarations fail the build with file and location output.

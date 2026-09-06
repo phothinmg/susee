@@ -54,7 +54,7 @@ export interface EntryPoint {
    *
    * default - false
    */
-  minify?: boolean | {options:MinifyOptions};
+  minify?: boolean | { options: MinifyOptions };
 }
 /**
  * Configuration for Susee Bundler
@@ -90,7 +90,7 @@ const getSuseeConfigPath = (): string | undefined => {
   const fileNames = ["susee.config.ts", "susee.config.js", "susee.config.mjs"];
   let configFile: string | undefined;
   for (const file of fileNames) {
-    const filePath = path.resolve(process.cwd(),file);
+    const filePath = path.resolve(process.cwd(), file);
     if (fs.existsSync(filePath)) {
       configFile = filePath;
       break;
@@ -131,9 +131,9 @@ function checkEntries(entries: EntryPoint[]) {
   }
 
   for (const obj of entries) {
-    if (!fs.existsSync(path.resolve(process.cwd(),obj.entry))) {
+    if (!fs.existsSync(path.resolve(process.cwd(), obj.entry))) {
       const info = "Entry file error";
-      const cause = `Entry file ${obj.entry} dose not exists.`;
+      const cause = `Entry file ${obj.entry} does not exist.`;
       logError(info, cause, true);
     }
   }
@@ -146,7 +146,7 @@ export type BuildEntryPoint = {
   outputDirectoryPath: string;
   tsconfigFilePath: string | undefined;
   checks: CheckOptions;
-  minify: boolean | {options:MinifyOptions};
+  minify: boolean | { options: MinifyOptions };
 };
 export type BuildOptions = {
   buildEntryPoints: BuildEntryPoint[];
@@ -168,7 +168,9 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
   for (const ent of config.entryPoints) {
     const entry = ent.entry;
     const exportPath = ent.exportPath;
-    const format: OutputFormat = ent.format ? [...new Set(ent.format)] : ["esm"];
+    const format: OutputFormat = ent.format
+      ? [...new Set(ent.format)]
+      : ["esm"];
     const tsconfigFilePath = ent.tsconfigFilePath ?? undefined;
     const outputDirectoryPath =
       ent.exportPath === "." ? outDir : `${outDir}${ent.exportPath.slice(1)}`;
@@ -203,10 +205,29 @@ function generateBuildOptions(config: SuSeeConfig): BuildOptions {
 async function finalSuseeConfig(): Promise<BuildOptions | undefined> {
   const configPath = getSuseeConfigPath();
   if (configPath) {
-    const _default: { default: SuSeeConfig } = await import(configPath as string);
+    const _default: { default: SuSeeConfig } = await import(
+      configPath as string
+    );
     const config = _default.default;
     return generateBuildOptions(config);
   }
 }
 
-export { finalSuseeConfig, generateBuildOptions };
+async function generateFinalBuildOptions(options?: SuSeeConfig):Promise<BuildOptions> {
+  let buildOptions = {} as BuildOptions;
+  const _buildOptions = await finalSuseeConfig();
+  if (!options && !_buildOptions) {
+    const info =
+      "Required build options or susee config file at root.You can use `npx susee init` to create susee config file at root";
+    const cause = "No build options or susee config file at root.";
+    logError(info, cause, true);
+  }
+  if (options) {
+    buildOptions = generateBuildOptions(options);
+  } else if (_buildOptions) {
+    buildOptions = _buildOptions;
+  }
+  return buildOptions;
+}
+
+export { generateFinalBuildOptions };

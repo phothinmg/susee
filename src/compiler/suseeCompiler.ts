@@ -43,7 +43,7 @@ function jsxCompilerOptions(
     const re = new RegExp(pattern, "gm");
     if (!re.test(sourceCode)) {
       console.error(
-        "[jsx-runtime-mismatch-error]:\nJSX syntax found in bundled code,but its not react runtime and jsx-runtime from bundled code and jsxImportSource from tsconfig are mismatched.`",
+        "[jsx-runtime-mismatch-error]:\nJSX syntax found in bundled code,but its not react runtime and jsx-runtime from bundled code and jsxImportSource from tsconfig are mismatched.",
       );
       process.exit(1);
     }

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import tcolor from "@suseejs/color";
+import { logError } from "@suseejs/susee_bundler";
 
 namespace files {
   const root = process.cwd();
@@ -43,8 +43,9 @@ namespace files {
     bytes: number;
   }> {
     if (!existsPath(filePath)) {
-      console.error(tcolor.magenta(`> ${filePath} does not exists `));
-      process.exit(1);
+      const info = `${filePath} does not exists`;
+      const cause = `When reading ${filePath}, file does not exists`;
+      logError(info,cause,true);
     }
     filePath = resolvePath(filePath);
     const readContent = await fs.promises.readFile(filePath);
@@ -142,7 +143,9 @@ namespace files {
     const pkgFile = resolvePath("package.json");
     const pkgtext = await readJsonFile(pkgFile);
     let { name, version, description, main, module, type, types, exports, ...rest } = pkgtext;
-    type = "module";
+    const hasCjs = files.commonjs !== undefined;
+    const hasEsm = files.esm !== undefined;
+    type = hasCjs && !hasEsm ? "commonjs" : "module";
 
     let _main: Record<string, string> = {};
     let _module: Record<string, string> = {};
@@ -154,7 +157,13 @@ namespace files {
         ? { module: path.relative(process.cwd(), files.module as string) }
         : {};
       _types = files.types ? { types: path.relative(process.cwd(), files.types as string) } : {};
-      _exports = { exports: { ...getExports(files, exportPath) } };
+      const normalizedExports =
+        exports && typeof exports === "object" && !Array.isArray(exports)
+          ? { ...exports }
+          : {};
+      _exports = {
+        exports: { ...normalizedExports, ...getExports(files, exportPath) },
+      };
     } else {
       _main = main ? { main: main } : {};
       _module = module ? { module: module } : {};

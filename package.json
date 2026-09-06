@@ -65,7 +65,8 @@
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
-    "build": "oxnode build.ts"
+    "build": "oxnode build.ts",
+    "test": "oxnode --test tests/**/*.test.ts"
   },
   "dependencies": {
     "@suseejs/susee_bundler": "^0.2.4",
