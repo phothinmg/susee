@@ -49,7 +49,7 @@ When run without extra arguments, susee attempts to find a config file (`susee.c
 
 This command allows for quick builds without a configuration file.
 
-```
+```text
 --entry <path>                Entry file (optional if provided as positional <entry>)
 --outdir <path>               Output directory (default: dist)
 --format <cjs|commonjs|esm|both>  Output format (default: esm)
@@ -63,7 +63,7 @@ Boolean flags accept `--flag=true|false`, `--flag true|false`, or a bare `--flag
 
 Examples:
 
-```
+```sh
 npx susee build src/index.ts --outdir dist
 npx susee build src/index.ts --format commonjs
 npx susee build --entry src/index.ts --format esm --tsconfig tsconfig.build.json
@@ -77,7 +77,7 @@ npx susee build src/index.ts --check
 
 This command bundles the entry's local dependency tree into a single source string and writes it directly to the output directory — without TypeScript compilation, declaration generation, or `package.json` updates. The output file keeps the same base name as the entry file.
 
-```
+```text
 --entry <path>                Entry file (optional if provided as positional <entry>)
 --outdir <path>               Output directory (default: current working directory)
 --check[=true|false]          Enable lint checks on the bundled output (default: false)
@@ -85,7 +85,7 @@ This command bundles the entry's local dependency tree into a single source stri
 
 Examples:
 
-```
+```sh
 npx susee bundle src/index.ts --outdir dist
 npx susee bundle src/index.ts --check
 npx susee bundle --entry src/index.ts --outdir bundled
