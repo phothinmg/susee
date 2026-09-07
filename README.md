@@ -9,12 +9,14 @@
 
 [![NPM][nodei_img]][nodei_url]
 
-[![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
-> [!IMPORTANT]
+[![oxc][oxc_img]][oxc_url] [![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
+>![important](https://img.shields.io/badge/IMPORTANT-%20?labelColor=%23673ab8&color=%23673ab8)
+>
 > Use **susee v2.3.0 or above**. The core bundler was ported to Rust in v2.3.0, fixing multiple bugs present in earlier versions. Older versions are no longer recommended.
 ## Overview
 
-`susee` is a **TypeScript-first bundler** powered by `oxc`, specialized for library packages. Unlike general-purpose bundlers, `susee` focuses on consolidating a package's local TypeScript dependency tree into consolidated source units and compiling them into dual-format artifacts (ESM and CommonJS).
+`susee` is a **TypeScript-first bundler** powered by [`oxc`][oxc_url], specialized for library packages. Unlike general-purpose bundlers, `susee` focuses on consolidating a package's local TypeScript dependency tree into consolidated source units and compiling them into dual-format artifacts (ESM and CommonJS).
+
 
 ## Key Features
 
@@ -304,3 +306,5 @@ npm run fmt      # oxfmt
 [publish_npm_svg]: https://github.com/phothinmg/susee/actions/workflows/npm-publish.yml/badge.svg?event=release
 [mmcov_svg]: https://img.shields.io/badge/mmcov-85.01%25-green?style=flat&labelColor=%232c3e50
 [mmcov_url]: https://suseejs.org/coverage
+[oxc_url]: https://oxc.rs/
+[oxc_img]: https://img.shields.io/badge/Powered%20by%20OXC-%20?style=flat&logo=oxc&labelColor=black&color=gray
