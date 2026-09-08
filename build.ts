@@ -1,4 +1,4 @@
-import { build } from "./src/index.js";
+import { build } from "./src/node/index.js";
 import path from "node:path";
 import fs from "node:fs";
 
@@ -16,12 +16,12 @@ import "../dist/cli/index.mjs";`;
 await build({
   entryPoints: [
     {
-      entry: "src/index.ts",
+      entry: "src/node/index.ts",
       format: ["commonjs", "esm"],
       exportPath: ".",
     },
     {
-      entry: "src/cli/index.ts",
+      entry: "src/node/cli/index.ts",
       exportPath: "./cli",
     },
   ],
