@@ -1,7 +1,7 @@
 use super::out_format::OutputFormat;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use susee_bundler::CheckOptions;
+use crate::core::bundle::tree::CheckOptions;
 
 // ------------------------
 // oxc minify config

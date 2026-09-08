@@ -17,9 +17,13 @@ oxc = { version = "0.148.0", features = [
     "transformer",
     "isolated_declarations",
 ] }
-susee_bundler = "0.2.4"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.151", features = ["preserve_order"] }
+colored = "2"
+indexmap = { version = "2", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3"
 
 [lib]
 name = "susee"

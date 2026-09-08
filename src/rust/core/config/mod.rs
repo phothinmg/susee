@@ -1,18 +1,18 @@
-mod out_format;
-mod entry_point;
-mod read_config;
+pub mod out_format;
+pub mod entry_point;
+pub mod read_config;
 
-pub use out_format::OutputFormat;
+
 pub use entry_point::SuSeeConfig;
 
-use susee_bundler::log_error;
+use crate::core::log;
 
 pub fn final_build_options(config:Option<SuSeeConfig>) -> std::option::Option<entry_point::BuildOptions>{
   let config_path = entry_point::get_susee_config_path();
   if config.is_none() && config_path.is_none() {
       let info = "Required build options or susee config file at root.You can use `npx susee init` to create susee config file at root".to_string();
       let cause = "No build options or susee config file at root.".to_string();
-      log_error(info, cause, Some(true));
+      log::error(&info, &cause,true);
   }
   let mut build_options:Option<entry_point::BuildOptions> = None;
   if !config.is_none() {

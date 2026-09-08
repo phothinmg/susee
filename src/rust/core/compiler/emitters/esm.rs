@@ -4,7 +4,7 @@ use oxc::parser::Parser;
 use oxc::semantic::SemanticBuilder;
 use oxc::transformer::{TransformOptions, Transformer};
 use std::path::Path;
-use crate::compiler::source_type::detect_source_type;
+use crate::core::compiler::source_type::detect_source_type;
 /// Emit ECMAScript module (ESM) code from a source string.
 ///
 pub fn emit_esm(

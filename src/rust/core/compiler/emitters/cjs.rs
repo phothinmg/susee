@@ -10,7 +10,7 @@
 //! `helper.js` file used by the TypeScript port — but only the helpers that
 //! the converted module actually needs are emitted.
 
-use crate::compiler::source_type::detect_source_type;
+use crate::core::compiler::source_type::detect_source_type;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::ImportMeta;
 use oxc::ast::ast::{
@@ -25,7 +25,7 @@ use oxc::semantic::SemanticBuilder;
 use oxc::span::SourceType;
 use oxc::transformer::{TransformOptions, Transformer};
 use std::path::Path;
-use susee_bundler::{log_error};
+use crate::core::log;
 // ---------------------------------------------------------------------------
 // Runtime helpers (inlined verbatim from `helper.js`).
 // ---------------------------------------------------------------------------
@@ -820,7 +820,7 @@ pub fn emit_cjs(source_code: &str, file_path: Option<String>) -> String {
     {
         let info = format!("Expected source type are ts, tsx, or mjs");
         let cause = format!("Found unsupported source type {entry_st:?}");
-        log_error(info, cause, Some(true));
+        log::error(&info,&cause,true);
     }
 
     if entry_st == SourceType::ts() || entry_st == SourceType::tsx() {
