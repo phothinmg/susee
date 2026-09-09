@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { cliConfig, cliBundleOpts } from "../../src/cli/parse_args.ts";
+import { cliConfig, cliBundleOpts } from "../../src/cli/parse_args.js";
 
 describe("cliConfig", () => {
   test("returns undefined for empty argv", () => {
@@ -92,14 +92,14 @@ describe("cliConfig", () => {
 
   test("parses --check as bare flag and sets all checks", () => {
     const cfg = cliConfig(["src/index.ts", "--check"])!;
-    assert.equal(cfg.entryPoints[0]!.checks.checkAnonymous, true);
+    assert.equal(cfg.entryPoints[0]!.checks?.checkAnonymous, true);
     assert.equal(cfg.entryPoints[0]!.checks.checkDefaultExports, true);
     assert.equal(cfg.entryPoints[0]!.checks.checkNpmInstalled, true);
   });
 
   test("parses --check=false and leaves checks false", () => {
     const cfg = cliConfig(["src/index.ts", "--check=false"])!;
-    assert.equal(cfg.entryPoints[0]!.checks.checkAnonymous, false);
+    assert.equal(cfg.entryPoints[0]!.checks?.checkAnonymous, false);
     assert.equal(cfg.entryPoints[0]!.checks.checkDefaultExports, false);
     assert.equal(cfg.entryPoints[0]!.checks.checkNpmInstalled, false);
   });

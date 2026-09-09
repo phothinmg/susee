@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import ts6 from "@suseejs/ts6";
-import { suseeCompiler } from "../../src/compiler/suseeCompiler.ts";
+import { suseeCompiler } from "../../src/compiler/suseeCompiler.js";
 
 describe("suseeCompiler", () => {
   test("compiles a simple ESM module to CommonJS", () => {

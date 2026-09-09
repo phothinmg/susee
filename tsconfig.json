@@ -41,5 +41,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src/node/**/*", "aa.ts","build.ts","susee.config.ts"]
+  "include": ["src/**/*", "aa.ts","build.ts","tests/**/*"]
 }

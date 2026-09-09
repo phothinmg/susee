@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { generateFinalBuildOptions } from "../../src/config/index.ts";
+import { generateFinalBuildOptions } from "../../src/config/index.js";
 import type { SuSeeConfig } from "../../src/config/index.ts";
 
 // We cannot directly import the private generateBuildOptions, but

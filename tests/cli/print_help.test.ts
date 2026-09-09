@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { printHelp } from "../../src/cli/print_help.ts";
+import { printHelp } from "../../src/cli/print_help.js";
 
 describe("printHelp", () => {
   test("prints usage information to stdout", () => {

@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { oxcMinify } from "../../src/helpers/minify.ts";
-import type { BuildEntryPoint } from "../../src/config/index.ts";
+import { oxcMinify } from "../../src/helpers/minify.js";
+import type { BuildEntryPoint } from "../../src/config/index.js";
 
 function makePoint(overrides: Partial<BuildEntryPoint> = {}): BuildEntryPoint {
   return {

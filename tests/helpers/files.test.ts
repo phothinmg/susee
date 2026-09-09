@@ -12,7 +12,7 @@ const origCwd = process.cwd();
 process.chdir(tmpDir);
 
 // Now import — root will be tmpDir
-const { files } = await import("../../src/helpers/files.ts");
+const { files } = await import("../../src/helpers/files.js");
 
 after(async () => {
   process.chdir(origCwd);

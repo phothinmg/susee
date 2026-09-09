@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import ts6 from "@suseejs/ts6";
-import { getCompilerOptions } from "../../src/compiler/tsoptions.ts";
+import { getCompilerOptions } from "../../src/compiler/tsoptions.js";
 
 describe("getCompilerOptions", () => {
   test("returns an object with commonjs, esm, and defaultOptions functions", () => {
