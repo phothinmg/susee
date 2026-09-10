@@ -15,7 +15,7 @@
 >
 > Use **susee v2.3.0 or above**. In v2.3.0, the core bundler was ported from TypeScript to Rust (powered by [`oxc`][oxc_url]) with assistance from the **glm-5.2:cloud** model served via the [Ollama](https://ollama.com) platform, fixing multiple bugs present in earlier versions. Older versions are no longer recommended.
 >
-> See the [bug information since v2.3.0](BUGS).
+> See the [bug information since v2.3.0](BUGS.md).
 
 ## Overview
 
