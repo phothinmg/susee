@@ -10,13 +10,16 @@
 [![NPM][nodei_img]][nodei_url]
 
 [![oxc][oxc_img]][oxc_url] [![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
+
 >![important](https://img.shields.io/badge/IMPORTANT-%20?labelColor=%23673ab8&color=%23673ab8)
 >
-> Use **susee v2.3.0 or above**. The core bundler was ported to Rust in v2.3.0, fixing multiple bugs present in earlier versions. Older versions are no longer recommended.
+> Use **susee v2.3.0 or above**. In v2.3.0, the core bundler was ported from TypeScript to Rust (powered by [`oxc`][oxc_url]) with assistance from the **glm-5.2:cloud** model served via the [Ollama](https://ollama.com) platform, fixing multiple bugs present in earlier versions. Older versions are no longer recommended.
+>
+> See the [bug information since v2.3.0](BUGS).
+
 ## Overview
 
 `susee` is a **TypeScript-first bundler** powered by [`oxc`][oxc_url], specialized for library packages. Unlike general-purpose bundlers, `susee` focuses on consolidating a package's local TypeScript dependency tree into consolidated source units and compiling them into dual-format artifacts (ESM and CommonJS).
-
 
 ## Key Features
 
@@ -51,7 +54,7 @@ Generate a starter `susee.config.{ts,js,mjs}` in your project root:
 npx susee init
 ```
 
-The interactive prompt asks whether your project is TypeScript. For TS projects it writes `susee.config.ts`; for JS projects it writes `susee.config.js` (ESM) or `susee.config.mjs` (CommonJS) based on your `package.json#type`.
+The interactive prompt asks whether your project is TypeScript. For TypeScript projects, it writes `susee.config.ts`; for JavaScript projects, it writes `susee.config.js` (ESM) or `susee.config.mjs` (CommonJS) based on your `package.json#type`.
 
 ### 2. Define your entries
 
@@ -87,7 +90,7 @@ export default config;
 npx susee build
 ```
 
-Susee reads your config, bundles each entry point, compiles to ESM and/or CommonJS, and writes output to `dist` by default.
+Susee reads your config, bundles each entry point, compiles to ESM and/or CommonJS, and writes the output to `dist` by default.
 
 ## CLI
 
