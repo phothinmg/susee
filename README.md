@@ -3,7 +3,7 @@
 <div align="center">
 <img src="https://susee.phothin.dev/logo/susee-bg-white.webp" width="160" height="160" alt="susee" />
   <h1>Susee</h1>
-  <p>A high-performance TypeScript library bundler</p>
+  <p>TypeScript library bundler</p>
 </div>
 <!-- markdownlint-enable MD033 -->
 
@@ -19,14 +19,13 @@
 
 ## Overview
 
-`susee` is a **TypeScript-first bundler** powered by [`oxc`][oxc_url], specialized for library packages. Unlike general-purpose bundlers, `susee` focuses on consolidating a package's local TypeScript dependency tree into consolidated source units and compiling them into dual-format artifacts (ESM and CommonJS).
+`susee` is a **TypeScript bundler** powered by [`oxc`][oxc_url], specialized for library packages. Unlike general-purpose bundlers, `susee` focuses on consolidating a package's local TypeScript dependency tree into consolidated source units and compiling them into dual-format artifacts (ESM and CommonJS).
 
 ## Key Features
 
 - **TypeScript-first build flow** — built around library development, not application bundling. Preserves a package-oriented workflow with declaration output and clean library artifacts.
 - **Dual output support** — produces both ESM and CommonJS from the same entry definition, so packages work with modern `import` and legacy `require` ecosystems.
 - **Duplicate declaration validation** — when source consolidation produces conflicting top-level declarations, the build fails with file and location output instead of silently renaming.
-- **Fast, low-overhead builds** — a lean pipeline that fits package development and release workflows without app-level complexity.
 - **Package metadata update** — can update `package.json` `exports`, `main`, `module`, and `types` fields after build output is generated.
 - **Built-in minification** — runs the `oxc-minify` minifier over emitted JavaScript when enabled.
 - **CLI and programmatic API** — use the CLI for local development/CI, or call the build API for custom scripting.
@@ -44,6 +43,19 @@ Verify the installation:
 npx susee --version
 ```
 
+### Scaffold a new project
+
+Generate a complete library project pre-configured with susee using [`create-susee`](https://github.com/phothinmg/create-susee):
+
+```sh
+npm create susee@latest
+# yarn create susee
+# pnpm create susee
+# bun create susee
+```
+
+The scaffolder generates `src/index.ts`, a ready-to-use `susee.config.ts`, `tsconfig.json`, and a `package.json` with `build`/`check` scripts. It prompts you to pick a linter ([Biome](https://biomejs.dev/) or [Oxc](https://oxc.rs/) — oxlint + oxfmt), optionally generates an `AGENTS.md` with project context for AI coding agents, auto-detects your package manager, and installs the latest published versions of all dependencies.
+
 ## Quick Start
 
 ### 1. Create a config file
@@ -55,6 +67,8 @@ npx susee init
 ```
 
 The interactive prompt asks whether your project is TypeScript. For TypeScript projects, it writes `susee.config.ts`; for JavaScript projects, it writes `susee.config.js` (ESM) or `susee.config.mjs` (CommonJS) based on your `package.json#type`.
+
+> Starting from scratch? [`create-susee`](https://github.com/phothinmg/create-susee) scaffolds the whole project — config, entry file, tsconfig, and scripts — in one command.
 
 ### 2. Define your entries
 
@@ -269,6 +283,20 @@ For each entry point, compiler options resolve in this order:
 2. `tsconfig.json` at the project root
 3. Susee defaults (`module: ES2020` for ESM, `module: CommonJS` for CJS, `target: Latest`)
 
+## Agent Skills
+
+Susee ships [agent skills](https://skills.sh) that give AI coding agents procedural knowledge about building with and contributing to susee. Install them with the [skills CLI](https://skills.sh):
+
+```sh
+npx skills add phothinmg/susee
+```
+
+| Skill | Purpose |
+| ----- | ------- |
+| `susee-build` | Configure and run builds — config files, CLI commands, programmatic API, dual ESM/CJS output |
+| `susee-troubleshooting` | Diagnose failing builds — duplicate declarations, entry/exportPath validation, invalid flags, tsconfig issues |
+| `susee-contribution` | Work on the susee codebase — architecture map, local checks, commit conventions, PR checklist |
+
 ## Development
 
 ```sh
@@ -293,12 +321,8 @@ npm run fmt      # oxfmt
 [file-contribute]: CONTRIBUTING.md
 [ptm]: https://github.com/phothinmg
 
-<!-- Need to update version -->
-
-[sb_img]: https://badge.socket.dev/npm/package/susee/2.2.4
-[sb_url]: https://badge.socket.dev/npm/package/susee/2.2.4
-
-<!--  -->
+[sb_img]: https://badge.socket.dev/npm/package/susee/2.3.0
+[sb_url]: https://badge.socket.dev/npm/package/susee/2.3.0
 
 [nodei_img]: https://nodei.co/npm/susee.svg?color=red
 [nodei_url]: https://nodei.co/npm/susee/
