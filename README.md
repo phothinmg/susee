@@ -9,7 +9,8 @@
 
 [![NPM][nodei_img]][nodei_url]
 
-[![oxc][oxc_img]][oxc_url] [![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115)
+[![oxc][oxc_img]][oxc_url] [![npm version][npm_v_img]][npm_v_url] [![license][license_img]](LICENSE) [![OpenSSF Baseline](https://www.bestpractices.dev/projects/13115/baseline)](https://www.bestpractices.dev/projects/13115) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13115/badge)](https://www.bestpractices.dev/projects/13115) ![NPM Downloads](https://img.shields.io/npm/dy/susee?logo=npm&logoColor=%23CB3837)
+
 
 >![important](https://img.shields.io/badge/IMPORTANT-%20?labelColor=%23673ab8&color=%23673ab8)
 >
