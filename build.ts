@@ -16,12 +16,12 @@ import "../dist/cli/index.mjs";`;
 await build({
   entryPoints: [
     {
-      entry: "src/node/index.ts",
+      entry: "src/index.ts",
       format: ["commonjs", "esm"],
       exportPath: ".",
     },
     {
-      entry: "src/node/cli/index.ts",
+      entry: "src/cli/index.ts",
       exportPath: "./cli",
     },
   ],
