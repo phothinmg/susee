@@ -22,7 +22,7 @@ This page shows the status of the current bugs in `susee`.
     <!--BLANK-->
     ## Section`.replace(/<!--BLANK-->/g, "");
     ```
-- **Current Status**: Already fixed in the core bundler, but still under testing. It will be resolved in the next minor version.
+- **Current Status**: Fixed in v3.0.0
 
 
 

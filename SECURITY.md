@@ -9,8 +9,9 @@ We follow SemVer and provide security fixes for actively maintained versions onl
 
 | Version | Supported |
 | ------- | --------- |
-| 2.3     | Yes       |
-| < 2.3   | No        |
+| 3.0.x (latest)     |  ✅ Yes |
+| 2.3      |  ✅ Yes |
+| < 2.3   | ❌ No     |
 
 If a fix is not practical for an older release line, we may provide guidance to upgrade to a supported version.
 
