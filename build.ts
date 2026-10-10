@@ -1,4 +1,4 @@
-import { build } from "./src/node/index.js";
+import { build } from "./src/index.js";
 import path from "node:path";
 import fs from "node:fs";
 
